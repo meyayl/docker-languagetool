@@ -3,13 +3,14 @@ This repository contains a Dockerfile to create a Docker image for [LanguageTool
 
 > [LanguageTool](https://www.languagetool.org/) is an Open Source proofreading software for English, French, German, Polish, Russian, and [more than 20 other languages](https://languagetool.org/languages/). It finds many errors that a simple spell checker cannot detect.
 
-Shortfacts:
-- Uses latest alpine 3.16 base image
+About this image:
+- Uses latest Alpine 3.16 base image
 - includes fasttext
 - includes su-exec
   - container starts as root and executes languagetool as restricted user using `exec su-exec`
-- container fixes folder ownership for ngrams and fasttext folders.
-- allows to specify ngram languages to download (if not already existing) 
+  - container fixes folder ownership for ngrams and fasttext folders
+- downloads ngram language modules if configured (if they don't already exist) 
+- downloads fasttext module (if it doesn't already exist)
 
 Note: due to proper pid1 handline, the container will exit with status code 143 (=SIGTERM). It appears the languagetool application does not handle SIGTERM, as such even though the container is terminated the way it should be, it will show the status code.
 
