@@ -9,16 +9,19 @@ RUN set -eux; \
 FROM alpine:3.16
 ARG VERSION=5.8
 
-RUN addgroup -S languagetool && adduser -S languagetool -G languagetool
-
 RUN set -eux; \
     apk add --update-cache \
       bash \
       curl \
       unzip \
       libstdc++ \
+      shadow \
       openjdk17-jre-headless; \
     rm -f /var/cache/apk/*
+
+RUN set -eux; \ 
+    groupmod --gid 783 --new-name languagetool users; \
+	adduser -u 783 -S languagetool -G languagetool
 
 RUN curl --location --output /tmp/LanguageTool-${VERSION}.zip https://www.languagetool.org/download/LanguageTool-${VERSION}.zip; \
     unzip /tmp/LanguageTool-${VERSION}.zip; \
@@ -30,7 +33,9 @@ COPY --from=build /fastText/fasttext /usr/local/bin/fasttext
 COPY --from=build /su-exec/su-exec /usr/local/bin/su-exec
 
 ENV langtool_fasttextBinary=/usr/local/bin/fasttext \
-    download_ngrams_for_langs=none
+    download_ngrams_for_langs=none \
+	MAP_UID=783 \
+	MAP_GID=783
 
 WORKDIR /LanguageTool
 
