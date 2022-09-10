@@ -24,7 +24,7 @@ services:
       # Java_Xms: 512m
       # OVERRIDE: Maximum Java heap size. Image default: 512m
       # Java_Xmx: 1g
-	  # OVERRIDE: Set UID for user languagetool. Image default: 783
+      # OVERRIDE: Set UID for user languagetool. Image default: 783
       # MAP_UID: 1026
       # OVERRIDE: Set GID for group languagetool. Image default: 783
       # MAP_GID: 100
