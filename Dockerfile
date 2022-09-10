@@ -1,0 +1,44 @@
+FROM alpine:3.16 as build
+RUN apk add git build-base --no-cache
+RUN set -eux; \
+    git clone https://github.com/facebookresearch/fastText.git; \
+    make -C fastText;\
+    git clone https://github.com/ncopa/su-exec; \
+    make -C su-exec;
+
+FROM alpine:3.16
+ARG VERSION=5.8
+
+RUN addgroup -S languagetool && adduser -S languagetool -G languagetool
+
+RUN set -eux; \
+    apk add --update-cache \
+      bash \
+      curl \
+      unzip \
+      libstdc++ \
+      openjdk17-jre-headless; \
+    rm -f /var/cache/apk/*
+
+RUN curl --location --output /tmp/LanguageTool-${VERSION}.zip https://www.languagetool.org/download/LanguageTool-${VERSION}.zip; \
+    unzip /tmp/LanguageTool-${VERSION}.zip; \
+    rm /tmp/LanguageTool-${VERSION}.zip; \
+    mv /LanguageTool-${VERSION} /LanguageTool; \
+    chown languagetool:languagetool -R /LanguageTool
+
+COPY --from=build /fastText/fasttext /usr/local/bin/fasttext
+COPY --from=build /su-exec/su-exec /usr/local/bin/su-exec
+
+ENV langtool_fasttextBinary=/usr/local/bin/fasttext \
+    download_ngrams_for_langs=none
+
+WORKDIR /LanguageTool
+
+COPY --chown=languagetool entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+HEALTHCHECK --timeout=10s --start-period=5s CMD curl --fail --data "language=en-US&text=a simple test" http://localhost:8010/v2/check || exit 1
+EXPOSE 8010
+
+ENTRYPOINT ["/entrypoint.sh"]
+
