@@ -1,5 +1,4 @@
 # Dockerfile for LanguageTool
-[![Known Vulnerabilities](https://snyk.io/test/github/meyayl/docker-languagetool/badge.svg)](https://snyk.io/test/github/meyayl/docker-languagetool)
 
 This repository contains a Dockerfile to create a Docker image for [LanguageTool](https://github.com/languagetool-org/languagetool).
 
