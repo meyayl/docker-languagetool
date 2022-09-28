@@ -7,7 +7,7 @@ RUN set -eux; \
     make -C su-exec;
 
 FROM alpine:3.16
-ARG VERSION=5.8
+ARG VERSION=5.9
 
 RUN set -eux; \
     apk add --update-cache \
