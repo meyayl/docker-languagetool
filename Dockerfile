@@ -21,7 +21,7 @@ RUN set -eux; \
 
 RUN set -eux; \ 
     groupmod --gid 783 --new-name languagetool users; \
-	adduser -u 783 -S languagetool -G languagetool
+    adduser -u 783 -S languagetool -G languagetool
 
 RUN curl --location --output /tmp/LanguageTool-${VERSION}.zip https://www.languagetool.org/download/LanguageTool-${VERSION}.zip; \
     unzip /tmp/LanguageTool-${VERSION}.zip; \
@@ -34,8 +34,8 @@ COPY --from=build /su-exec/su-exec /usr/local/bin/su-exec
 
 ENV langtool_fasttextBinary=/usr/local/bin/fasttext \
     download_ngrams_for_langs=none \
-	MAP_UID=783 \
-	MAP_GID=783
+    MAP_UID=783 \
+    MAP_GID=783
 
 WORKDIR /LanguageTool
 
