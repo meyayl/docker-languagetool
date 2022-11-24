@@ -11,7 +11,7 @@ services:
       - 8010:8010
     environment:
       # OVERRIDE: comma seperated list of ngram language models to download (if not existing)
-      #           valid languages are "en", "de", "es", "fr" and "nl". Image default: none
+      #           Valid languages are "en", "de", "es", "fr" and "nl". Image default: none
       #           example: download_ngrams_for_langs: en,de,es
       # download_ngrams_for_langs: en,de
       # OPTIONAL: container path for the ngrams data. Image default: /ngrams
@@ -21,9 +21,16 @@ services:
       # OPTIONAL: path to the fasttext model. Will be downloaded if not existing
       # langtool_fasttextModel:  /fasttext/lid.176.bin
       # OVERRIDE: minimal Java heap size. Image default: 256m
-      # Java_Xms: 512m
-      # OVERRIDE: Maximum Java heap size. Image default: 512m
-      # Java_Xmx: 1g
+      # JAVA_XMS: 512m
+      # OVERRIDE: Maximum Java heap size. Image default: 1g
+      # JAVA_XMX: 1g
+      # OVERRIDE: Optional: Configure the garbage collector the JVM will use.
+      #           Valid options are: SerialGC, ParallelGC, ParNewGC, G1GC, ZGC
+      #           Note: ZGC might not work
+      # JAVA_GC: SerialGC
+      # OVERRIDE: Optional: Set you own custom Java options for the JVM.
+      #           Note: This will render the other JAVA_* options useless.
+      # JAVA_OPTS: 
       # OVERRIDE: Set UID for user languagetool. Image default: 783
       # MAP_UID: 1026
       # OVERRIDE: Set GID for group languagetool. Image default: 783
