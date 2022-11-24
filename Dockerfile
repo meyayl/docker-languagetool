@@ -1,4 +1,4 @@
-FROM alpine:3.16 as build
+FROM alpine:3.16.3 as build
 RUN apk add git build-base --no-cache
 RUN set -eux; \
     git clone https://github.com/facebookresearch/fastText.git; \

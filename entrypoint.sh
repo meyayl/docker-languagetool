@@ -131,9 +131,20 @@ if [ "$config_injected" = true ] ; then
 	cat config.properties
 fi
 
-# set memory limits
-Xms=${Java_Xms:-256m}
-Xmx=${Java_Xmx:-512m}
-
+# set default JAVA_OPTS with default memory limits and garbage collector
+if [ -z "${JAVA_OPTS}" ]; then
+  JAVA_GC="${JAVA_GC:-SerialGC}"
+  for gc in SerialGC ParallelGC ParNewGC G1GC ZGC; do
+    if [ "${JAVA_GC}" == "${gc}" ]; then
+      JAVA_GC_OPT="-XX:+Use${JAVA_GC}"
+      break
+    fi
+  done
+  JAVA_OPTS="-Xms${JAVA_XMS:-256m} -Xmx${JAVA_XMX:-1024m} -XX:+UseStringDeduplication ${JAVA_GC_OPT}"
+  echo "Using JAVA_OPTS=${JAVA_OPTS}"
+else
+  echo "JAVA_OPTS environment variables detected."
+  echo "Using JAVA_OPTS=${JAVA_OPTS}"
+fi
 # start languagetool
-exec su-exec languagetool:languagetool java -Xms$Xms -Xmx$Xmx -cp languagetool-server.jar org.languagetool.server.HTTPServer --port ${LISTEPORT:-8010} --public --allow-origin '*' --config config.properties
+exec su-exec languagetool:languagetool java  ${JAVA_OPTS} -cp languagetool-server.jar org.languagetool.server.HTTPServer --port ${LISTEPORT:-8010} --public --allow-origin '*' --config config.properties
