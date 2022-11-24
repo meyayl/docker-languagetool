@@ -6,7 +6,7 @@ RUN set -eux; \
     git clone https://github.com/ncopa/su-exec; \
     make -C su-exec;
 
-FROM alpine:3.16
+FROM alpine:3.16.3
 ARG VERSION=5.9
 
 RUN set -eux; \
@@ -42,7 +42,7 @@ WORKDIR /LanguageTool
 COPY --chown=languagetool entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-HEALTHCHECK --timeout=10s --start-period=5s CMD curl --fail --data "language=en-US&text=a simple test" http://localhost:8010/v2/check || exit 1
+HEALTHCHECK --interval=10s --timeout=8s --start-period=10s CMD curl --fail --data "language=en-US&text=a simple test" http://localhost:8010/v2/check || exit 1
 EXPOSE 8010
 
 ENTRYPOINT ["/entrypoint.sh"]
