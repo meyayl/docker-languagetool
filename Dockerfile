@@ -1,4 +1,4 @@
-FROM alpine:3.16.3 as build
+FROM alpine:3.17.0 as build
 RUN apk add git build-base --no-cache
 RUN set -eux; \
     git clone https://github.com/facebookresearch/fastText.git; \
@@ -6,7 +6,7 @@ RUN set -eux; \
     git clone https://github.com/ncopa/su-exec; \
     make -C su-exec;
 
-FROM alpine:3.16.3
+FROM alpine:3.17.0
 ARG VERSION=5.9
 
 RUN set -eux; \

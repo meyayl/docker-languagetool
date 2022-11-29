@@ -6,7 +6,7 @@ The source repo can be found [here](https://github.com/meyayl/docker-languagetoo
 
 About this image:
 - Uses official release zip from https://languagetool.org/download/
-- Uses the latest Alpine 3.16 base image
+- Uses the latest Alpine 3.17 base image
 - Uses OpenJDK 17
 - includes fasttext
 - includes su-exec
@@ -76,6 +76,7 @@ The environment parameters are split into two halves, separated by an equal, the
 
 | Date | Tag | Change |
 |---|---|---|
+| 2022-11-29 | 5.9-3 | - Update base image to Alpine 3.17.0 |
 | 2022-11-24 | 5.9-3 | - Add support to configure garbage collector </br> - Add JVM argument `-XX:+UseStringDeduplication` </br> - Add support to pass custom JAVA_OPTS </br> - Change Java_Xm? variables to JAVA_XM? |
 | 2022-11-12 | 5.9-2 | - Update base image to Alpine 3.16.3 |
 | 2022-09-28 | 5.9-1 | - Update LanguageTool to 5.9 |
