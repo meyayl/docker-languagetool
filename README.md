@@ -7,7 +7,7 @@ The source repo can be found [here](https://github.com/meyayl/docker-languagetoo
 About this image:
 - Uses official release zip from https://languagetool.org/download/
 - Uses the latest Alpine 3.17 base image
-- Uses stripped down Eclipse Temurin 17 JRE
+- Uses custom Eclipse Temurin 17 JRE limited to modules required by the current LanguageTool release
 - includes `fasttext`
 - includes `su-exec`
   - container starts as root and executes languagetool as restricted user using `exec su-exec`
@@ -78,7 +78,7 @@ The environment parameters are split into two halves, separated by an equal, the
 
 | Date | Tag | Change |
 |---|---|---|
-| 2022-12-?? | 5.9-5 | - Switch to stripped down Eclipse Temurin 17 JRE </br> - Remove JVM argument `-XX:+UseStringDeduplication` as it only works for GC1 GC </br> - Add `tini` to suppress exit code 143 </br> - Removed `curl` and switch to `wget` </br> - Print version info about Alpine and Eclipse Temurin during start |
+| 2022-12-04 | 5.9-5 | - Switch to stripped down Eclipse Temurin 17 JRE </br> - Remove JVM argument `-XX:+UseStringDeduplication` except for G1GC </br> - Add `tini` to suppress exit code 143 </br> - Removed `curl` and switch to `wget` </br> - Print version info about Alpine and Eclipse Temurin during start |
 | 2022-11-29 | 5.9-4 | - Update base image to Alpine 3.17.0 |
 | 2022-11-24 | 5.9-3 | - Add support to configure garbage collector </br> - Add JVM argument `-XX:+UseStringDeduplication` </br> - Add support to pass custom JAVA_OPTS </br> - Change Java_Xm? variables to JAVA_XM? |
 | 2022-11-12 | 5.9-2 | - Update base image to Alpine 3.16.3 |
