@@ -7,9 +7,9 @@ The source repo can be found [here](https://github.com/meyayl/docker-languagetoo
 About this image:
 - Uses official release zip from https://languagetool.org/download/
 - Uses the latest Alpine 3.17 base image
-- Uses stripped down Eclipse Temurin 17 JRE 
-- includes fasttext
-- includes su-exec
+- Uses stripped down Eclipse Temurin 17 JRE
+- includes `fasttext`
+- includes `su-exec`
   - container starts as root and executes languagetool as restricted user using `exec su-exec`
   - container fixes folder ownership for ngrams and fasttext folders
 - Entrypoint uses `tini` to supress the container exiting with status code 143 (see notes below)
@@ -17,7 +17,7 @@ About this image:
 - optional: downloads fasttext module (if it doesn't already exist)
 - optional: user mapping (make sure to check MAP_UID and MAP_GID below)
 
-Note: ~~  due to proper pid1 handling, the container will exit with status code 143 (=SIGTERM). It appears that languagetool does not handle SIGTERM, as such even though the container is terminated the way it should be, it will show the status code. ~~
+~~Note: due to proper pid1 handling, the container will exit with status code 143 (=SIGTERM). It appears that languagetool does not handle SIGTERM, as such even though the container is terminated the way it should be, it will show the status code.~~
 
 
 # Setup
