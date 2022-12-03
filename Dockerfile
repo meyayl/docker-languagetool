@@ -1,20 +1,24 @@
 FROM alpine:3.17.0 as base
 
+FROM base as java_base
+
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 
 RUN set -eux; \
-    apk add --no-cache fontconfig libretls musl-locales musl-locales-lang ttf-dejavu tzdata zlib; \
+    apk add --no-cache libretls musl-locales musl-locales-lang tzdata zlib unzip; \
     rm -rf /var/cache/apk/*
 
-FROM base as build
+FROM java_base as prepare
+
+ARG LT_VERSION=5.9
 
 ENV JAVA_HOME=/opt/java/openjdk \
     JAVA_VERSION=jdk-17.0.5+8
 
 RUN set -eux; \
-    apk add --no-cache binutils git build-base upx; \
+    apk add --no-cache binutils; \
     rm -rf /var/cache/apk/*
 
 RUN set -eux; \
@@ -36,41 +40,56 @@ RUN set -eux; \
     rm /tmp/openjdk.tar.gz;
 
 RUN set -eux; \
+    wget -O /tmp/LanguageTool-${LT_VERSION}.zip https://www.languagetool.org/download/LanguageTool-${LT_VERSION}.zip; \
+    unzip /tmp/LanguageTool-${LT_VERSION}.zip; \
+    mv /LanguageTool-${LT_VERSION} /languagetool; \
+    rm /tmp/LanguageTool-${LT_VERSION}.zip
+
+RUN set -eux; \
+    LT_DEPS=$(${JAVA_HOME}/bin/jdeps \
+        --print-module-deps \
+        --ignore-missing-deps \
+        --recursive \
+        --multi-release 17 \
+        --class-path="/languagetool/libs/*" \
+        --module-path="/languagetool/libs/*" \
+        /languagetool/languagetool-server.jar); \
     ${JAVA_HOME}/bin/jlink \
-        --add-modules ALL-MODULE-PATH \
+        --add-modules ${LT_DEPS} \
         --strip-debug \
         --no-man-pages \
         --no-header-files \
         --compress=2 \
-        --output /opt/java/jre
+        --output /opt/java/customjre
+
+
+FROM base as fasttext
+
+RUN set -eux; \
+    apk add --no-cache git build-base upx; \
+    rm -rf /var/cache/apk/*
 
 RUN set -eux; \
     git clone https://github.com/facebookresearch/fastText.git; \
     make -C fastText;\
     upx -5 -o /fastText/fasttext-upx /fastText/fasttext
 
-FROM base
-ARG VERSION=5.9
+
+FROM java_base
 
 RUN set -eux; \
-    apk add --no-cache bash unzip shadow libstdc++ su-exec tini; \
+    apk add --no-cache bash shadow libstdc++ su-exec tini; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
     groupmod --gid 783 --new-name languagetool users; \
     adduser -u 783 -S languagetool -G languagetool
 
-RUN set -eux; \
-    wget -O /tmp/LanguageTool-${VERSION}.zip https://www.languagetool.org/download/LanguageTool-${VERSION}.zip; \
-    unzip /tmp/LanguageTool-${VERSION}.zip; \
-    rm /tmp/LanguageTool-${VERSION}.zip; \
-    mv /LanguageTool-${VERSION} /languagetool; \
-    chown languagetool:languagetool -R /languagetool
+COPY --from=prepare /languagetool/ /languagetool
+COPY --from=prepare /opt/java/customjre/ /opt/java/customjre
+COPY --from=fasttext /fastText/fasttext-upx /usr/local/bin/fasttext
 
-COPY --from=build /opt/java/jre/ /opt/java/jre
-COPY --from=build /fastText/fasttext-upx /usr/local/bin/fasttext
-
-ENV JAVA_HOME=/opt/java/jre \
+ENV JAVA_HOME=/opt/java/customjre \
     langtool_fasttextBinary=/usr/local/bin/fasttext \
     download_ngrams_for_langs=none \
     MAP_UID=783 \
