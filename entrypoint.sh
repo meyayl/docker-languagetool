@@ -152,10 +152,13 @@ if [ -z "${JAVA_OPTS}" ]; then
   for gc in SerialGC ParallelGC ParNewGC G1GC ZGC; do
     if [ "${JAVA_GC}" == "${gc}" ]; then
       JAVA_GC_OPT="-XX:+Use${JAVA_GC}"
+      if [ "${JAVA_GC}" == "G1GC" ]; then
+        JAVA_GC_OPT+=" -XX:+UseStringDeduplication"
+      fi;
       break
     fi
   done
-  JAVA_OPTS="-Xms${JAVA_XMS:-256m} -Xmx${JAVA_XMX:-1024m} -XX:+UseStringDeduplication ${JAVA_GC_OPT}"
+  JAVA_OPTS="-Xms${JAVA_XMS:-256m} -Xmx${JAVA_XMX:-1024m} ${JAVA_GC_OPT}"
   echo "INFO: Using JAVA_OPTS=${JAVA_OPTS}"
 else
   echo "JAVA_OPTS environment variables detected."
