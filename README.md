@@ -17,7 +17,8 @@ About this image:
 - optional: downloads fasttext module (if it doesn't already exist)
 - optional: user mapping (make sure to check MAP_UID and MAP_GID below)
 
-~~Note: due to proper pid1 handling, the container will exit with status code 143 (=SIGTERM). It appears that languagetool does not handle SIGTERM, as such even though the container is terminated the way it should be, it will show the status code.~~
+Note: Due to proper pid1 handling, the container will exit with status code 143 (=SIGTERM). It appears that languagetool does not handle SIGTERM, as such even though the container is terminated the way it should be, it will show the status code. This behavior is now suppressed using `tini`.
+
 
 
 # Setup
