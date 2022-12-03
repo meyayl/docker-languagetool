@@ -7,16 +7,15 @@ The source repo can be found [here](https://github.com/meyayl/docker-languagetoo
 About this image:
 - Uses official release zip from https://languagetool.org/download/
 - Uses the latest Alpine 3.17 base image
-- Uses OpenJDK 17
-- includes fasttext
-- includes su-exec
+- Uses custom Eclipse Temurin 17 JRE limited to modules required by the current LanguageTool release
+- includes `fasttext`
+- includes `su-exec`
   - container starts as root and executes languagetool as restricted user using `exec su-exec`
   - container fixes folder ownership for ngrams and fasttext folders
+- Entrypoint uses `tini` to suppress the container exiting with status code 143 (LanguageTool does not handle SIGTERM as it should)
 - optional: downloads ngram language modules if configured (if they don't already exist)
 - optional: downloads fasttext module (if it doesn't already exist)
 - optional: user mapping (make sure to check MAP_UID and MAP_GID below)
-
-Note: due to proper pid1 handling, the container will exit with status code 143 (=SIGTERM). It appears that languagetool does not handle SIGTERM, as such even though the container is terminated the way it should be, it will show the status code.
 
 # Setup
 
@@ -54,6 +53,9 @@ services:
       - ./fasttext:/fasttext
 ```
 
+An example compose file can be downloaded from [here](https://raw.githubusercontent.com/meyayl/docker-languagetool/main/docker-compose.yml).
+
+
 ## Parameters
 
 The environment parameters are split into two halves, separated by an equal, the left-hand side represents the variable names (use them as is) the right-hand side the value (change if necessary).
@@ -76,7 +78,8 @@ The environment parameters are split into two halves, separated by an equal, the
 
 | Date | Tag | Change |
 |---|---|---|
-| 2022-11-29 | 5.9-3 | - Update base image to Alpine 3.17.0 |
+| 2022-12-04 | 5.9-5 | - Switch to stripped down Eclipse Temurin 17 JRE </br> - Remove JVM argument `-XX:+UseStringDeduplication` except for G1GC </br> - Add `tini` to suppress exit code 143 </br> - Removed `curl` and switch to `wget` </br> - Print version info about Alpine and Eclipse Temurin during start |
+| 2022-11-29 | 5.9-4 | - Update base image to Alpine 3.17.0 |
 | 2022-11-24 | 5.9-3 | - Add support to configure garbage collector </br> - Add JVM argument `-XX:+UseStringDeduplication` </br> - Add support to pass custom JAVA_OPTS </br> - Change Java_Xm? variables to JAVA_XM? |
 | 2022-11-12 | 5.9-2 | - Update base image to Alpine 3.16.3 |
 | 2022-09-28 | 5.9-1 | - Update LanguageTool to 5.9 |

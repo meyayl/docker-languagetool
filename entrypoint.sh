@@ -1,6 +1,11 @@
 #!/bin/bash
 set -eo pipefail
 
+# exec container argument as command
+if [ $# -ne 0 ]; then
+  exec "$@"
+fi
+
 # enabled debug for entrypoint script
 if [ ! -z "${DEBUG_ENTRYPOINT}" ] && [ "${DEBUG_ENTRYPOINT}" == "true" ]; then
   set -x
@@ -27,7 +32,7 @@ download_and_extract_ngrams(){
   if [ ! -d "${langtool_languageModel}/${_LANG}" ]; then
     if [ ! -e "${langtool_languageModel}\ngrams-${_LANG}.zip" ]; then
       echo "INFO: Downloading \"${_LANG}\" ngrams."
-      curl --output "${langtool_languageModel}\ngrams-${_LANG}.zip" "${_BASE_URL}/${ngrams_filesnames[${_LANG}]}"
+      wget -O "${langtool_languageModel}\ngrams-${_LANG}.zip" "${_BASE_URL}/${ngrams_filesnames[${_LANG}]}"
     fi
     if [ -e "${langtool_languageModel}\ngrams-${_LANG}.zip" ]; then
       echo "INFO: Extracting \"${_LANG}\" ngrams."
@@ -72,7 +77,7 @@ download_fasttext_mode(){
   if [ ! -z "${langtool_fasttextModel}" ];then
     if [ ! -e "${langtool_fasttextModel}" ]; then
       echo "INFO: Downloading fasttext model."
-      curl --output "${langtool_fasttextModel}" "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
+      wget -O "${langtool_fasttextModel}" "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
       fix_dir_owner "${langtool_fasttextModel}"
 	else
 	  echo "INFO: Skipping download of fasttext model: already exists."
@@ -119,16 +124,26 @@ user_map(){
   fi
 }
 
+print_info(){
+  echo "INFO: Version Informations:"
+  local _ALPINE_VERSION=$(cat /etc/os-release | grep "VERSION_ID=" | cut -d'=' -f2)
+  echo "Alpine Linux v${_ALPINE_VERSION}" | indent
+  java --version | indent
+}
+
+indent() { sed 's/^/  /'; }
+
 user_map
 fix_ownership
 handle_ngrams
 download_fasttext_mode
 create_config
+print_info
 
 # show current languagetool config
 if [ "$config_injected" = true ] ; then
   echo 'INFO: Using following LanguageTool configuration:'
-	cat config.properties
+  cat config.properties | indent
 fi
 
 # set default JAVA_OPTS with default memory limits and garbage collector
@@ -137,14 +152,17 @@ if [ -z "${JAVA_OPTS}" ]; then
   for gc in SerialGC ParallelGC ParNewGC G1GC ZGC; do
     if [ "${JAVA_GC}" == "${gc}" ]; then
       JAVA_GC_OPT="-XX:+Use${JAVA_GC}"
+      if [ "${JAVA_GC}" == "G1GC" ]; then
+        JAVA_GC_OPT+=" -XX:+UseStringDeduplication"
+      fi;
       break
     fi
   done
-  JAVA_OPTS="-Xms${JAVA_XMS:-256m} -Xmx${JAVA_XMX:-1024m} -XX:+UseStringDeduplication ${JAVA_GC_OPT}"
-  echo "Using JAVA_OPTS=${JAVA_OPTS}"
+  JAVA_OPTS="-Xms${JAVA_XMS:-256m} -Xmx${JAVA_XMX:-1024m} ${JAVA_GC_OPT}"
+  echo "INFO: Using JAVA_OPTS=${JAVA_OPTS}"
 else
   echo "JAVA_OPTS environment variables detected."
-  echo "Using JAVA_OPTS=${JAVA_OPTS}"
+  echo "INFO: Using JAVA_OPTS=${JAVA_OPTS}"
 fi
 # start languagetool
 exec su-exec languagetool:languagetool java  ${JAVA_OPTS} -cp languagetool-server.jar org.languagetool.server.HTTPServer --port ${LISTEPORT:-8010} --public --allow-origin '*' --config config.properties
