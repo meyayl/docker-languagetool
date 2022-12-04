@@ -31,13 +31,4 @@ jobs:
 
     uses: ./.github/workflows/reusable-super-linter.yaml
     
-    ### Optional settings examples
-    
-    # with:
-      ### For a DevOps-focused repository. Prevents some code-language linters from running
-      ### defaults to false
-      # devops-only: false
-      
-      ### A regex to exclude files from linting
-      ### defaults to empty
-      # filter-regex-exclude: html/.*
+  
