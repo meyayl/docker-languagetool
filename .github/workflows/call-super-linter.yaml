@@ -4,9 +4,11 @@ name: Lint Code Base
 
 on:
   push:
-    paths:
-      - 'Dockerfile'
-      - 'entrypoint.sh'
+    paths-ignore:
+      - 'README.md'
+      - 'docker-compose.yml'
+      - '.gitignore'
+      - '.dockerignore'
     branches:
       - 'main'
       - 'feature/*'

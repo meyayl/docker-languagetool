@@ -4,9 +4,11 @@ name: Build and verify image
 on:
   workflow_dispatch:
   push:
-    paths:
-      - 'Dockerfile'
-      - 'entrypoint.sh'
+    paths-ignore:
+      - 'README.md'
+      - 'docker-compose.yml'
+      - '.gitignore'
+      - '.dockerignore'
     branches:
       - 'main'
       - 'feature/*'
