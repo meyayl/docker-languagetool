@@ -23,12 +23,18 @@ About this image:
 
 ```sh
 docker run -d \
- --name=languagetool \
- --env download_ngrams_for_langs=en \
- --env langtool_languageModel=/ngrams \
- --env langtool_fasttextModel=/fasttext/lid.176.bin \
- --volume $PWD/ngrams:/ngrams \
- --volume $PWD/fasttext:/fasttext \
+  --name languagetool \
+  --restart always \
+  --cap-drop ALL \
+  --cap-add CAP_SETUID \
+  --cap-add CAP_SETGID \
+  --security-opt no-new-privileges \
+  --publish 8010:8010 \
+  --env download_ngrams_for_langs=en \
+  --env langtool_languageModel=/ngrams \
+  --env langtool_fasttextModel=/fasttext/lid.176.bin \
+  --volume $PWD/ngrams:/ngrams \
+  --volume $PWD/fasttext:/fasttext \
   meyay/languagetool:latest
 ```
 
@@ -42,6 +48,14 @@ services:
   languagetool:
     image: meyay/languagetool:latest
     container_name: languagetool
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CAP_SETUID
+      - CAP_SETGID
+    security_opt:
+      - no-new-privileges
     ports:
       - 8010:8010
     environment:

@@ -6,6 +6,14 @@ services:
     image: meyay/languagetool:latest
     build: .
     container_name: languagetool
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CAP_SETUID
+      - CAP_SETGID
+    security_opt:
+      - no-new-privileges
     ports:
       # Using default port from the image
       - 8010:8010
