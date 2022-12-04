@@ -159,7 +159,7 @@ print_info
 # show current languagetool config
 if [ "$config_injected" = true ] ; then
   echo 'INFO: Using following LanguageTool configuration:'
-  cat config.properties | indent
+  indent < config.properties
 fi
 
 # set default JAVA_OPTS with default memory limits and garbage collector
@@ -181,4 +181,5 @@ else
   echo "INFO: Using JAVA_OPTS=${JAVA_OPTS}"
 fi
 # start languagetool
-exec su-exec languagetool:languagetool java  ${JAVA_OPTS} -cp languagetool-server.jar org.languagetool.server.HTTPServer --port ${LISTEPORT:-8010} --public --allow-origin "*" --config config.properties
+# hadolint ignore=SC2086
+exec su-exec languagetool:languagetool java ${JAVA_OPTS} -cp languagetool-server.jar org.languagetool.server.HTTPServer --port "${LISTEPORT:-8010}" --public --allow-origin "*" --config config.properties
