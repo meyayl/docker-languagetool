@@ -80,13 +80,13 @@ handle_ngrams(){
             exit 1
         esac
       done
-	fi
+    fi
   else
     if [ ! -z "${download_ngrams_for_langs}" ]; then
       echo "WARNING: No base path for ngram language modules provided, skipping download of ${download_ngrams_for_langs}."
-	else
-	  echo "WARNING: No base path for ngram language modules provided." 
-	fi
+    else
+      echo "WARNING: No base path for ngram language modules provided." 
+    fi
   fi
 }
 
@@ -96,9 +96,9 @@ download_fasttext_mode(){
       echo "INFO: Downloading fasttext model."
       wget -O "${langtool_fasttextModel}" "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
       fix_dir_owner "${langtool_fasttextModel}"
-  else
-    echo "INFO: Skipping download of fasttext model: already exists."
-  fi
+    else
+      echo "INFO: Skipping download of fasttext model: already exists."
+    fi
   else
     echo "INFO: \"langtool_fasttextModel\" not specified. Skipping download of fasttext model."
     unset langtool_fasttextModel
