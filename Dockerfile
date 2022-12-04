@@ -11,7 +11,6 @@ RUN set -eux; \
     rm -rf /var/cache/apk/*
 
 FROM java_base as prepare
-SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 ARG LT_VERSION=5.9
 
@@ -22,6 +21,8 @@ RUN set -eux; \
     apk add --no-cache binutils; \
     rm -rf /var/cache/apk/*
 
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+# hadolint ignore=SC3060
 RUN set -eux; \
     RELEASE_PATH="${JAVA_VERSION/+/%2B}"; \
     RELEASE_TYPE="${JAVA_VERSION%-*}"; \

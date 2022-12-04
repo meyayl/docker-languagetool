@@ -5,7 +5,8 @@
 The source repository can be found [here](https://github.com/meyayl/docker-languagetool).
 
 About this image:
-- Uses official release zip from https://languagetool.org/download/
+
+- Uses official [release zip](https://languagetool.org/download/)
 - Uses the latest Alpine 3.17 base image
 - Uses custom Eclipse Temurin 17 JRE limited to modules required by the current LanguageTool release
 - includes `fasttext`
@@ -17,9 +18,9 @@ About this image:
 - optional: downloads fasttext module (if it doesn't already exist)
 - optional: user mapping (make sure to check MAP_UID and MAP_GID below)
 
-# Setup
+## Setup
 
-## Docker CLI Usage
+### Docker CLI Usage
 
 ```sh
 docker run -d \
@@ -40,7 +41,7 @@ docker run -d \
 
 ## Docker Compose Usage
 
-```
+```yaml
 ---
 version: "3.8"
 
@@ -68,8 +69,7 @@ services:
 ```
 
 An example compose file can be downloaded from [here](https://raw.githubusercontent.com/meyayl/docker-languagetool/main/docker-compose.yml).
-
-
+: m
 ## Parameters
 
 The environment parameters are split into two halves, separated by an equal, the left-hand side represents the variable names (use them as is) the right-hand side the value (change if necessary).
@@ -88,7 +88,7 @@ The environment parameters are split into two halves, separated by an equal, the
 | MAP_UID | 783 | Optional: UID of the user inside the container that runs LanguageTool. If you encounter permission problems with your volumes, make sure to set the parameter to the UID of the host folder owner. |
 | MAP_GID | 783 | Optional: GID of the user inside the container that runs LanguageTool. If you encounter permission problems with your volumes, make sure to set the parameter to the GID of the host folder owner. |
 
-# Changelog
+## Changelog
 
 | Date | Tag | Change |
 |---|---|---|
