@@ -86,7 +86,7 @@ jobs:
           curl --data "language=en-US&text=a simple test" http://127.0.0.1:8010/v2/check | tee /dev/stderr | grep -q detectedLanguage
           docker stop test
 
-      - name: Push to Docker
+      - name: Push to DockerHub
         uses: docker/build-push-action@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
