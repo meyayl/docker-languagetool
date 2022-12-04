@@ -86,6 +86,15 @@ jobs:
           curl --data "language=en-US&text=a simple test" http://127.0.0.1:8010/v2/check | tee /dev/stderr | grep -q detectedLanguage
           docker stop test
 
+      - name: Docker metadata
+        id: metadata
+        uses: docker/metadata-action@v4
+        with:
+          images: meyay/languagetool
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
       - name: Push to DockerHub
         uses: docker/build-push-action@v3
         if: startsWith(github.ref, 'refs/tags/')
@@ -94,3 +103,5 @@ jobs:
           tags: meyay/languagetool:${{ github.run_id }}
           platforms: linux/amd64
           cache-from: type=gha
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
