@@ -28,7 +28,7 @@ RUN set -eux; \
     RELEASE_NUMBER="${RELEASE_NUMBER/+/_}"; \
     URL="https://github.com/adoptium/temurin17-binaries/releases/download/${RELEASE_PATH}/OpenJDK17U-${RELEASE_TYPE}_x64_alpine-linux_hotspot_${RELEASE_NUMBER}.tar.gz"; \
     CHKSUM=$(wget --quiet -O -  "${URL}.sha256.txt" | cut -d' ' -f1); \
-    wget --progress=dot:gig -O /tmp/openjdk.tar.gz ${URL}; \
+    wget -O /tmp/openjdk.tar.gz ${URL}; \
     echo "${CHKSUM} */tmp/openjdk.tar.gz" | sha256sum -c -; \
     mkdir -p "${JAVA_HOME}"; \
     tar --extract \
@@ -40,9 +40,9 @@ RUN set -eux; \
     rm /tmp/openjdk.tar.gz;
 
 RUN set -eux; \
-    wget --progress=dot:gig -O /tmp/LanguageTool-${LT_VERSION}.zip https://www.languagetool.org/download/LanguageTool-${LT_VERSION}.zip; \
+    wget -O /tmp/LanguageTool-${LT_VERSION}.zip https://www.languagetool.org/download/LanguageTool-${LT_VERSION}.zip; \
     unzip "/tmp/LanguageTool-${LT_VERSION}.zip"; \
-    mv "/LanguageTool-${LT_VERSION} /languagetool"; \
+    mv "/LanguageTool-${LT_VERSION}" "/languagetool"; \
     rm "/tmp/LanguageTool-${LT_VERSION}.zip"
 
 RUN set -eux; \

@@ -48,7 +48,7 @@ download_and_extract_ngrams(){
   if [ ! -d "${langtool_languageModel}/${_LANG}" ]; then
     if [ ! -e "${langtool_languageModel}\ngrams-${_LANG}.zip" ]; then
       echo "INFO: Downloading \"${_LANG}\" ngrams."
-      wget --progress=dot:giga -O "${langtool_languageModel}\ngrams-${_LANG}.zip" "${_BASE_URL}/${ngrams_filesnames[${_LANG}]}"
+      wget  -O "${langtool_languageModel}\ngrams-${_LANG}.zip" "${_BASE_URL}/${ngrams_filesnames[${_LANG}]}"
     fi
     if [ -e "${langtool_languageModel}\ngrams-${_LANG}.zip" ]; then
       echo "INFO: Extracting \"${_LANG}\" ngrams."
@@ -93,7 +93,7 @@ download_fasttext_mode(){
   if [ -n "${langtool_fasttextModel}" ];then
     if [ ! -e "${langtool_fasttextModel}" ]; then
       echo "INFO: Downloading fasttext model."
-      wget --progress=dot:giga -O "${langtool_fasttextModel}" "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
+      wget  -O "${langtool_fasttextModel}" "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
       fix_dir_owner "${langtool_fasttextModel}"
     else
       echo "INFO: Skipping download of fasttext model: already exists."
