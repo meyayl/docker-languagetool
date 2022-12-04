@@ -28,7 +28,8 @@ if [ -n "${DEBUG_ENTRYPOINT}" ] && [ "${DEBUG_ENTRYPOINT}" == "true" ]; then
 fi
 
 fix_dir_owner(){
-  local _PATH="${1}"
+  local _PATH
+  _PATH="${1}"
   find "${_PATH}"  ! \( -user  languagetool -group languagetool \) -exec chown languagetool:languagetool {} \;
 }
 
@@ -42,8 +43,10 @@ ngrams_filesnames[fr]=ngrams-fr-20150913.zip
 ngrams_filesnames[nl]=ngrams-nl-20181229.zip
 
 download_and_extract_ngrams(){
-  local _LANG="${1}"
-  local _BASE_URL="https://languagetool.org/download/ngram-data"
+  local _LANG
+  _LANG="${1}"
+  local _BASE_URL
+  _BASE_URL="https://languagetool.org/download/ngram-data"
 
   if [ ! -d "${langtool_languageModel}/${_LANG}" ]; then
     if [ ! -e "${langtool_languageModel}\ngrams-${_LANG}.zip" ]; then
@@ -142,7 +145,8 @@ user_map(){
 
 print_info(){
   echo "INFO: Version Informations:"
-  local _ALPINE_VERSION=$(grep "VERSION_ID=" /etc/os-release | cut -d'=' -f2)
+  local _ALPINE_VERSION
+  _ALPINE_VERSION=$(grep "VERSION_ID=" /etc/os-release | cut -d'=' -f2)
   echo "Alpine Linux v${_ALPINE_VERSION}" | indent
   java --version | indent
 }
