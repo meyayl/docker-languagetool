@@ -23,7 +23,7 @@ if [ $# -ne 0 ]; then
 fi
 
 # enabled debug for entrypoint script
-if [ ! -z "${DEBUG_ENTRYPOINT}" ] && [ "${DEBUG_ENTRYPOINT}" == "true" ]; then
+if [ -n "${DEBUG_ENTRYPOINT}" ] && [ "${DEBUG_ENTRYPOINT}" == "true" ]; then
   set -x
 fi
 
@@ -58,14 +58,14 @@ download_and_extract_ngrams(){
   else
     echo "INFO: Skipping download of ngrams model for language ${_LANG}: already exists."
   fi
-  if [ ! -z "${langtool_languageModel}" ]; then
+  if [ -n "${langtool_languageModel}" ]; then
     fix_dir_owner "${langtool_languageModel}/${_LANG}/"
   fi
 }
 
 handle_ngrams(){
-  if [ ! -z "${langtool_languageModel}" ]; then
-    if [ ! -z "${download_ngrams_for_langs}" ] && [ ! -z "${langtool_languageModel}" ] ; then
+  if [ -n "${langtool_languageModel}" ]; then
+    if [ -n "${download_ngrams_for_langs}" ] && [ -n "${langtool_languageModel}" ] ; then
       IFS=',' read -ra langs <<< "${download_ngrams_for_langs}"
       for lang in "${langs[@]}"; do
         case "${lang}" in
@@ -81,7 +81,7 @@ handle_ngrams(){
       done
     fi
   else
-    if [ ! -z "${download_ngrams_for_langs}" ]; then
+    if [ -n "${download_ngrams_for_langs}" ]; then
       echo "WARNING: No base path for ngram language modules provided, skipping download of ${download_ngrams_for_langs}."
     else
       echo "WARNING: No base path for ngram language modules provided." 
@@ -90,7 +90,7 @@ handle_ngrams(){
 }
 
 download_fasttext_mode(){
-  if [ ! -z "${langtool_fasttextModel}" ];then
+  if [ -n "${langtool_fasttextModel}" ];then
     if [ ! -e "${langtool_fasttextModel}" ]; then
       echo "INFO: Downloading fasttext model."
       wget -O "${langtool_fasttextModel}" "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
@@ -105,11 +105,11 @@ download_fasttext_mode(){
 }
 
 fix_ownership(){
-  if [ ! -z "${langtool_languageModel}" ]; then
+  if [ -n "${langtool_languageModel}" ]; then
     echo "INFO: Fixing ownership for ngrams base folder if necessary."
     fix_dir_owner "${langtool_languageModel}"
   fi
-  if [ ! -z "${langtool_fasttextModel}" ]; then
+  if [ -n "${langtool_fasttextModel}" ]; then
     echo "INFO: Fixing ownership for fasttext model file if necessasry."
     fix_dir_owner "$(dirname "${langtool_fasttextModel}")"
   fi
@@ -130,11 +130,11 @@ create_config(){
 }
 
 user_map(){
-  if [ ! -z "${MAP_UID}" ]; then
+  if [ -n "${MAP_UID}" ]; then
     echo "INFO: Changing uid for user \"languagetool\" to ${MAP_UID}."
     usermod -u ${MAP_UID} languagetool
   fi
-  if [ ! -z "${MAP_GID}" ]; then
+  if [ -n "${MAP_GID}" ]; then
     echo "INFO: Changing gid for group \"languagetool\" to ${MAP_GID}."
     groupmod -g ${MAP_GID} languagetool 
   fi
