@@ -99,9 +99,9 @@ jobs:
 
       - name: Push to DockerHub
         uses: docker/build-push-action@v3
-        if: startsWith(github.ref, 'refs/tags/')
+        #if: startsWith(github.ref, 'refs/tags/')
         with:
-          push: true
+          push: false
           platforms: linux/amd64
           cache-from: type=gha
           tags: ${{ steps.meta.outputs.tags }}
