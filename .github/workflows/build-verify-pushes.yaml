@@ -100,7 +100,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           push: true
-          tags: meyay/languagetool:${{ github.run_id }}
           platforms: linux/amd64
           cache-from: type=gha
           tags: ${{ steps.meta.outputs.tags }}
