@@ -1,0 +1,8 @@
+---
+MD013:
+  # allow number of characters instead default of 80
+  line_length: 9999
+  # allow number of characters for headings
+  heading_line_length: 100
+  # check code blocks?
+  code_blocks: false

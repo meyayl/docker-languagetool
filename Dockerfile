@@ -11,6 +11,7 @@ RUN set -eux; \
     rm -rf /var/cache/apk/*
 
 FROM java_base as prepare
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 ARG LT_VERSION=5.9
 
@@ -21,6 +22,8 @@ RUN set -eux; \
     apk add --no-cache binutils; \
     rm -rf /var/cache/apk/*
 
+# hadolint ignore=SC3060
+# hadolint ignore=DL4006
 RUN set -eux; \
     RELEASE_PATH="${JAVA_VERSION/+/%2B}"; \
     RELEASE_TYPE="${JAVA_VERSION%-*}"; \
@@ -41,12 +44,12 @@ RUN set -eux; \
 
 RUN set -eux; \
     wget -O /tmp/LanguageTool-${LT_VERSION}.zip https://www.languagetool.org/download/LanguageTool-${LT_VERSION}.zip; \
-    unzip /tmp/LanguageTool-${LT_VERSION}.zip; \
-    mv /LanguageTool-${LT_VERSION} /languagetool; \
-    rm /tmp/LanguageTool-${LT_VERSION}.zip
+    unzip "/tmp/LanguageTool-${LT_VERSION}.zip"; \
+    mv "/LanguageTool-${LT_VERSION}" "/languagetool"; \
+    rm "/tmp/LanguageTool-${LT_VERSION}.zip"
 
 RUN set -eux; \
-    LT_DEPS=$(${JAVA_HOME}/bin/jdeps \
+    LT_DEPS=$("${JAVA_HOME}/bin/jdeps" \
         --print-module-deps \
         --ignore-missing-deps \
         --recursive \
@@ -54,8 +57,8 @@ RUN set -eux; \
         --class-path="/languagetool/libs/*" \
         --module-path="/languagetool/libs/*" \
         /languagetool/languagetool-server.jar); \
-    ${JAVA_HOME}/bin/jlink \
-        --add-modules ${LT_DEPS} \
+    "${JAVA_HOME}/bin/jlink" \
+        --add-modules "${LT_DEPS}" \
         --strip-debug \
         --no-man-pages \
         --no-header-files \
@@ -64,6 +67,8 @@ RUN set -eux; \
 
 
 FROM base as fasttext
+
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 RUN set -eux; \
     apk add --no-cache git build-base upx; \

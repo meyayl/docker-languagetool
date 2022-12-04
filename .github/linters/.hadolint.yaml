@@ -1,0 +1,6 @@
+---
+ignored:
+  - DL3018 # ignore apk add versions pinning
+  - DL3059 # ignore multiple consecutive runs
+  - DL3047 # ignore use of wget without progress bar
+  - SC3060 # ignore warning: In POSIX sh, string replacement is undefined.

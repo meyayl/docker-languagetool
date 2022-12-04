@@ -48,4 +48,3 @@ services:
       - ./ngrams:/ngrams
       # OPTIONAL: The location of the fasttext model on the local machine
       - ./fasttext:/fasttext
-
