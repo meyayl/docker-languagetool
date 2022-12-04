@@ -35,6 +35,7 @@ jobs:
       - name: Build and export to Docker
         uses: docker/build-push-action@v2
         with:
+          pull: true
           push: false
           load: true
           tags: meyay/languagetool:${{ github.run_id }}
