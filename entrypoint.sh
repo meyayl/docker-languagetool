@@ -125,18 +125,18 @@ create_config(){
 
   for varname in ${!langtool_*}; do
     config_injected=true
-    echo "${varname#'langtool_'}="${!varname} >> config.properties
+    echo "${varname#'langtool_'}=${!varname}" >> config.properties
   done
 }
 
 user_map(){
   if [ -n "${MAP_UID}" ]; then
     echo "INFO: Changing uid for user \"languagetool\" to ${MAP_UID}."
-    usermod -u ${MAP_UID} languagetool
+    usermod -u "${MAP_UID}" languagetool
   fi
   if [ -n "${MAP_GID}" ]; then
     echo "INFO: Changing gid for group \"languagetool\" to ${MAP_GID}."
-    groupmod -g ${MAP_GID} languagetool 
+    groupmod -g "${MAP_GID}" languagetool 
   fi
 }
 
@@ -181,4 +181,4 @@ else
   echo "INFO: Using JAVA_OPTS=${JAVA_OPTS}"
 fi
 # start languagetool
-exec su-exec languagetool:languagetool java  ${JAVA_OPTS} -cp languagetool-server.jar org.languagetool.server.HTTPServer --port ${LISTEPORT:-8010} --public --allow-origin '*' --config config.properties
+exec su-exec languagetool:languagetool java  ${JAVA_OPTS} -cp languagetool-server.jar org.languagetool.server.HTTPServer --port ${LISTEPORT:-8010} --public --allow-origin "*" --config config.properties
