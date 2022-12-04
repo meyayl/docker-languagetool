@@ -142,7 +142,7 @@ user_map(){
 
 print_info(){
   echo "INFO: Version Informations:"
-  local _ALPINE_VERSION=$(cat /etc/os-release | grep "VERSION_ID=" | cut -d'=' -f2)
+  local _ALPINE_VERSION=$(grep "VERSION_ID=" /etc/os-release | cut -d'=' -f2)
   echo "Alpine Linux v${_ALPINE_VERSION}" | indent
   java --version | indent
 }
