@@ -81,7 +81,7 @@ jobs:
           docker logs test
           docker exec test /opt/java/customjre/bin/java --version
           docker exec test /entrypoint.sh help
-          docker exec test /usr/local/bin/fasttext
+          docker exec test /usr/local/bin/fasttext || true
           curl --data "language=en-US&text=a simple test" http://127.0.0.1:8010/v2/check | tee /dev/stderr | grep -q detectedLanguage
           docker stop test
 
