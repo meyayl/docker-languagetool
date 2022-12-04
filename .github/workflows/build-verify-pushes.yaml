@@ -9,6 +9,8 @@ on:
       - 'docker-compose.yml'
       - '.gitignore'
       - '.dockerignore'
+      - '.github/linters*'
+      - '.github/workflows/reusable-super-linter.yaml'
     branches:
       - 'main'
       - 'feature/*'
