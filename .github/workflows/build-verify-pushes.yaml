@@ -2,6 +2,7 @@
 name: Build and verify image
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'Dockerfile'
