@@ -104,5 +104,5 @@ jobs:
           push: false
           platforms: linux/amd64
           cache-from: type=gha
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
