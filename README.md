@@ -2,7 +2,7 @@
 
 > [LanguageTool](https://www.languagetool.org/) is an Open Source proofreading software for English, French, German, Polish, Russian, and [more than 20 other languages](https://languagetool.org/languages/). It finds many errors that a simple spell checker cannot detect.
 
-The source repo can be found [here](https://github.com/meyayl/docker-languagetool).
+The source repository can be found [here](https://github.com/meyayl/docker-languagetool).
 
 About this image:
 - Uses official release zip from https://languagetool.org/download/
@@ -88,7 +88,7 @@ The environment parameters are split into two halves, separated by an equal, the
 | MAP_UID | 783 | Optional: UID of the user inside the container that runs LanguageTool. If you encounter permission problems with your volumes, make sure to set the parameter to the UID of the host folder owner. |
 | MAP_GID | 783 | Optional: GID of the user inside the container that runs LanguageTool. If you encounter permission problems with your volumes, make sure to set the parameter to the GID of the host folder owner. |
 
-# Change Log
+# Changelog
 
 | Date | Tag | Change |
 |---|---|---|

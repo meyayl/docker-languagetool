@@ -56,7 +56,7 @@ RUN set -eux; \
         --module-path="/languagetool/libs/*" \
         /languagetool/languagetool-server.jar); \
     "${JAVA_HOME}/bin/jlink" \
-        --add-modules ${LT_DEPS} \
+        --add-modules "${LT_DEPS}" \
         --strip-debug \
         --no-man-pages \
         --no-header-files \
