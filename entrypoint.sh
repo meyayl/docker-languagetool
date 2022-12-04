@@ -5,12 +5,11 @@ set -eo pipefail
 if [ $# -ne 0 ]; then
   if [ "$1" == "help" ]; then
     print_line=false
-    while IFS= read -r line
-    do
-      if [ $(grep -wc '\-\-config FILE' <<< "${line}") -eq 1 ] ; then
+    while IFS= read -r line; do
+      if [ $(grep -wc '\-\-config FILE' <<< "${line}") -eq 1 ]; then
         print_line=true
       fi
-      if [ $(grep -wc '\-\-port' <<< "${line}") -eq 1 ] ; then
+      if [ $(grep -wc '\-\-port' <<< "${line}") -eq 1 ]; then
         print_line=false
       fi
       if [ "${print_line}" == "true" ]; then
