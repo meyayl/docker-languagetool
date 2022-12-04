@@ -184,6 +184,8 @@ else
   echo "JAVA_OPTS environment variables detected."
   echo "INFO: Using JAVA_OPTS=${JAVA_OPTS}"
 fi
+
+read -ra FINAL_JAVA_OPTS <<< "${JAVA_OPTS}"
+
 # start languagetool
-# hadolint ignore=SC2086
-exec su-exec languagetool:languagetool java ${JAVA_OPTS} -cp languagetool-server.jar org.languagetool.server.HTTPServer --port "${LISTEPORT:-8010}" --public --allow-origin "*" --config config.properties
+exec su-exec languagetool:languagetool java "${options[@]}" -cp languagetool-server.jar org.languagetool.server.HTTPServer --port "${LISTEPORT:-8010}" --public --allow-origin "*" --config config.properties
