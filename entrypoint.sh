@@ -3,7 +3,24 @@ set -eo pipefail
 
 # exec container argument as command
 if [ $# -ne 0 ]; then
-  exec "$@"
+  if [ "$1" == "help" ]; then
+    print_line=false
+    while IFS= read -r line
+    do
+      if [ $(grep -wc '\-\-config FILE' <<< "${line}") -eq 1 ] ; then
+        print_line=true
+      fi
+      if [ $(grep -wc '\-\-port' <<< "${line}") -eq 1 ] ; then
+        print_line=false
+      fi
+      if [ "${print_line}" == "true" ]; then
+          echo "$line"
+      fi
+    done <<< "$(java -cp languagetool-server.jar org.languagetool.server.HTTPServer --help)"
+    exit 0
+  else
+    exec "$@"
+  fi
 fi
 
 # enabled debug for entrypoint script
