@@ -41,9 +41,9 @@ RUN set -eux; \
 
 RUN set -eux; \
     wget --progress=dot:gig -O /tmp/LanguageTool-${LT_VERSION}.zip https://www.languagetool.org/download/LanguageTool-${LT_VERSION}.zip; \
-    unzip /tmp/LanguageTool-${LT_VERSION}.zip; \
-    mv /LanguageTool-${LT_VERSION} /languagetool; \
-    rm /tmp/LanguageTool-${LT_VERSION}.zip
+    unzip "/tmp/LanguageTool-${LT_VERSION}.zip"; \
+    mv "/LanguageTool-${LT_VERSION} /languagetool"; \
+    rm "/tmp/LanguageTool-${LT_VERSION}.zip"
 
 RUN set -eux; \
     LT_DEPS=$(${JAVA_HOME}/bin/jdeps \
