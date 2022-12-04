@@ -1,0 +1,7 @@
+---
+ignored:
+  - DL3003 # ignore cd
+  - DL3006 # ignore image version pinning
+  - DL3018 # ignore apk add versions pinning
+  - DL3022 # ignore bad rule for COPY --from
+  - DL3059 # ignore multiple consecutive runs
