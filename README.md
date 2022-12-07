@@ -92,6 +92,7 @@ The environment parameters are split into two halves, separated by an equal, the
 
 | Date | Tag | Change |
 |---|---|---|
+| 2022-12-07 | 5.9-7 | - Fix health check command |
 | 2022-12-04 | 5.9-6 | - Add `help` comfmand to display languagetool configuration items to be used with `languagetool_*`|
 | 2022-12-04 | 5.9-5 | - Switch to stripped down Eclipse Temurin 17 JRE </br> - Remove JVM argument `-XX:+UseStringDeduplication` except for G1GC </br> - Add `tini` to suppress exit code 143 </br> - Removed `curl` and switch to `wget` </br> - Print version info about Alpine and Eclipse Temurin during start |
 | 2022-11-29 | 5.9-4 | - Update base image to Alpine 3.17.0 |
