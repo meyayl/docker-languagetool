@@ -13,7 +13,7 @@ RUN set -eux; \
 FROM java_base as prepare
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
-ARG LT_VERSION=5.9
+ARG LT_VERSION=6.0
 
 ENV JAVA_HOME=/opt/java/openjdk \
     JAVA_VERSION=jdk-17.0.5+8
@@ -83,7 +83,7 @@ RUN set -eux; \
 FROM java_base
 
 RUN set -eux; \
-    apk add --no-cache bash shadow libstdc++ su-exec tini; \
+    apk add --no-cache bash shadow libstdc++ gcompat su-exec tini; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
