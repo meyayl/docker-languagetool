@@ -184,7 +184,7 @@ jobs:
 
   update-pr:
     name: Update PullRequest
-    needs: [ super-linter, build-test-image, integration-test-image, cve-check-image, cve-check-image-and-report ]
+    needs: [ super-linter, build-test-image, integration-test-image, scan-image, cve-check-image-and-report ]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
@@ -221,7 +221,7 @@ jobs:
 
   build-and-push-final-image:
     name: Build and push final image
-    needs: [ super-linter, build-test-image, integration-test-image, cve-check-image ]
+    needs: [ super-linter, build-test-image, integration-test-image,scan-image ]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
 
