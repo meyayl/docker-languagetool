@@ -31,7 +31,7 @@ jobs:
       contents: read
       statuses: write
 
-    uses: ./.github/linters/reusable-super-linter.yaml
+    uses: ./.github/workflows/reusable-super-linter.yaml
 
   build-test-image:
     name: Build Image for Testing
