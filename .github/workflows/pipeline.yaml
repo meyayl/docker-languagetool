@@ -223,8 +223,7 @@ jobs:
     name: Build and push final image
     needs: [ super-linter, build-test-image, integration-test-image, cve-check-image ]
     runs-on: ubuntu-latest
-    #if: github.ref == 'refs/heads/main'
-    if: github.ref == refs(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/')
 
     permissions:
       packages: write # needed to push docker image to ghcr.io
