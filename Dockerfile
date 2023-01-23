@@ -16,7 +16,7 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 ARG LT_VERSION=6.0
 
 ENV JAVA_HOME=/opt/java/openjdk \
-    JAVA_VERSION=jdk-17.0.5+8
+    JAVA_VERSION=jdk-17.0.6+10
 
 RUN set -eux; \
     apk add --no-cache binutils; \
