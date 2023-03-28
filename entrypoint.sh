@@ -186,6 +186,14 @@ else
 fi
 
 read -ra FINAL_JAVA_OPTS <<< "${JAVA_OPTS}"
+#setloglevel
+xml edit --inplace --update "/configuration/logger[@name='org.languagetool']/@level" --value ${LOG_LEVEL} logback.xml
 
 # start languagetool
-exec su-exec languagetool:languagetool java "${FINAL_JAVA_OPTS[@]}" -cp languagetool-server.jar org.languagetool.server.HTTPServer --port "${LISTEPORT:-8010}" --public --allow-origin "*" --config config.properties
+exec su-exec languagetool:languagetool \
+  java "${FINAL_JAVA_OPTS[@]}" -Dlogback.configurationFile="${LOGBACK_CONFIG}" -cp languagetool-server.jar org.languagetool.server.HTTPServer \
+    --port "${LISTEPORT:-8010}" \
+    --public \
+    --allow-origin "*" \
+    --config config.properties
+
