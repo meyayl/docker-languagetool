@@ -92,10 +92,11 @@ The environment parameters are split into two halves, separated by an equal, the
 
 | Date | Tag | Change |
 |---|---|---|
+| 2023-03-28 | 6.1-0 | - Upgrade to languagetool 6.1 |  
 | 2023-02-23 | 6.0-5 | - Update base image to Alpine 3.17.2. |
 | 2023-01-23 | 6.0-4 | - Update Java to Eclipse Temurin 17.0.6+10. |
 | 2023-01-15 | 6.0-3 | - Update base image to Alpine 3.17.1.|
-| 2023-01-01 | 6.0-2 | - Add  alpine package `gcompat` to satisfy `ld-linux-x86-64.so.2` dependency.|
+| 2023-01-01 | 6.0-2 | - Add alpine package `gcompat` to satisfy `ld-linux-x86-64.so.2` dependency.|
 | ~~2022-12-29~~</br>2023-01-01| ~~6.0-1~~ | ~~- Upgrade to languagetool 6.0~~</br> - Removed tag due to ClassPath exception.|
 | 2022-12-07 | 5.9-7 | - Fix health check command |
 | 2022-12-04 | 5.9-6 | - Add `help` comfmand to display languagetool configuration items to be used with `languagetool_*`|
