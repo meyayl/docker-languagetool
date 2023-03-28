@@ -46,7 +46,9 @@ RUN set -eux; \
     wget -O /tmp/LanguageTool-${LT_VERSION}.zip https://www.languagetool.org/download/LanguageTool-${LT_VERSION}.zip; \
     unzip "/tmp/LanguageTool-${LT_VERSION}.zip"; \
     mv "/LanguageTool-${LT_VERSION}" "/languagetool"; \
-    rm "/tmp/LanguageTool-${LT_VERSION}.zip"
+	cd "/languagetool"; \
+    ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml; \
+    rm "/tmp/LanguageTool-${LT_VERSION}.zip" 
 
 RUN set -eux; \
     LT_DEPS=$("${JAVA_HOME}/bin/jdeps" \
@@ -83,7 +85,7 @@ RUN set -eux; \
 FROM java_base
 
 RUN set -eux; \
-    apk add --no-cache bash shadow libstdc++ gcompat su-exec tini; \
+    apk add --no-cache bash shadow libstdc++ gcompat su-exec tini xmlstarlet; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
@@ -98,7 +100,9 @@ ENV JAVA_HOME=/opt/java/customjre \
     langtool_fasttextBinary=/usr/local/bin/fasttext \
     download_ngrams_for_langs=none \
     MAP_UID=783 \
-    MAP_GID=783
+    MAP_GID=783 \
+    LOG_LEVEL=INFO \
+    LOGBACK_CONFIG=./logback.xml
 
 ENV PATH=${JAVA_HOME}/bin:${PATH}
 
