@@ -13,7 +13,7 @@ RUN set -eux; \
 FROM java_base as prepare
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
-ARG LT_VERSION=6.0
+ARG LT_VERSION=6.1
 
 ENV JAVA_HOME=/opt/java/openjdk \
     JAVA_VERSION=jdk-17.0.6+10
