@@ -95,6 +95,7 @@ The environment parameters are split into two halves, separated by an equal, the
 
 | Date | Tag | Change |
 |---|---|---|
+| 2023-04-01 | 6.1-2 | - Update base image to Alpine 3.17.3. |
 | 2023-03-28 | 6.1-1 | - Add logic to set log level |
 | 2023-03-28 | 6.1-0 | - Upgrade to languagetool 6.1 |  
 | 2023-02-23 | 6.0-5 | - Update base image to Alpine 3.17.2. |
