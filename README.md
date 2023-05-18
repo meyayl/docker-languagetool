@@ -7,7 +7,7 @@ The source repository can be found [here](https://github.com/meyayl/docker-langu
 About this image:
 
 - Uses official [release zip](https://languagetool.org/download/)
-- Uses the latest Alpine 3.17 base image
+- Uses the latest Alpine 3.18 base image
 - Uses custom Eclipse Temurin 17 JRE limited to modules required by the current LanguageTool release
 - includes `fasttext`
 - includes `su-exec`
@@ -95,6 +95,7 @@ The environment parameters are split into two halves, separated by an equal, the
 
 | Date | Tag | Change |
 |---|---|---|
+| 2023-05-19 | 6.1-3 | - Update base image to Alpine 3.18.0</br> - Update Java to 17.0.7+7 |
 | 2023-04-01 | 6.1-2 | - Update base image to Alpine 3.17.3. |
 | 2023-03-28 | 6.1-1 | - Add logic to set log level |
 | 2023-03-28 | 6.1-0 | - Upgrade to languagetool 6.1 |  
