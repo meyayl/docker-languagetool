@@ -95,6 +95,7 @@ The environment parameters are split into two halves, separated by an equal, the
 
 | Date | Tag | Change |
 |---|---|---|
+| 2023-06-30 | 6.1-4 | - Update base image to Alpine 3.18.2 |
 | 2023-05-19 | 6.1-3 | - Update base image to Alpine 3.18.0</br> - Update Java to 17.0.7+7 |
 | 2023-04-01 | 6.1-2 | - Update base image to Alpine 3.17.3. |
 | 2023-03-28 | 6.1-1 | - Add logic to set log level |
