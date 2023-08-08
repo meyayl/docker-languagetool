@@ -1,4 +1,4 @@
-FROM alpine:3.18.2 as base
+FROM alpine:3.18.3 as base
 
 FROM base as java_base
 
