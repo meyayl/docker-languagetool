@@ -95,6 +95,7 @@ The environment parameters are split into two halves, separated by an equal, the
 
 | Date | Tag | Change |
 |---|---|---|
+| 2023-08-10 | 6.2-1 | - Update base image to Alpine 3.18.3</br> - Update Java to 17.0.8+7 |
 | 2023-07-09 | 6.2-0 | - Update to languagetool 6.2 |
 | 2023-06-30 | 6.1-4 | - Update base image to Alpine 3.18.2 |
 | 2023-05-19 | 6.1-3 | - Update base image to Alpine 3.18.0</br> - Update Java to 17.0.7+7 |
@@ -107,7 +108,7 @@ The environment parameters are split into two halves, separated by an equal, the
 | 2023-01-01 | 6.0-2 | - Add alpine package `gcompat` to satisfy `ld-linux-x86-64.so.2` dependency.</br>(this fixes the issue of the 6.0-1 image)|
 | ~~2022-12-29~~</br>2023-01-01| ~~6.0-1~~ | ~~- Upgrade to languagetool 6.0~~</br> - Removed tag due to ClassPath exception.|
 | 2022-12-07 | 5.9-7 | - Fix health check command |
-| 2022-12-04 | 5.9-6 | - Add `help` comfmand to display languagetool configuration items to be used with `languagetool_*`|
+| 2022-12-04 | 5.9-6 | - Add `help` command to display languagetool configuration items to be used with `languagetool_*`|
 | 2022-12-04 | 5.9-5 | - Switch to stripped down Eclipse Temurin 17 JRE </br> - Remove JVM argument `-XX:+UseStringDeduplication` except for G1GC </br> - Add `tini` to suppress exit code 143 </br> - Removed `curl` and switch to `wget` </br> - Print version info about Alpine and Eclipse Temurin during start |
 | 2022-11-29 | 5.9-4 | - Update base image to Alpine 3.17.0 |
 | 2022-11-24 | 5.9-3 | - Add support to configure garbage collector </br> - Add JVM argument `-XX:+UseStringDeduplication` </br> - Add support to pass custom JAVA_OPTS </br> - Change Java_Xm? variables to JAVA_XM? |
