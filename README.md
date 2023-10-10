@@ -95,6 +95,7 @@ The environment parameters are split into two halves, separated by an equal, the
 
 | Date | Tag | Change |
 |---|---|---|
+| 2023-10-10 | 6.3-0 | - Update to LanguageTool 6.3</br> - Update base image to Alpine 3.18.4</br> - Updaet Java to 17.0.8.1+1 |
 | 2023-08-10 | 6.2-1 | - Update base image to Alpine 3.18.3</br> - Update Java to 17.0.8+7 |
 | 2023-07-09 | 6.2-0 | - Update to languagetool 6.2 |
 | 2023-06-30 | 6.1-4 | - Update base image to Alpine 3.18.2 |
