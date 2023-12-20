@@ -13,7 +13,7 @@ RUN set -eux; \
 FROM java_base as prepare
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
-ARG LT_VERSION=6.3
+ARG LT_VERSION=6.3a
 
 ENV JAVA_HOME=/opt/java/openjdk \
     JAVA_VERSION=jdk-17.0.9+9
@@ -45,7 +45,7 @@ RUN set -eux; \
 RUN set -eux; \
     wget -O /tmp/LanguageTool-${LT_VERSION}.zip https://www.languagetool.org/download/LanguageTool-${LT_VERSION}.zip; \
     unzip "/tmp/LanguageTool-${LT_VERSION}.zip"; \
-    mv "/LanguageTool-${LT_VERSION}" "/languagetool"; \
+    mv /LanguageTool-* "/languagetool"; \
 	cd "/languagetool"; \
     ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml; \
     rm "/tmp/LanguageTool-${LT_VERSION}.zip" 
