@@ -1,4 +1,4 @@
-FROM alpine:3.18.5 as base
+FROM alpine:3.18.6 as base
 
 FROM base as java_base
 
@@ -16,7 +16,7 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 ARG LT_VERSION=6.3a
 
 ENV JAVA_HOME=/opt/java/openjdk \
-    JAVA_VERSION=jdk-17.0.9+9
+    JAVA_VERSION=jdk-17.0.10+7
 
 RUN set -eux; \
     apk add --no-cache binutils; \
