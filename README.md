@@ -91,31 +91,34 @@ The environment parameters are split into two halves, separated by an equal, the
 | MAP_GID | 783 | Optional: GID of the user inside the container that runs LanguageTool. If you encounter permission problems with your volumes, make sure to set the parameter to the GID of the host folder owner. |
 | LOG_LEVEL| INFO | Optional: set log level for LanguageTool. Valid options are: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`. |
 
+## Build yourseelf
+
 ## Changelog
 
 | Date | Tag | Change |
 |---|---|---|
-| 2024-02-12 | 6.3a-1 | - Update base image to Alpine 3.18.6</br> - Update Java to 17.0.10+7 |
+| 2024-02-17 | 6.3a-2 | - Modify Dockerfile to create the languagetool user without home directory<br/> - Modify entrypoint script to modify uid:gid of languagetool user and group if actually changed. |
+| 2024-02-12 | 6.3a-1 | - Update base image to Alpine 3.18.6<br/> - Update Java to 17.0.10+7 |
 | 2023-12-20 | 6.3a-0 | - Update to LanguageTool 6.3a |
-| 2023-12-03 | 6.3-1 | - Update base image to Alpine 3.18.5</br> - Update Java to 17.0.9+9 |
-| 2023-10-10 | 6.3-0 | - Update to LanguageTool 6.3</br> - Update base image to Alpine 3.18.4</br> - Update Java to 17.0.8.1+1 |
-| 2023-08-10 | 6.2-1 | - Update base image to Alpine 3.18.3</br> - Update Java to 17.0.8+7 |
+| 2023-12-03 | 6.3-1 | - Update base image to Alpine 3.18.5<br/> - Update Java to 17.0.9+9 |
+| 2023-10-10 | 6.3-0 | - Update to LanguageTool 6.3<br/> - Update base image to Alpine 3.18.4<br/> - Update Java to 17.0.8.1+1 |
+| 2023-08-10 | 6.2-1 | - Update base image to Alpine 3.18.3<br/> - Update Java to 17.0.8+7 |
 | 2023-07-09 | 6.2-0 | - Update to languagetool 6.2 |
 | 2023-06-30 | 6.1-4 | - Update base image to Alpine 3.18.2 |
-| 2023-05-19 | 6.1-3 | - Update base image to Alpine 3.18.0</br> - Update Java to 17.0.7+7 |
+| 2023-05-19 | 6.1-3 | - Update base image to Alpine 3.18.0<br/> - Update Java to 17.0.7+7 |
 | 2023-04-01 | 6.1-2 | - Update base image to Alpine 3.17.3. |
 | 2023-03-28 | 6.1-1 | - Add logic to set log level |
 | 2023-03-28 | 6.1-0 | - Upgrade to languagetool 6.1 |  
 | 2023-02-23 | 6.0-5 | - Update base image to Alpine 3.17.2. |
 | 2023-01-23 | 6.0-4 | - Update Java to Eclipse Temurin 17.0.6+10. |
 | 2023-01-15 | 6.0-3 | - Update base image to Alpine 3.17.1.|
-| 2023-01-01 | 6.0-2 | - Add alpine package `gcompat` to satisfy `ld-linux-x86-64.so.2` dependency.</br>(this fixes the issue of the 6.0-1 image)|
-| ~~2022-12-29~~</br>2023-01-01| ~~6.0-1~~ | ~~- Upgrade to languagetool 6.0~~</br> - Removed tag due to ClassPath exception.|
+| 2023-01-01 | 6.0-2 | - Add alpine package `gcompat` to satisfy `ld-linux-x86-64.so.2` dependency.<br/>(this fixes the issue of the 6.0-1 image)|
+| ~~2022-12-29~~<br/>2023-01-01| ~~6.0-1~~ | ~~- Upgrade to languagetool 6.0~~<br/> - Removed tag due to ClassPath exception.|
 | 2022-12-07 | 5.9-7 | - Fix health check command |
 | 2022-12-04 | 5.9-6 | - Add `help` command to display languagetool configuration items to be used with `languagetool_*`|
-| 2022-12-04 | 5.9-5 | - Switch to stripped down Eclipse Temurin 17 JRE </br> - Remove JVM argument `-XX:+UseStringDeduplication` except for G1GC </br> - Add `tini` to suppress exit code 143 </br> - Removed `curl` and switch to `wget` </br> - Print version info about Alpine and Eclipse Temurin during start |
+| 2022-12-04 | 5.9-5 | - Switch to stripped down Eclipse Temurin 17 JRE <br/> - Remove JVM argument `-XX:+UseStringDeduplication` except for G1GC <br/> - Add `tini` to suppress exit code 143 <br/> - Removed `curl` and switch to `wget` <br/> - Print version info about Alpine and Eclipse Temurin during start |
 | 2022-11-29 | 5.9-4 | - Update base image to Alpine 3.17.0 |
-| 2022-11-24 | 5.9-3 | - Add support to configure garbage collector </br> - Add JVM argument `-XX:+UseStringDeduplication` </br> - Add support to pass custom JAVA_OPTS </br> - Change Java_Xm? variables to JAVA_XM? |
+| 2022-11-24 | 5.9-3 | - Add support to configure garbage collector <br/> - Add JVM argument `-XX:+UseStringDeduplication` <br/> - Add support to pass custom JAVA_OPTS <br/> - Change Java_Xm? variables to JAVA_XM? |
 | 2022-11-12 | 5.9-2 | - Update base image to Alpine 3.16.3 |
 | 2022-09-28 | 5.9-1 | - Update LanguageTool to 5.9 |
 | 2022-09-10 | 5.8-2 | - Add user mapping support |

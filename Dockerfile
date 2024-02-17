@@ -90,7 +90,7 @@ RUN set -eux; \
 
 RUN set -eux; \
     groupmod --gid 783 --new-name languagetool users; \
-    adduser -u 783 -S languagetool -G languagetool
+    adduser -u 783 -S languagetool -G languagetool -H
 
 COPY --from=prepare /languagetool/ /languagetool
 COPY --from=prepare /opt/java/customjre/ /opt/java/customjre

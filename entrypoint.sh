@@ -134,12 +134,22 @@ create_config(){
 
 user_map(){
   if [ -n "${MAP_UID}" ]; then
-    echo "INFO: Changing uid for user \"languagetool\" to ${MAP_UID}."
-    usermod -u "${MAP_UID}" languagetool
+    CURRENT_UID="$(id languagetool -u)"
+    if [ "${MAP_UID}" == "${CURRENT_UID}" ]; then
+      echo "INFO: User \"languagetool\" alread has has uid ${CURRENT_UID}."
+    else
+      echo "INFO: Setting uid for user \"languagetool\" to ${MAP_UID}."
+      usermod -u "${MAP_UID}" languagetool
+    fi
   fi
   if [ -n "${MAP_GID}" ]; then
-    echo "INFO: Changing gid for group \"languagetool\" to ${MAP_GID}."
-    groupmod -g "${MAP_GID}" languagetool 
+    CURRENT_GID="$(id languagetool -g)"
+    if [ "${MAP_GID}" == "${CURRENT_GID}" ]; then
+      echo "INFO: Group \"languagetool\" already has gid ${CURRENT_UID}."
+    else
+      echo "INFO: Setting gid for group \"languagetool\" to ${MAP_GID}."
+      groupmod -g "${MAP_GID}" languagetool
+    fi
   fi
 }
 
