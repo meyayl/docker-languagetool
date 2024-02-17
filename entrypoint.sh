@@ -113,7 +113,7 @@ fix_ownership(){
     fix_dir_owner "${langtool_languageModel}"
   fi
   if [ -n "${langtool_fasttextModel}" ]; then
-    echo "INFO: Fixing ownership for fasttext model file if necessasry."
+    echo "INFO: Fixing ownership for fasttext model file if necessary."
     fix_dir_owner "$(dirname "${langtool_fasttextModel}")"
   fi
 }

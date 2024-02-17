@@ -7,7 +7,7 @@ The source repository can be found [here](https://github.com/meyayl/docker-langu
 About this image:
 
 - Uses official [release zip](https://languagetool.org/download/)
-- Uses the latest Alpine 3.18 base image
+- Uses the latest Alpine 3.19 base image
 - Uses custom Eclipse Temurin 17 JRE limited to modules required by the current LanguageTool release
 - includes `fasttext`
 - includes `su-exec`
@@ -18,7 +18,6 @@ About this image:
 - optional: downloads fasttext module (if it doesn't already exist)
 - optional: user mapping (make sure to check MAP_UID and MAP_GID below)
 - optional: set log level
-
 
 ## Setup
 
@@ -91,7 +90,23 @@ The environment parameters are split into two halves, separated by an equal, the
 | MAP_GID | 783 | Optional: GID of the user inside the container that runs LanguageTool. If you encounter permission problems with your volumes, make sure to set the parameter to the GID of the host folder owner. |
 | LOG_LEVEL| INFO | Optional: set log level for LanguageTool. Valid options are: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`. |
 
-## Build yourseelf
+## Fasttext support
+
+Now that fasttext is available on Alpine 3.19, the image switched to using the Alpine package, instead of compiling the binaries from the sources. This hopefully fixes the compatibility issue users with older cpus experienced with my previous images, that were build on a amd64v3 architecture cpu, which compiled the `fasttext` binary with cpu optimizations older cpus do not support.
+
+If the Alpine `fasttext` package does not work for you, you can build a custom image to compile the `fasttext` binary using cpu optimizations your cpu (as long as it's x86_64 based) actually understands:
+
+```
+git clone  https://github.com/meyayl/docker-languagetool.git
+cd docker-languagetool
+sudo docker build -t meyay/docker-languagetool:latest -f Dockerfile.fasttext .
+```
+
+Once the image is build, you can `docke compose up -d` like you would do with the images hosted on Docker Hub.
+
+>NOTE1: This image will use alpine 3.18.6 as base image, as I couldn't find a way yet to compile the `fasttext` source with Alpine 3.19.1. On Alpine 3.19.0 I could not even clone the source repo.
+
+>NOTE2: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
 
 ## Changelog
 
