@@ -1,4 +1,4 @@
-FROM alpine:3.19.1 as base
+FROM alpine:3.18.6 as base
 
 FROM base as java_base
 
@@ -68,10 +68,24 @@ RUN set -eux; \
         --output /opt/java/customjre
 
 
+FROM base as fasttext
+
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
+RUN set -eux; \
+    apk add --no-cache git build-base upx; \
+    rm -rf /var/cache/apk/*
+
+RUN set -eux; \
+    git clone https://github.com/facebookresearch/fastText.git; \
+    make -C fastText;\
+    upx -5 -o /fastText/fasttext-upx /fastText/fasttext
+
+
 FROM java_base
 
 RUN set -eux; \
-    apk add --no-cache bash shadow libstdc++ gcompat su-exec tini xmlstarlet fasttext; \
+    apk add --no-cache bash shadow libstdc++ gcompat su-exec tini xmlstarlet; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
@@ -80,6 +94,7 @@ RUN set -eux; \
 
 COPY --from=prepare /languagetool/ /languagetool
 COPY --from=prepare /opt/java/customjre/ /opt/java/customjre
+COPY --from=fasttext /fastText/fasttext-upx /usr/bin/fasttext
 
 ENV JAVA_HOME=/opt/java/customjre \
     langtool_fasttextBinary=/usr/bin/fasttext \
