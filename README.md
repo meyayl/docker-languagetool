@@ -104,7 +104,7 @@ sudo docker build -t meyay/docker-languagetool:latest -f Dockerfile.fasttext .
 
 Once the image is build, you can `docke compose up -d` like you would do with the images hosted on Docker Hub.
 
->NOTE1: This image will use alpine 3.18.6 as base image, as I couldn't find a way yet to compile the `fasttext` source with Alpine 3.19.1. On Alpine 3.19.0 I could not even clone the source repo.
+>NOTE1: Alpine 3.19 commes with gcc13, and does not provide older versions which are required to compile the fasttext sources. As a result Alpine 3.18.6 is used to compile fasttext with gcc12.
 
 >NOTE2: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
 
