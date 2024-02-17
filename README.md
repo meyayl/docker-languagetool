@@ -112,6 +112,7 @@ Once the image is build, you can `docke compose up -d` like you would do with th
 
 | Date | Tag | Change |
 |---|---|---|
+| 2024-02-17 | 6.3a-3 | - Update base image to Alpine 3.19.1<br/> - Migrate from compiling fasttext to using the Alpine fasttext package.|
 | 2024-02-17 | 6.3a-2 | - Modify Dockerfile to create the languagetool user without home directory<br/> - Modify entrypoint script to modify uid:gid of languagetool user and group if actually changed. |
 | 2024-02-12 | 6.3a-1 | - Update base image to Alpine 3.18.6<br/> - Update Java to 17.0.10+7 |
 | 2023-12-20 | 6.3a-0 | - Update to LanguageTool 6.3a |
