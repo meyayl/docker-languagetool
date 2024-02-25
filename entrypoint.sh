@@ -49,14 +49,14 @@ download_and_extract_ngrams(){
   _BASE_URL="https://languagetool.org/download/ngram-data"
 
   if [ ! -d "${langtool_languageModel}/${_LANG}" ]; then
-    if [ ! -e "${langtool_languageModel}\ngrams-${_LANG}.zip" ]; then
+    if [ ! -e "${langtool_languageModel}/ngrams-${_LANG}.zip" ]; then
       echo "INFO: Downloading \"${_LANG}\" ngrams."
-      wget  -O "${langtool_languageModel}\ngrams-${_LANG}.zip" "${_BASE_URL}/${ngrams_filesnames[${_LANG}]}"
+      wget  -O "${langtool_languageModel}/ngrams-${_LANG}.zip" "${_BASE_URL}/${ngrams_filesnames[${_LANG}]}"
     fi
-    if [ -e "${langtool_languageModel}\ngrams-${_LANG}.zip" ]; then
+    if [ -e "${langtool_languageModel}/ngrams-${_LANG}.zip" ]; then
       echo "INFO: Extracting \"${_LANG}\" ngrams."
-      unzip  "${langtool_languageModel}\ngrams-${_LANG}.zip" -d "${langtool_languageModel}"
-      rm "${langtool_languageModel}\ngrams-${_LANG}.zip"
+      unzip  "${langtool_languageModel}/ngrams-${_LANG}.zip" -d "${langtool_languageModel}"
+      rm "${langtool_languageModel}/ngrams-${_LANG}.zip"
     fi
   else
     echo "INFO: Skipping download of ngrams model for language ${_LANG}: already exists."
