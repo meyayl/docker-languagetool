@@ -8,7 +8,7 @@ About this image:
 
 - Uses official [release zip](https://languagetool.org/download/)
 - Uses the latest Alpine 3.19 base image
-- Uses custom Eclipse Temurin 17 JRE limited to modules required by the current LanguageTool release
+- Uses custom Eclipse Temurin 21 JRE limited to modules required by the current LanguageTool release
 - includes `fasttext`
 - includes `su-exec`
   - container starts as root and executes languagetool as restricted user using `exec su-exec`
@@ -30,6 +30,7 @@ docker run -d \
   --cap-drop ALL \
   --cap-add CAP_SETUID \
   --cap-add CAP_SETGID \
+  --cap-add CAP_CHOWN \
   --security-opt no-new-privileges \
   --publish 8010:8010 \
   --env download_ngrams_for_langs=en \
@@ -56,6 +57,7 @@ services:
     cap_add:
       - CAP_SETUID
       - CAP_SETGID
+      - CAP_CHOWN
     security_opt:
       - no-new-privileges
     ports:
@@ -112,6 +114,7 @@ Once the image is build, you can `docke compose up -d` like you would do with th
 
 | Date | Tag | Change |
 |---|---|---|
+| 2024-03-26 | 6.3a-5 | - Update Java to 21.0.2+13<br/> - Add capability CAP_CHOWN to README.md and compose file. | 
 | 2024-02-26 | 6.3a-4 | - Fix entrypoint script bug that affected new users when downloading the ngram models. |
 | 2024-02-17 | 6.3a-3 | - Update base image to Alpine 3.19.1<br/> - Migrate from compiling fasttext to using the Alpine fasttext package.|
 | 2024-02-17 | 6.3a-2 | - Modify Dockerfile to create the languagetool user without home directory<br/> - Modify entrypoint script to modify uid:gid of languagetool user and group if actually changed. |

@@ -11,6 +11,7 @@ services:
     cap_add:
       - CAP_SETUID
       - CAP_SETGID
+      - CAP_CHOWN
     security_opt:
       - no-new-privileges
     ports:
