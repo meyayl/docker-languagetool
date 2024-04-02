@@ -51,19 +51,19 @@ download_and_extract_ngrams(){
   if [ ! -d "${langtool_languageModel}/${_LANG}" ]; then
     if [ ! -e "${langtool_languageModel}/ngrams-${_LANG}.zip" ]; then
       echo "INFO: Downloading \"${_LANG}\" ngrams."
-      wget  -O "${langtool_languageModel}/ngrams-${_LANG}.zip" "${_BASE_URL}/${ngrams_filesnames[${_LANG}]}"
+      su -s /bin/bash languagetool -c "wget  -O \"${langtool_languageModel}/ngrams-${_LANG}.zip\" \"${_BASE_URL}/${ngrams_filesnames[${_LANG}]}\""
     fi
     if [ -e "${langtool_languageModel}/ngrams-${_LANG}.zip" ]; then
       echo "INFO: Extracting \"${_LANG}\" ngrams."
-      unzip  "${langtool_languageModel}/ngrams-${_LANG}.zip" -d "${langtool_languageModel}"
-      rm "${langtool_languageModel}/ngrams-${_LANG}.zip"
+      su -s /bin/bash languagetool -c "unzip  \"${langtool_languageModel}/ngrams-${_LANG}.zip\" -d \"${langtool_languageModel}\""
+      su -s /bin/bash languagetool -c "rm \"${langtool_languageModel}/ngrams-${_LANG}.zip\""
     fi
   else
     echo "INFO: Skipping download of ngrams model for language ${_LANG}: already exists."
   fi
-  if [ -n "${langtool_languageModel}" ]; then
-    fix_dir_owner "${langtool_languageModel}/${_LANG}/"
-  fi
+  #if [ -n "${langtool_languageModel}" ]; then
+  #  fix_dir_owner "${langtool_languageModel}/${_LANG}/"
+  #fi
 }
 
 handle_ngrams(){
@@ -96,7 +96,7 @@ download_fasttext_mode(){
   if [ -n "${langtool_fasttextModel}" ];then
     if [ ! -e "${langtool_fasttextModel}" ]; then
       echo "INFO: Downloading fasttext model."
-      wget  -O "${langtool_fasttextModel}" "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
+      su -s /bin/bash languagetool -c "wget  -O \"${langtool_fasttextModel}\" \"https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin\""
       fix_dir_owner "${langtool_fasttextModel}"
     else
       echo "INFO: Skipping download of fasttext model: already exists."
