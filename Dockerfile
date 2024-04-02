@@ -13,7 +13,7 @@ RUN set -eux; \
 FROM java_base as prepare
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
-ARG LT_VERSION=6.3a
+ARG LT_VERSION=6.4
 
 ENV JAVA_HOME=/opt/java/openjdk \
     JAVA_VERSION=jdk-21.0.2+13
@@ -54,7 +54,7 @@ RUN set -eux; \
         --print-module-deps \
         --ignore-missing-deps \
         --recursive \
-        --multi-release 17 \
+        --multi-release 21 \
         --class-path="/languagetool/libs/*" \
         --module-path="/languagetool/libs/*" \
         /languagetool/languagetool-server.jar); \
