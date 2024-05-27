@@ -7,7 +7,7 @@ The source repository can be found [here](https://github.com/meyayl/docker-langu
 About this image:
 
 - Uses official [release zip](https://languagetool.org/download/)
-- Uses the latest Alpine 3.19 base image
+- Uses the latest Alpine 3.20 base image
 - Uses custom Eclipse Temurin 21 JRE limited to modules required by the current LanguageTool release
 - includes `fasttext`
 - includes `su-exec`
@@ -114,7 +114,8 @@ Once the image is build, you can `docke compose up -d` like you would do with th
 
 | Date | Tag | Change |
 |---|---|---|
-| 2024-04-02 | 6.4 | - Update to LanguageTool 6.4<br/> - Modified entrypoint script, to require 7x5 permissions instead of 7x7 for ngrams and fasttext volumes anymore. | 
+| 2024-05-27 | 6.4-1 | - Update base image to Alpine 3.20.0 |
+| 2024-04-02 | 6.4-0 | - Update to LanguageTool 6.4<br/> - Modified entrypoint script, to require 7x5 permissions instead of 7x7 for ngrams and fasttext volumes anymore. | 
 | 2024-03-26 | 6.3a-5 | - Update Java to 21.0.2+13<br/> - Add capability CAP_CHOWN to README.md and compose file. | 
 | 2024-02-26 | 6.3a-4 | - Fix entrypoint script bug that affected new users when downloading the ngram models. |
 | 2024-02-17 | 6.3a-3 | - Update base image to Alpine 3.19.1<br/> - Migrate from compiling fasttext to using the Alpine fasttext package.|
