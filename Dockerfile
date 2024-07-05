@@ -1,4 +1,6 @@
-FROM alpine:3.20.0 as base
+ARG LT_VERSION=6.4
+ARG JAVA_VERSION=jdk-21.0.3+9
+FROM alpine:3.20.1 as base
 
 FROM base as java_base
 
@@ -13,10 +15,11 @@ RUN set -eux; \
 FROM java_base as prepare
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
-ARG LT_VERSION=6.4
+ARG LT_VERSION
+ARG JAVA_VERSION
 
 ENV JAVA_HOME=/opt/java/openjdk \
-    JAVA_VERSION=jdk-21.0.2+13
+    JAVA_VERSION=${JAVA_VERSION}
 
 RUN set -eux; \
     apk add --no-cache binutils; \

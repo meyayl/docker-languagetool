@@ -45,8 +45,6 @@ docker run -d \
 
 ```yaml
 ---
-version: "3.8"
-
 services:
   languagetool:
     image: meyay/languagetool:latest
@@ -94,19 +92,19 @@ The environment parameters are split into two halves, separated by an equal, the
 
 ## Fasttext support
 
-Now that fasttext is available on Alpine 3.19, the image switched to using the Alpine package, instead of compiling the binaries from the sources. This hopefully fixes the compatibility issue users with older cpus experienced with my previous images, that were build on a amd64v3 architecture cpu, which compiled the `fasttext` binary with cpu optimizations older cpus do not support.
+Now that fasttext is available since Alpine 3.19, the image switched to using the Alpine package, instead of compiling the binaries from the sources. This hopefully fixes the compatibility issue users with older cpus experienced with my previous images, that were build on a amd64v3 architecture cpu, which compiled the `fasttext` binary with cpu optimizations older cpus do not support.
 
 If the Alpine `fasttext` package does not work for you, you can build a custom image to compile the `fasttext` binary using cpu optimizations your cpu (as long as it's x86_64 based) actually understands:
 
 ```
 git clone  https://github.com/meyayl/docker-languagetool.git
 cd docker-languagetool
-sudo docker build -t meyay/docker-languagetool:latest -f Dockerfile.fasttext .
+sudo docker build -t meyay/languagetool:latest -f Dockerfile.fasttext .
 ```
 
 Once the image is build, you can `docke compose up -d` like you would do with the images hosted on Docker Hub.
 
->NOTE1: Alpine 3.19 commes with gcc13, and does not provide older versions which are required to compile the fasttext sources. As a result Alpine 3.18.6 is used to compile fasttext with gcc12.
+>NOTE1: Alpine version 3.19+ commes with gcc13, and does not provide older versions which are required to compile the fasttext sources. As a result Alpine 3.18.7 is used to compile fasttext with gcc12.
 
 >NOTE2: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
 
@@ -114,6 +112,7 @@ Once the image is build, you can `docke compose up -d` like you would do with th
 
 | Date | Tag | Change |
 |---|---|---|
+| 2024-07-05 | 6.4-2 | - Update base image to Alpine 3.20.1<br/> - Update Java to 21.0.3+9 |
 | 2024-05-27 | 6.4-1 | - Update base image to Alpine 3.20.0 |
 | 2024-04-02 | 6.4-0 | - Update to LanguageTool 6.4<br/> - Modified entrypoint script, to require 7x5 permissions instead of 7x7 for ngrams and fasttext volumes anymore. | 
 | 2024-03-26 | 6.3a-5 | - Update Java to 21.0.2+13<br/> - Add capability CAP_CHOWN to README.md and compose file. | 
