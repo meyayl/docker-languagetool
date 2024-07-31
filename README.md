@@ -112,6 +112,7 @@ Once the image is build, you can `docke compose up -d` like you would do with th
 
 | Date | Tag | Change |
 |---|---|---|
+| 2024-07-31 | 6.4-3 | - Update base image to Alpine 3.20.2<br/> - Update Java to 21.0.4+7 |
 | 2024-07-05 | 6.4-2 | - Update base image to Alpine 3.20.1<br/> - Update Java to 21.0.3+9 |
 | 2024-05-27 | 6.4-1 | - Update base image to Alpine 3.20.0 |
 | 2024-04-02 | 6.4-0 | - Update to LanguageTool 6.4<br/> - Modified entrypoint script, to require 7x5 permissions instead of 7x7 for ngrams and fasttext volumes anymore. | 
