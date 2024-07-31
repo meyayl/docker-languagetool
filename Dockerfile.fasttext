@@ -1,7 +1,7 @@
 ARG LT_VERSION=6.4
 ARG JAVA_VERSION=jdk-21.0.4+7
 
-FROM alpine:3.18.7 as base
+FROM alpine:3.18.8 as base
 
 FROM base as java_base
 
