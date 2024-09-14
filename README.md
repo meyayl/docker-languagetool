@@ -112,6 +112,7 @@ Once the image is build, you can `docke compose up -d` like you would do with th
 
 | Date | Tag | Change |
 |---|---|---|
+| 2024-09-14 | 6.4-4 | - Update base image to Alpine 3.20.3 | 
 | 2024-07-31 | 6.4-3 | - Update base image to Alpine 3.20.2<br/> - Update Java to 21.0.4+7 |
 | 2024-07-05 | 6.4-2 | - Update base image to Alpine 3.20.1<br/> - Update Java to 21.0.3+9 |
 | 2024-05-27 | 6.4-1 | - Update base image to Alpine 3.20.0 |
