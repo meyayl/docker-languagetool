@@ -102,7 +102,7 @@ cd docker-languagetool
 sudo docker build -t meyay/languagetool:latest -f Dockerfile.fasttext .
 ```
 
-Once the image is build, you can `docke compose up -d` like you would do with the images hosted on Docker Hub.
+Once the image is build, you can `docker compose up -d` like you would do with the images hosted on Docker Hub.
 
 >NOTE1: Alpine version 3.19+ commes with gcc13, and does not provide older versions which are required to compile the fasttext sources. As a result Alpine 3.18.8 is used to compile fasttext with gcc12.
 
