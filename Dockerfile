@@ -1,8 +1,8 @@
 ARG LT_VERSION=6.5
-ARG JAVA_VERSION=jdk-21.0.4+7
-FROM alpine:3.20.3 as base
+ARG JAVA_VERSION=jdk-21.0.5+11
+FROM alpine:3.20.3 AS base
 
-FROM base as java_base
+FROM base AS java_base
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
@@ -12,7 +12,7 @@ RUN set -eux; \
     apk add --no-cache libretls musl-locales musl-locales-lang tzdata zlib unzip; \
     rm -rf /var/cache/apk/*
 
-FROM java_base as prepare
+FROM java_base AS prepare
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 ARG LT_VERSION
@@ -84,21 +84,25 @@ COPY --from=prepare /languagetool/ /languagetool
 COPY --from=prepare /opt/java/customjre/ /opt/java/customjre
 
 ENV JAVA_HOME=/opt/java/customjre \
+    langtool_languageModel=/ngrams \
     langtool_fasttextBinary=/usr/bin/fasttext \
+    langtool_fasttextModel=/fasttext/lid.176.bin \
     download_ngrams_for_langs=none \
     MAP_UID=783 \
     MAP_GID=783 \
     LOG_LEVEL=INFO \
-    LOGBACK_CONFIG=./logback.xml
+    LOGBACK_CONFIG=./logback.xml \
+    DISABLE_PERMISSION_FIX=false \
+    DISABLE_FASTTEXT=false
 
 ENV PATH=${JAVA_HOME}/bin:${PATH}
 
 WORKDIR /languagetool
 
-COPY --chown=languagetool entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s CMD wget --quiet --post-data "language=en-US&text=a simple test" -O - http://localhost:8010/v2/check > /dev/null 2>&1  || exit 1
 EXPOSE 8010
 
-ENTRYPOINT ["/sbin/tini", "-g", "-e 143", "--", "/entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]

@@ -3,7 +3,10 @@ services:
   languagetool:
     image: meyay/languagetool:latest
     container_name: languagetool
-    restart: always
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
     cap_drop:
       - ALL
     cap_add:
@@ -19,19 +22,19 @@ services:
       # OVERRIDE: comma seperated list of ngram language models to download (if not existing)
       #           Valid languages are "en", "de", "es", "fr" and "nl". Image default: none
       #           example: download_ngrams_for_langs: en,de,es
-      # download_ngrams_for_langs: en,de
+      download_ngrams_for_langs: en
       # OPTIONAL: container path for the ngrams data. Image default: /ngrams
-      # langtool_languageModel: /ngrams
+      #langtool_languageModel: /ngrams
       # OVERRIDE: container path to the fasttext binary. Image default: /usr/local/bin/fasttext
       # langtool_fasttextBinary: /usr/local/bin/fasttext
-      # OPTIONAL: path to the fasttext model. Will be downloaded if not existing
-      # langtool_fasttextModel:  /fasttext/lid.176.bin
+      # OPTIONAL: path to the fasttext model. Image default:/fasttext/lid.176.bin
+      # langtool_fasttextModel: /fasttext/lid.176.bin
       # OVERRIDE: minimal Java heap size. Image default: 256m
       # JAVA_XMS: 512m
-      # OVERRIDE: Maximum Java heap size. Image default: 1g
-      # JAVA_XMX: 1g
-      # OVERRIDE: Optional: Configure the garbage collector the JVM will use.
-      #           Valid options are: SerialGC, ParallelGC, ParNewGC, G1GC, ZGC
+      # OVERRIDE: Maximum Java heap size. Image default: 1536m
+      # JAVA_XMX: 1536m
+      # OVERRIDE: Optional: Configure the garbage collector the JVM will use. Image default: ShenandoahGC
+      #           Valid options are: SerialGC, ParallelGC, ParNewGC, G1GC, ZGC, ShenandoahGC
       #           Note: ZGC might not work
       # JAVA_GC: SerialGC
       # OVERRIDE: Optional: Set you own custom Java options for the JVM.
@@ -41,6 +44,10 @@ services:
       # MAP_UID: 1026
       # OVERRIDE: Set GID for group languagetool. Image default: 783
       # MAP_GID: 100
+      #
+      # DISABLE_PERMISSION_FIX: false
+      # DISABLE_FASTTEXT: false
+      # DEBUG_ENTRYPOINT: false
     volumes:
       # OPTIONAL: The location of ngrams data on the local machine
       - ./ngrams:/ngrams
