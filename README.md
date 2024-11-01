@@ -137,8 +137,6 @@ If the container is started as privliged user (default), and the environment var
 
 ## Volumes
 
-The volume parameters are split into two halves, separated by an equal, the left-hand side represents the variable names (use them as is) the right-hand side the value (change if necessary).
-
 | Container Path         | DESCRIPTION                                                                                                                                                        |
 |------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | /ngrams                | Location to store the ngram language models. If container is started as unprivileged user, make sure the host path is owned by the user that starts the container. |
