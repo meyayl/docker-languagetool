@@ -17,7 +17,7 @@ services:
       - no-new-privileges
     ports:
       # Using default port from the image
-      - 8010:8010
+      - 8081:8081
     environment:
       # OVERRIDE: comma seperated list of ngram language models to download (if not existing)
       #           Valid languages are "en", "de", "es", "fr" and "nl". Image default: none
