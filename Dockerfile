@@ -1,5 +1,5 @@
-ARG LT_VERSION=6.5
-ARG JAVA_VERSION=jdk-21.0.6+7
+ARG LT_VERSION=6.6
+ARG JAVA_VERSION=jdk-21.0.7+6
 FROM alpine:3.21.3 AS base
 
 FROM base AS java_base
@@ -9,7 +9,7 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 RUN set -eux; \
-    apk add --no-cache libretls musl-locales musl-locales-lang tzdata zlib unzip; \
+    apk add --upgrade --no-cache libretls musl-locales musl-locales-lang tzdata zlib unzip; \
     rm -rf /var/cache/apk/*
 
 FROM java_base AS prepare
@@ -24,6 +24,7 @@ ENV JAVA_HOME=/opt/java/openjdk \
 RUN set -eux; \
     apk add --no-cache binutils; \
     rm -rf /var/cache/apk/*
+
 # hadolint ignore=SC3060
 # hadolint ignore=DL4006
 RUN set -eux; \
@@ -47,10 +48,10 @@ RUN set -eux; \
 RUN set -eux; \
     wget -O /tmp/LanguageTool-${LT_VERSION}.zip https://www.languagetool.org/download/LanguageTool-${LT_VERSION}.zip; \
     unzip "/tmp/LanguageTool-${LT_VERSION}.zip"; \
-    mv /LanguageTool-* "/languagetool"; \
+    mv /LanguageTool-*/ "/languagetool"; \
 	cd "/languagetool"; \
     ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml; \
-    rm "/tmp/LanguageTool-${LT_VERSION}.zip" 
+    rm "/tmp/LanguageTool-${LT_VERSION}.zip"
 
 RUN set -eux; \
     LT_DEPS=$("${JAVA_HOME}/bin/jdeps" \
@@ -66,19 +67,18 @@ RUN set -eux; \
         --strip-debug \
         --no-man-pages \
         --no-header-files \
-        --compress=2 \
         --output /opt/java/customjre
-
 
 FROM java_base
 
 RUN set -eux; \
-    apk add --no-cache bash shadow libstdc++ gcompat su-exec tini xmlstarlet fasttext; \
+    apk add --no-cache bash shadow libstdc++ gcompat su-exec tini xmlstarlet fasttext nss_wrapper; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
     groupmod --gid 783 --new-name languagetool users; \
-    adduser -u 783 -S languagetool -G languagetool -H
+    adduser -u 783 -S languagetool -G languagetool -H; \
+    mkdir -p /ngrams /fasttext
 
 COPY --from=prepare /languagetool/ /languagetool
 COPY --from=prepare /opt/java/customjre/ /opt/java/customjre
@@ -92,17 +92,25 @@ ENV JAVA_HOME=/opt/java/customjre \
     MAP_GID=783 \
     LOG_LEVEL=INFO \
     LOGBACK_CONFIG=./logback.xml \
-    DISABLE_PERMISSION_FIX=false \
-    DISABLE_FASTTEXT=false
+    DISABLE_FILE_OWNER_FIX=false \
+    DISABLE_FASTTEXT=false \
+    LISTEN_PORT=8081
 
 ENV PATH=${JAVA_HOME}/bin:${PATH}
 
 WORKDIR /languagetool
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s CMD wget --quiet --post-data "language=en-US&text=a simple test" -O - http://localhost:${LISTEN_PORT}/v2/check > /dev/null 2>&1  || exit 1
+EXPOSE ${LISTEN_PORT}
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s CMD wget --quiet --post-data "language=en-US&text=a simple test" -O - http://localhost:8010/v2/check > /dev/null 2>&1  || exit 1
-EXPOSE 8010
-
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
+
+LABEL org.opencontainers.image.title="meyay/languagetool"
+LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
+LABEL org.opencontainers.image.version="6.6-0"
+LABEL org.opencontainers.image.created="2025-04-19"
+LABEL org.opencontainers.image.licenses="LGPL-2.1"
+LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
+LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"
+LABEL org.opencontainers.image.url="https://github.com/languagetool-org/languagetool"

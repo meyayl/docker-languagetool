@@ -4,27 +4,28 @@ services:
     image: meyay/languagetool:latest
     container_name: languagetool
     restart: unless-stopped
-    read_only: true
+    # read_only: true
     tmpfs:
       - /tmp
     cap_drop:
       - ALL
     cap_add:
+      - CAP_CHOWN
+      - CAP_DAC_OVERRIDE
       - CAP_SETUID
       - CAP_SETGID
-      - CAP_CHOWN
     security_opt:
       - no-new-privileges
     ports:
       # Using default port from the image
-      - 8010:8010
+      - 8081:8081
     environment:
       # OVERRIDE: comma seperated list of ngram language models to download (if not existing)
       #           Valid languages are "en", "de", "es", "fr" and "nl". Image default: none
       #           example: download_ngrams_for_langs: en,de,es
       download_ngrams_for_langs: en
       # OPTIONAL: container path for the ngrams data. Image default: /ngrams
-      #langtool_languageModel: /ngrams
+      # langtool_languageModel: /ngrams
       # OVERRIDE: container path to the fasttext binary. Image default: /usr/local/bin/fasttext
       # langtool_fasttextBinary: /usr/local/bin/fasttext
       # OPTIONAL: path to the fasttext model. Image default:/fasttext/lid.176.bin
@@ -44,9 +45,11 @@ services:
       # MAP_UID: 1026
       # OVERRIDE: Set GID for group languagetool. Image default: 783
       # MAP_GID: 100
-      #
-      # DISABLE_PERMISSION_FIX: false
+      # OPTIONAL: disable fixing file owner issues. Image default: false
+      # DISABLE_FILE_OWNER_FIX: false
+      # OPTIONAL: disable the fasttext support. Image default: false
       # DISABLE_FASTTEXT: false
+      # OPTIONAL: activate debug output for the entrypoint script. Image default: false
       # DEBUG_ENTRYPOINT: false
     volumes:
       # OPTIONAL: The location of ngrams data on the local machine
