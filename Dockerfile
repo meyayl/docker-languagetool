@@ -51,7 +51,15 @@ RUN set -eux; \
     mv /LanguageTool-*/ "/languagetool"; \
 	cd "/languagetool"; \
     ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml; \
-    rm "/tmp/LanguageTool-${LT_VERSION}.zip"
+    rm "/tmp/LanguageTool-${LT_VERSION}.zip"; \
+    update_maven_dependency() { \
+      local _URL=${1}; \
+      local _FILENAME=${_URL##*/}; \
+      local _FILENAME=${_FILENAME%\-*}.jar; \
+      wget "${_URL}" -O /languagetool/libs/${_FILENAME}; \
+    }; \
+    update_maven_dependency https://repo1.maven.org/maven2/ch/qos/logback/logback-core/1.5.18/logback-core-1.5.18.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/ch/qos/logback/logback-classic/1.5.18/logback-classic-1.5.18.jar
 
 RUN set -eux; \
     LT_DEPS=$("${JAVA_HOME}/bin/jdeps" \
@@ -108,8 +116,8 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.6-0"
-LABEL org.opencontainers.image.created="2025-04-19"
+LABEL org.opencontainers.image.version="6.6-1"
+LABEL org.opencontainers.image.created="2025-04-20"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
 LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"
