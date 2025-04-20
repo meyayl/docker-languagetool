@@ -214,9 +214,11 @@ cd docker-languagetool
 sudo docker build -t meyay/languagetool:latest -f Dockerfile.fasttext .
 ```
 
+As alternative method, `sudo make docker_build` can be used to build your custom image.
+
 Once the image is build, you can `docker compose up -d` like you would do with the images hosted on Docker Hub.
 
->NOTE1: Alpine version 3.19+ comes with gcc13, and does not provide older versions which are required to compile the fasttext sources. As a result Alpine 3.18.8 is used to compile fasttext with gcc12.
+>NOTE1: From now on the fastText sources are patched to work with gcc13.
 
 >NOTE2: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
 
