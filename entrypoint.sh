@@ -31,7 +31,7 @@ is_root() {
 }
 
 is_ro_mount(){
-  [[ "$(awk '/^[[:alnum:]]* \/ /{ split($4,mount_opts,","); for (i = 1; i <= length(mount_opts); i++){if (mount_opts[i] == "ro" || mount_opts[i] == "rw" ){print mount_opts[i];}}}' /proc/mounts)" == "ro" ]]
+  [[ "$(awk '/^[[:alnum:]]* \/ /{ if ($1 != "rootfs") { split($4,mount_opts,","); for (i = 1; i <= length(mount_opts); i++){if (mount_opts[i] == "ro" || mount_opts[i] == "rw" ){print mount_opts[i];}}}}' /proc/mounts)" == "ro" ]]
 }
 
 download_and_extract_ngram_language_model(){
