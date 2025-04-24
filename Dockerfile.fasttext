@@ -1,6 +1,6 @@
 ARG LT_VERSION=6.6
 ARG JAVA_VERSION=jdk-21.0.7+6
-FROM alpine:3.18.12 as base
+FROM alpine:3.21.3 AS base
 
 FROM base AS java_base
 
@@ -82,12 +82,17 @@ FROM base AS fasttext
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 RUN set -eux; \
-    apk add --no-cache git build-base upx; \
+    apk add --no-cache git build-base cmake upx; \
     rm -rf /var/cache/apk/*
 
+COPY patches/ /patches/
 RUN set -eux; \
     git clone https://github.com/facebookresearch/fastText.git; \
-    make -C fastText;\
+    cp /patches/* fastText/; \
+    cd fastText; \
+    git apply gcc13.patch; \
+    cmake . ; \
+    make ; \
     upx -5 -o /fastText/fasttext-upx /fastText/fasttext
 
 FROM java_base
