@@ -81,6 +81,8 @@ FROM java_base
 
 RUN set -eux; \
     apk add --no-cache bash shadow libstdc++ gcompat su-exec tini xmlstarlet fasttext nss_wrapper; \
+    # fix CVE-2025-32414 and CVE-2025-32415 in Alpine 3.21.3
+    apk add --no-cache libxml2; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
@@ -116,8 +118,8 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.6-1"
-LABEL org.opencontainers.image.created="2025-04-20"
+LABEL org.opencontainers.image.version="6.6-2"
+LABEL org.opencontainers.image.created="2025-05-18"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
 LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"
