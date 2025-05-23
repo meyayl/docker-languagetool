@@ -353,16 +353,41 @@ fi
 if [[ "${USER_MAPPING}" == "true" ]]; then
     su -m -s /bin/bash languagetool -c 'handle_ngram_language_models'
     su -m -s /bin/bash languagetool -c 'download_fasttext_model'
-    if [[ "${DISABLE_FASTTEXT}" == "true" ]]; then
-      unset langtool_fasttextModel
-    fi
-
 else
     handle_ngram_language_models
     download_fasttext_model
-    if [[ "${DISABLE_FASTTEXT}" == "true" ]]; then
-      unset langtool_fasttextModel
+fi
+
+if [[ "${DISABLE_FASTTEXT}" != "true" ]]; then
+  if [[ -z "${langtool_fasttextBinary}" ]]; then
+    echo -e "${INFO}: Variable \"langtool_fasttextBinary\" not set. Fasttext can not be used."
+    DISABLE_FASTTEXT=true
+  else
+    if [[ ! -e "${langtool_fasttextBinary}" ]]; then
+      echo -e "${WARN}: Fasttext binary not found at \"${langtool_fasttextBinary}\". Fasttext can not be used."
+      DISABLE_FASTTEXT=true
+    else
+      if [[ ! -x "${langtool_fasttextBinary}" ]]; then
+        echo -e "${WARN}: Fasttext binary has not execution permission \"${langtool_fasttextBinary}\". Fasttext can not be used."
+        DISABLE_FASTTEXT=true
+      fi
     fi
+  fi
+  if [[ -z "${langtool_fasttextModel}" ]]; then
+    echo -e "${INFO}: Variable \"langtool_fasttextModel\" not set. Fasttext can not be used."
+    DISABLE_FASTTEXT=true
+  else
+    if [[ ! -e "${langtool_fasttextModel}" ]]; then
+      echo -e "${WARN}: Fasttext model not found at \"${langtool_fasttextModel}\". Fasttext can not be used."
+      DISABLE_FASTTEXT=true
+    fi
+  fi
+fi
+
+if [[ "${DISABLE_FASTTEXT}" == "true" ]] ; then
+  echo -e "${WARN}: Fasttext support is disabled."
+  unset langtool_fasttextModel
+  unset langtool_fasttextBinary
 fi
 
 # create config
