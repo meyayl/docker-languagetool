@@ -58,7 +58,7 @@ docker run -d \
   --env MAP_UID=783 \
   --env MAG_GID=783 \
   --read-only \
-  --tmpfs /tmp \
+  --tmpfs /tmp:exec \
   --volume $PWD/ngrams:/ngrams \
   --volume $PWD/fasttext:/fasttext \
   meyay/languagetool:latest
@@ -75,7 +75,7 @@ services:
     restart: unless-stopped
     read_only: true
     tmpfs:
-      - /tmp
+      - /tmp:exec
     cap_drop:
       - ALL
     cap_add:
@@ -117,7 +117,7 @@ docker run -d \
   --env download_ngrams_for_langs=en \
   --user 783:783 \
   --read-only \
-  --tmpfs /tmp \
+  --tmpfs /tmp:exec \
   --volume $PWD/ngrams:/ngrams \
   --volume $PWD/fasttext:/fasttext \
   meyay/languagetool:latest
@@ -135,7 +135,7 @@ services:
     user: "783:783"
     read_only: true
     tmpfs:
-      - /tmp
+      - /tmp:exec
     cap_drop:
       - ALL
     security_opt:

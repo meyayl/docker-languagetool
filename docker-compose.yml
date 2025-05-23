@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     # read_only: true
     tmpfs:
-      - /tmp
+      - /tmp:exec
     cap_drop:
       - ALL
     cap_add:
