@@ -172,10 +172,10 @@ It can be changed using the environment variable `LISTEN_PORT`.
 |----------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | no       | /ngrams        | Location to store the ngram language models. If container is started as unprivileged user, make sure the host path is owned by the user and/or group that starts the container. |
 | no       | /fasttext      | Location to store the fasttext model. If container is started as unprivileged user, make sure the host path is owned by the user and/or group that starts the container.        |
-| yes      | /tmp           | Location to store the created logback.xml and config.property. Preferably a tmpfs mount. |
+| yes      | /tmp           | Location to store the created logback.xml and config.property. Preferably a tmpfs mount with exec permissions.                                                                  |
 
 Restrictions if only required volumes are used:
-- privileged container: ngram language models and fasttext model will written into the container filesystem.
+- privileged container: ngram language models and fasttext model will be written into the container filesystem.
 - read-only filesystem: neither ngram language models, nor fasttext model can be used.
 - unprivileged container: neither ngram language models, nor fasttext model can be used.
 
