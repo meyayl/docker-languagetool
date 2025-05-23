@@ -358,6 +358,11 @@ else
     download_fasttext_model
 fi
 
+if [[ "${CONTAINER_MODE}" == "download-only" ]]; then
+    echo -e "${INFO}: Variable \"CONTAINER_MODE\" set to \"download-only\". Stopping the container."
+    exit 0
+fi
+
 if [[ "${DISABLE_FASTTEXT}" != "true" ]]; then
   if [[ -z "${langtool_fasttextBinary}" ]]; then
     echo -e "${INFO}: Variable \"langtool_fasttextBinary\" not set. Fasttext can not be used."

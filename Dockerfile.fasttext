@@ -123,7 +123,8 @@ ENV JAVA_HOME=/opt/java/customjre \
     LOGBACK_CONFIG=./logback.xml \
     DISABLE_FILE_OWNER_FIX=false \
     DISABLE_FASTTEXT=false \
-    LISTEN_PORT=8081
+    LISTEN_PORT=8081 \
+    CONTAINER_MODE=default
 
 ENV PATH=${JAVA_HOME}/bin:${PATH}
 
@@ -137,8 +138,8 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.6-2"
-LABEL org.opencontainers.image.created="2025-05-18"
+LABEL org.opencontainers.image.version="6.6-3"
+LABEL org.opencontainers.image.created="2025-05-23"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
 LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"
