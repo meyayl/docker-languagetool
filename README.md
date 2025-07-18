@@ -8,7 +8,7 @@ The Docker Hub repository can be found [here](https://hub.docker.com/r/meyay/lan
 ## Features
 
 - Uses official LanguageTool [release zip](https://languagetool.org/download/)
-- Built on latest Alpine 3.21 base image
+- Built on latest Alpine 3.22 base image
 - Custom Eclipse Temurin 21 JRE (optimized with required modules only)
 - Uses `tini` to handle container signals properly
 - includes `fasttext`
@@ -231,7 +231,7 @@ Once the image is build, you can `docker compose up -d` like you would do with t
 | 2025-05-23                    | 6.6-3      | - Add CONTAINER_MODE variable for k8s users, that might want to manage the model downloads in initContainers.                                                                                                                                                                                |
 | 2025-05-18                    | 6.6-2      | - Fix: jna error (`Error loading shared library /tmp/jna*.tmp: Operation not permitted`)<br/> - Fix CVE-2025-32414 and CVE-2025-32415 in Alpine 3.21.3                                                                                                                                       |
 | 2025-04-20                    | 6.6-1      | - Fix: read-only mode for Synology DSM6.2 with aufs<br/> - Replace cve affected logback-core and logback-classic with package version 1.5.18                                                                                                                                                 |
-| 2025-04-19                    | 6.6-0      | - Breaking: Changed LISTEN_PORT from 8010 to 8081<br/> - Extended sanity checks and log output in entrypoint script<br/> - Update Java to 21.0.7+6                                                                                                                                           |
+| 2025-04-19                    | 6.6-0      | - Update to LaguageTool 6.6<br/> - Breaking: Changed LISTEN_PORT from 8010 to 8081<br/> - Extended sanity checks and log output in entrypoint script<br/> - Update Java to 21.0.7+6                                                                                                                                           |
 | 2025-02-16                    | 6.5-2      | - Update base image to Alpine 3.21.3<br/> - Update Java to 21.0.6+7                                                                                                                                                                                                                          |
 | 2024-10-30                    | 6.5-1      | - Massive refactoring of Entrypoint script<br/> - Update Java to 21.0.5+11                                                                                                                                                                                                                   |
 | 2024-09-29                    | 6.5-0      | - Update to LaguageTool 6.5                                                                                                                                                                                                                                                                  |
