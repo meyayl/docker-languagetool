@@ -7,7 +7,7 @@ The Docker Hub repository can be found [here](https://hub.docker.com/r/meyay/lan
 
 ## Features
 
-- Builds the release versions based on tags from [LanguageTool](https://github.com/languagetool-org/languagetool/tags) source repository
+- Version build from tags of the [LanguageTool](https://github.com/languagetool-org/languagetool/tags) repository to accommodate the [discontinuation](https://github.com/languagetool-org/languagetool/blob/master/languagetool-standalone/CHANGES.md#66-2025-03-27) of release zips after v6.6
 - Built on latest Alpine 3.22 base image
 - Custom Eclipse Temurin 21 JRE (optimized with required modules only)
 - Uses `tini` to handle container signals properly
