@@ -1,5 +1,6 @@
 ARG LT_VERSION=6.6
 ARG JAVA_VERSION=jdk-21.0.8+9
+ARG MAVEN_VERSION=3.9.11
 FROM alpine:3.22.1 AS base
 
 FROM base AS java_base
@@ -9,7 +10,9 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 RUN set -eux; \
-    apk add --upgrade --no-cache libretls musl-locales musl-locales-lang tzdata zlib unzip; \
+    apk add --upgrade --no-cache libretls musl-locales musl-locales-lang tzdata zlib; \
+    # Fix HIGH CVE-2008-0888
+    apk add --no-cache unzip --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main; \
     rm -rf /var/cache/apk/*
 
 FROM java_base AS prepare
@@ -17,6 +20,7 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 ARG LT_VERSION
 ARG JAVA_VERSION
+ARG MAVEN_VERSION
 
 ENV JAVA_HOME=/opt/java/openjdk \
     JAVA_VERSION=${JAVA_VERSION}
@@ -46,12 +50,34 @@ RUN set -eux; \
     rm /tmp/openjdk.tar.gz;
 
 RUN set -eux; \
-    wget -O /tmp/LanguageTool-${LT_VERSION}.zip https://www.languagetool.org/download/LanguageTool-${LT_VERSION}.zip; \
-    unzip "/tmp/LanguageTool-${LT_VERSION}.zip"; \
+    URL="https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" ; \
+    CHKSUM=$(wget --quiet -O - "${URL}.sha512") ; \
+    MAVEN_HOME=/opt/maven : \
+    echo "b" ;\
+    wget -O /tmp/maven.tar.gz ${URL} ; \
+    echo "c" ;\
+    echo "${CHKSUM} */tmp/maven.tar.gz" | sha512sum -c - ; \
+    mkdir -p "${MAVEN_HOME}"; \
+    echo "d" ;\
+    tar --extract \
+        --file /tmp/maven.tar.gz \
+        --directory "${MAVEN_HOME}" \
+        --strip-components 1 \
+        --no-same-owner \
+    ; \
+    echo "d" ;\
+    rm /tmp/maven.tar.gz;
+
+RUN set -eux; \
+    apk add --upgrade --no-cache git; \
+    rm -rf /var/cache/apk/* ;\
+    git clone --depth 1 -b v${LT_VERSION} https://github.com/languagetool-org/languagetool.git /tmp/languagetool ; \
+    /opt/maven/bin/mvn --file /tmp/languagetool/pom.xml --projects languagetool-standalone --also-make package -DskipTests --quiet; \
+    unzip "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" -d "/"; \
     mv /LanguageTool-*/ "/languagetool"; \
 	cd "/languagetool"; \
     ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml; \
-    rm "/tmp/LanguageTool-${LT_VERSION}.zip"; \
+    rm -r "/tmp/languagetool"; \
     update_maven_dependency() { \
       local _URL=${1}; \
       local _FILENAME=${_URL##*/}; \
@@ -100,8 +126,6 @@ FROM java_base
 
 RUN set -eux; \
     apk add --no-cache bash shadow libstdc++ gcompat su-exec tini xmlstarlet nss_wrapper; \
-    # fix CVE-2025-32414 and CVE-2025-32415 in Alpine 3.21.3
-    apk add --no-cache libxml2; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
@@ -139,8 +163,8 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.6-4"
-LABEL org.opencontainers.image.created="2025-07-18"
+LABEL org.opencontainers.image.version="6.6-5"
+LABEL org.opencontainers.image.created="2025-08-29"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
 LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"
