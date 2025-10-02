@@ -11,6 +11,8 @@ ENV LANG=en_US.UTF-8 \
 
 RUN set -eux; \
     apk add --upgrade --no-cache libretls musl-locales musl-locales-lang tzdata zlib; \
+    # Fix  CVE-2025-9230 (High), CVE-2025-9231 (Medium), CVE-2025-9232 (Medium)
+    apk add --no-cache openssl; \
     # Fix HIGH CVE-2008-0888
     apk add --no-cache unzip --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main; \
     rm -rf /var/cache/apk/*
@@ -86,7 +88,8 @@ RUN set -eux; \
     }; \
     update_maven_dependency https://repo1.maven.org/maven2/ch/qos/logback/logback-core/1.5.18/logback-core-1.5.18.jar; \
     update_maven_dependency https://repo1.maven.org/maven2/ch/qos/logback/logback-classic/1.5.18/logback-classic-1.5.18.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar
+    update_maven_dependency https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.118.Final/netty-codec-4.1.118.Final.jar
 
 RUN set -eux; \
     LT_DEPS=$("${JAVA_HOME}/bin/jdeps" \
@@ -136,7 +139,7 @@ ENV PATH=${JAVA_HOME}/bin:${PATH}
 
 WORKDIR /languagetool
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s CMD wget --quiet --post-data "language=en-US&text=a simple test" -O - http://localhost:${LISTEN_PORT}/v2/check > /dev/null 2>&1  || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s CMD wget --quiet --output-document - http://localhost:${LISTEN_PORT}/v2/healthcheck > /dev/null 2>&1  || exit 1
 EXPOSE ${LISTEN_PORT}
 
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
@@ -144,8 +147,8 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.6-5"
-LABEL org.opencontainers.image.created="2025-08-29"
+LABEL org.opencontainers.image.version="6.6-6"
+LABEL org.opencontainers.image.created="2025-10-02"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
 LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"
