@@ -89,7 +89,7 @@ RUN set -eux; \
     update_maven_dependency https://repo1.maven.org/maven2/ch/qos/logback/logback-core/1.5.18/logback-core-1.5.18.jar; \
     update_maven_dependency https://repo1.maven.org/maven2/ch/qos/logback/logback-classic/1.5.18/logback-classic-1.5.18.jar; \
     update_maven_dependency https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.118.Final/netty-codec-4.1.118.Final.jar
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.127.Final/netty-codec-4.1.127.Final.jar
 
 RUN set -eux; \
     LT_DEPS=$("${JAVA_HOME}/bin/jdeps" \
@@ -147,7 +147,7 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.6-6"
+LABEL org.opencontainers.image.version="6.6-7"
 LABEL org.opencontainers.image.created="2025-10-02"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
