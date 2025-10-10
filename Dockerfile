@@ -1,7 +1,7 @@
 ARG LT_VERSION=6.7
 ARG JAVA_VERSION=jdk-21.0.8+9
 ARG MAVEN_VERSION=3.9.11
-FROM alpine:3.22.1 AS base
+FROM alpine:3.22.2 AS base
 
 FROM base AS java_base
 
@@ -11,12 +11,6 @@ ENV LANG=en_US.UTF-8 \
 
 RUN set -eux; \
     apk add --upgrade --no-cache libretls musl-locales musl-locales-lang tzdata zlib; \
-    # Fix CVE-2025-49796 (Critical), CVE-2025-49794 (Critical), CVE-2025-49795 (High), CVE-2025-6021 (High), CVE-2025-6170 (Low)
-    apk add --no-cache libxml2~=2.13.9-r; \
-    # Fix CVE-2025-9230 (High), CVE-2025-9231 (Medium), CVE-2025-9232 (Medium)
-    apk add --no-cache openssl~=3.5.4-r0; \
-    # Fix CVE-2008-0888 (High)
-    apk add --no-cache unzip --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main; \
     rm -rf /var/cache/apk/*
 
 FROM java_base AS prepare
@@ -146,8 +140,8 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.7-0"
-LABEL org.opencontainers.image.created="2025-10-09"
+LABEL org.opencontainers.image.version="6.7-1"
+LABEL org.opencontainers.image.created="2025-10-10"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
 LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"
