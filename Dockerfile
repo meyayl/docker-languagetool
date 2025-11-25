@@ -52,26 +52,28 @@ RUN set -eux; \
 RUN set -eux; \
     URL="https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" ; \
     CHKSUM=$(wget --quiet -O - "${URL}.sha512") ; \
-    MAVEN_HOME=/opt/maven : \
-    echo "b" ;\
+    MAVEN_HOME=/opt/maven ; \
     wget -O /tmp/maven.tar.gz ${URL} ; \
-    echo "c" ;\
     echo "${CHKSUM} */tmp/maven.tar.gz" | sha512sum -c - ; \
     mkdir -p "${MAVEN_HOME}"; \
-    echo "d" ;\
     tar --extract \
         --file /tmp/maven.tar.gz \
         --directory "${MAVEN_HOME}" \
         --strip-components 1 \
         --no-same-owner \
     ; \
-    echo "d" ;\
     rm /tmp/maven.tar.gz;
 
 RUN set -eux; \
-    apk add --upgrade --no-cache git; \
+    apk add --upgrade --no-cache git xmlstarlet ; \
     rm -rf /var/cache/apk/* ;\
     git clone --depth 1 -b v${LT_VERSION} https://github.com/languagetool-org/languagetool.git /tmp/languagetool ; \
+    patch_property() { \
+      local _xpath=${1} ; \
+      local _value=${2} ; \
+      xml edit --inplace --update "${_xpath}" --value "${_value}" /tmp/languagetool/pom.xml ; \
+    }; \
+    patch_property "//*[name()='ch.qos.logback.version']" "1.5.21" ; \
     /opt/maven/bin/mvn --file /tmp/languagetool/pom.xml --projects languagetool-standalone --also-make package -DskipTests --quiet; \
     unzip "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" -d "/"; \
     mv /LanguageTool-*/ "/languagetool"; \
@@ -84,9 +86,15 @@ RUN set -eux; \
       local _FILENAME=${_FILENAME%\-*}.jar; \
       wget "${_URL}" -O /languagetool/libs/${_FILENAME}; \
     }; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.127.Final/netty-codec-4.1.127.Final.jar;  \
-    update_maven_dependency https://repo1.maven.org/maven2/ch/qos/logback/logback-core/1.5.19/logback-core-1.5.19.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/ch/qos/logback/logback-classic/1.5.19/logback-classic-1.5.19.jar;
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-buffer/4.1.127.Final/netty-buffer-4.1.127.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.1.127.Final/netty-codec-dns-4.1.127.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.127.Final/netty-codec-4.1.127.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-common/4.1.127.Final/netty-common-4.1.127.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-handler/4.1.127.Final/netty-handler-4.1.127.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.1.127.Final/netty-resolver-dns-4.1.127.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-resolver/4.1.127.Final/netty-resolver-4.1.127.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-transport-native-unix-common/4.1.127.Final/netty-transport-native-unix-common-4.1.127.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-transport/4.1.127.Final/netty-transport-4.1.127.Final.jar;
 
 RUN set -eux; \
     LT_DEPS=$("${JAVA_HOME}/bin/jdeps" \

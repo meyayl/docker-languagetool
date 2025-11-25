@@ -32,6 +32,11 @@ The Docker Hub repository can be found [here](https://hub.docker.com/r/meyay/lan
 >Either update your port mapping configuration to use the new port, or set the environment
 >variable `LISTEN_PORT` to `8010` to retain old behavior.
 
+>⚠️ WARNING for version 6.7 ⚠️
+>
+>There might be a potential memory leak that results in unlimited memory growth.
+>Please remain on the image from the 6.6 tag for day to day use, and try the 6.7 tag only for testing purposes.
+
 ## Setup
 
 The following subsections show usage examples.<br/>
@@ -227,6 +232,7 @@ Once the image is build, you can `docker compose up -d` like you would do with t
 
 | Date                          | Tag       | Change                                                                                                                                                                                                                                                                                       |
 |-------------------------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 2025-11-25                    | 6.7-3     | - Refactor mechanism for CVE upgrades on Java dependencies: patch pom.xml for direct dependencies, override  libraries for transitive dependencies where the dependant artifact can't be upgraded using the pom.xml.                                                                       |
 | 2025-10-25                    | 6.7-2     | - Fix extraction issue for downloads caused by `unzip` in-box version from Alpine 3.22.2 (using edge package instead)<br/> - Update Java to 21.0.9+10<br/>  - Fix CVE-2025-11226 (Medium)                                                                                                    |
 | 2025-10-10                    | 6.7-1     | - Update Alpine to 3.22.2                                                                                                                                                                                                                                                                    |
 | 2025-10-09                    | 6.7-0     | - Update to LaguageTool 6.7<br/> - Fix CVE-2025-49796 (Critical), CVE-2025-49794 (Critical), CVE-2025-49795 (High), CVE-2025-6021 (High), CVE-2025-6170 (Low)                                                                                                                                |
