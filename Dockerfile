@@ -1,7 +1,7 @@
 ARG LT_VERSION=6.7
 ARG JAVA_VERSION=jdk-21.0.9+10
 ARG MAVEN_VERSION=3.9.11
-FROM alpine:3.22.2 AS base
+FROM alpine:3.23.2 AS base
 
 FROM base AS java_base
 
