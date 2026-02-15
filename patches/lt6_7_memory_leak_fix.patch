@@ -1,0 +1,442 @@
+From 0045f6f6f0935a04a2c79d71bc0019f455b65c9b Mon Sep 17 00:00:00 2001
+From: Jonathan Hult <Jonathan@JonathanHult.com>
+Date: Fri, 5 Dec 2025 11:45:04 -0600
+Subject: [PATCH] [core] fix memory leak in Hunspell dictionary loading
+
+This commit fixes a severe memory leak in Hunspell dictionary loading that caused unbounded memory growth during normal operation (#11380).
+
+By making a contribution to this project, I certify that:
+
+(a) The contribution was created in whole or in part by me and I have the right to submit it under the open source license indicated in the file; or
+
+(b) The contribution is based upon previous work that, to the best of my knowledge, is covered under an appropriate open source license and I have the right under that license to submit that work with modifications, whether created in whole or in part by me, under the same open source license (unless I am permitted to submit under a different license), as indicated in the file; or
+
+(c) The contribution was provided directly to me by some other person who certified (a), (b) or (c) and I have not modified it.
+
+(d) I understand and agree that this project and the contribution are public and that a record of the contribution (including all personal information I submit with it, including my sign-off) is maintained indefinitely and may be redistributed consistent with this project or the open source license(s) involved.
+
+Signed-off-by: Jonathan Hult <Jonathan@JonathanHult.com>
+---
+ .../hunspell/DumontsHunspellDictionary.java   |  38 ++-
+ .../rules/spelling/hunspell/Hunspell.java     | 227 +++++++++++-------
+ .../rules/spelling/hunspell/HunspellRule.java |  22 +-
+ 3 files changed, 174 insertions(+), 113 deletions(-)
+
+diff --git a/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/DumontsHunspellDictionary.java b/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/DumontsHunspellDictionary.java
+index f554398d4297..dd051f546c2e 100644
+--- a/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/DumontsHunspellDictionary.java
++++ b/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/DumontsHunspellDictionary.java
+@@ -21,17 +21,33 @@
+ import dumonts.hunspell.Hunspell;
+
+ import java.io.IOException;
++import java.nio.file.Files;
+ import java.nio.file.Path;
+ import java.util.Arrays;
+ import java.util.List;
++import lombok.Getter;
++import lombok.extern.slf4j.Slf4j;
+
++@Slf4j
+ public class DumontsHunspellDictionary implements HunspellDictionary {
+   private final Hunspell hunspell;
++  private final Path dictionaryPath;
++  private final Path affixPath;
++  @Getter
++  private final boolean deleteOnClose;
++  @Getter
+   private boolean closed = false;
+
+   public DumontsHunspellDictionary(Path dictionary, Path affix) {
++    this(dictionary, affix, false);
++  }
++
++  public DumontsHunspellDictionary(Path dictionary, Path affix, boolean deleteOnClose) {
++    this.dictionaryPath = dictionary;
++    this.affixPath = affix;
++    this.deleteOnClose = deleteOnClose;
+     try {
+-      hunspell = new Hunspell(dictionary,affix);
++      hunspell = new Hunspell(dictionary, affix);
+     } catch (UnsatisfiedLinkError e) {
+       throw new RuntimeException("Could not create hunspell instance. Please note that LanguageTool supports only 64-bit platforms " +
+           "(Linux, Windows, Mac) and that it requires a 64-bit JVM (Java).", e);
+@@ -62,14 +78,24 @@ public List<String> suggest(String word) {
+     return Arrays.asList(hunspell.suggest(word));
+   }
+
+-  @Override
+-  public boolean isClosed() {
+-    return closed;
+-  }
+-
+   @Override
+   public void close() throws IOException {
+     closed = true;
+     hunspell.close();
++
++    // Clean up temp files if this dictionary owns them (fixes #11380)
++    if (deleteOnClose) {
++      try {
++        boolean dicDeleted = Files.deleteIfExists(dictionaryPath);
++        boolean affDeleted = Files.deleteIfExists(affixPath);
++        if (dicDeleted || affDeleted) {
++          log.trace("Deleted temporary Hunspell files: {} (deleted: {}) and {} (deleted: {})",
++                    dictionaryPath, dicDeleted, affixPath, affDeleted);
++        }
++      } catch (IOException e) {
++        // Log but don't throw - cleanup is best effort
++        log.trace("Failed to delete temporary Hunspell files: {} and {}", dictionaryPath, affixPath, e);
++      }
++    }
+   }
+ }
+diff --git a/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/Hunspell.java b/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/Hunspell.java
+index 7c28e0d01d0f..922df659e5ac 100644
+--- a/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/Hunspell.java
++++ b/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/Hunspell.java
+@@ -1,80 +1,81 @@
+ package org.languagetool.rules.spelling.hunspell;
+
+-import org.languagetool.JLanguageTool;
+-import org.languagetool.broker.ResourceDataBroker;
+-
+-import java.io.*;
++import java.io.IOException;
++import java.io.InputStream;
+ import java.net.URISyntaxException;
+ import java.net.URL;
+-import java.nio.file.*;
+-import java.util.*;
+-import java.util.function.BiFunction;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.nio.file.StandardCopyOption;
++import java.util.HashMap;
++import java.util.Map;
++import java.util.Objects;
++import lombok.extern.slf4j.Slf4j;
++import org.jetbrains.annotations.NotNull;
++import org.languagetool.JLanguageTool;
++import org.languagetool.broker.ResourceDataBroker;
+
++@Slf4j
+ public final class Hunspell {
+-  static class LanguageAndPath {
+-    private final Path dictionary;
+-    private final Path affix;
+-    LanguageAndPath(Path dictionary, Path affix) {
+-      this.dictionary = Objects.requireNonNull(dictionary);
+-      this.affix = Objects.requireNonNull(affix);
+-    }
+-    @Override
+-    public boolean equals(Object o) {
+-      if (this == o) return true;
+-      if (o == null || getClass() != o.getClass()) return false;
+-      LanguageAndPath that = (LanguageAndPath) o;
+-      return Objects.equals(dictionary, that.dictionary) &&
+-          Objects.equals(affix, that.affix);
+-    }
+-    @Override
+-    public int hashCode() {
+-      return Objects.hash(dictionary, affix);
+-    }
++  private record PathPair(Path dictionary, Path affix) {
++      private PathPair(Path dictionary, Path affix) {
++        this.dictionary = Objects.requireNonNull(dictionary);
++        this.affix = Objects.requireNonNull(affix);
++      }
+   }
+
+-  static final boolean FORCE_TEMP_FILES = "true".equals(System.getenv("HUNSPELL_FORCE_TEMP_FILES"));
++  private record ResourcePair(String dictionaryPath, String affixPath) {
++      private ResourcePair(String dictionaryPath, String affixPath) {
++        this.dictionaryPath = Objects.requireNonNull(dictionaryPath);
++        this.affixPath = Objects.requireNonNull(affixPath);
++      }
++  }
+
+-  private static final Map<LanguageAndPath, HunspellDictionary> map = new HashMap<>();
+-  private static BiFunction<Path, Path, HunspellDictionary> hunspellDictionaryFactory = DumontsHunspellDictionary::new;
+-  private static Factory hunspellDictionaryStreamFactory = viaTempFiles(DumontsHunspellDictionary::new);
++  /**
++   * Cache for {@link HunspellDictionary Hunspell dictionaries} loaded from file paths (real files on disk)
++   */
++  private static final Map<PathPair, HunspellDictionary> pathCache = new HashMap<>();
+
+   /**
+-   * @deprecated Use {@link #setHunspellStreamFactory}
++   * Cache for {@link HunspellDictionary Hunspell dictionaries} loaded from resources (may involve temp files)
+    */
+-  @Deprecated
+-  public static void setHunspellDictionaryFactory(BiFunction<Path, Path, HunspellDictionary> factory) {
+-    if (FORCE_TEMP_FILES) {
+-      hunspellDictionaryFactory = factory;
+-    } else {
+-      hunspellDictionaryStreamFactory = viaTempFiles(factory);
+-    }
+-  }
++  private static final Map<ResourcePair, HunspellDictionary> resourceCache = new HashMap<>();
+
+-  private static Factory viaTempFiles(BiFunction<Path, Path, HunspellDictionary> factory) {
++  private static Factory hunspellDictionaryStreamFactory = viaTempFiles();
++
++  private static Factory viaTempFiles() {
+     return new Factory() {
+       @Override
+       public HunspellDictionary createFromLocalFiles(String languageCode, Path dictionary, Path affix) {
+-        return factory.apply(dictionary, affix);
++        // Local files on disk - no temp files, no cleanup needed
++        return new DumontsHunspellDictionary(dictionary, affix, false);
+       }
+
+       @Override
+       public HunspellDictionary createFromStreams(String language, InputStream dictionaryStream, InputStream affixStream) throws IOException {
+-        Path dictionary = Files.createTempFile(language, ".dic");
+-        Path affix = Files.createTempFile(language, ".aff");
+-        Files.copy(dictionaryStream, dictionary, StandardCopyOption.REPLACE_EXISTING);
+-        Files.copy(affixStream, affix, StandardCopyOption.REPLACE_EXISTING);
+-        try {
+-          return factory.apply(dictionary, affix);
+-        } finally {
+-          Files.deleteIfExists(dictionary);
+-          Files.deleteIfExists(affix);
+-        }
++        // Create temp files from streams - must clean up when dictionary is closed
++        var tempFiles = createTempFilesFromStreams(language, dictionaryStream, affixStream);
++        log.trace("Created temp files for language {}: {} and {}", language, tempFiles.dictionary, tempFiles.affix);
++        return new DumontsHunspellDictionary(tempFiles.dictionary, tempFiles.affix, true);
+       }
+     };
+   }
+
++  private static PathPair createTempFilesFromStreams(String language, InputStream dictionaryStream, InputStream affixStream) throws IOException {
++    Path dictionary = Files.createTempFile(language, ".dic");
++    Path affix = Files.createTempFile(language, ".aff");
++    Files.copy(dictionaryStream, dictionary, StandardCopyOption.REPLACE_EXISTING);
++    Files.copy(affixStream, affix, StandardCopyOption.REPLACE_EXISTING);
++
++    // Mark for deletion on JVM exit (for cached dictionaries that live for JVM lifetime)
++    dictionary.toFile().deleteOnExit();
++    affix.toFile().deleteOnExit();
++
++    return new PathPair(dictionary, affix);
++  }
++
+   /**
+-   * Set a custom way to create Hunspell dictionaries,
++   * Set a custom way to create {@link HunspellDictionary Hunspell dictionaries},
+    * e.g., more efficient or portable than the default, possibly via Apache Lucene.
+    * The default one is to use a native wrapper over the real Hunspell binary,
+    * creating temporary files from the streams.
+@@ -83,83 +84,118 @@ public static void setHunspellStreamFactory(Factory factory) {
+     hunspellDictionaryStreamFactory = factory;
+   }
+
++  /**
++   * Get a {@link HunspellDictionary} for files that already exist on disk.
++   * The dictionary is cached and reused for subsequent requests with the same {@link Path paths}.
++   * The files are NOT deleted when the dictionary is closed (caller owns the files).
++   *
++   * @param dictionary {@link Path} to dictionary file (.dic) on disk
++   * @param affix {@link Path} to affix file (.aff) on disk
++   * @return {@link HunspellDictionary} that is either cached or newly created
++   */
++  @NotNull
+   public static synchronized HunspellDictionary getDictionary(Path dictionary, Path affix) {
+-    LanguageAndPath key = new LanguageAndPath(dictionary, affix);
+-    HunspellDictionary hunspell = map.get(key);
++    PathPair key = new PathPair(dictionary, affix);
++    HunspellDictionary hunspell = pathCache.get(key);
+     if (hunspell != null && !hunspell.isClosed()) {
++      log.trace("Returning cached dictionary for {} and {}", dictionary, affix);
+       return hunspell;
+     }
+
+-    if (FORCE_TEMP_FILES) {
+-      HunspellDictionary newHunspell = hunspellDictionaryFactory.apply(dictionary, affix);
+-      map.put(key, newHunspell);
+-      return newHunspell;
+-    }
+-
+     try {
+       HunspellDictionary newHunspell = hunspellDictionaryStreamFactory
+         .createFromLocalFiles(dictionary.getFileName().toString(), dictionary, affix);
+-      map.put(key, newHunspell);
++      pathCache.put(key, newHunspell);
++      log.trace("Created and cached new dictionary for {} and {}", dictionary, affix);
+       return newHunspell;
+     } catch (IOException e) {
+       throw new RuntimeException(e);
+     }
+   }
+
++  @NotNull
+   public static HunspellDictionary forDictionaryInResources(String language, String resourcePath) {
+     return forDictionaryInResources(language, resourcePath + language + ".dic", resourcePath + language + ".aff");
+   }
+
+-  public static HunspellDictionary forDictionaryInResources(String language, String dicPath, String affPath) {
+-    if (FORCE_TEMP_FILES) {
+-      try {
+-        ResourceDataBroker broker = JLanguageTool.getDataBroker();
+-        InputStream dictionaryStream = broker.getAsStream(dicPath);
+-        InputStream affixStream = broker.getAsStream(affPath);
+-        if (dictionaryStream == null || affixStream == null) {
+-          throw new RuntimeException("Could not find dictionary for language \"" + language + "\" in classpath");
+-        }
+-        Path dictionary = Files.createTempFile(language, ".dic");
+-        Path affix = Files.createTempFile(language, ".aff");
+-        Files.copy(dictionaryStream, dictionary, StandardCopyOption.REPLACE_EXISTING);
+-        Files.copy(affixStream, affix, StandardCopyOption.REPLACE_EXISTING);
+-        return hunspellDictionaryFactory.apply(dictionary, affix);
+-      } catch (IOException e) {
+-        throw new RuntimeException("Could not create temporary dictionaries for language \"" + language + "\"", e);
+-      }
++  /**
++   * Get a {@link HunspellDictionary} from classpath resources.
++   * The dictionary is cached by resource path and reused for subsequent requests.
++   * If the resource is a {@code file://} URL, uses the file directly.
++   * If the resource is in a JAR, creates temp files that live for the JVM lifetime.
++   *
++   * @param language Language code (for error messages and temp file naming)
++   * @param dicPath Classpath resource path to dictionary file (.dic)
++   * @param affPath Classpath resource path to affix file (.aff)
++   * @return {@link HunspellDictionary} that is either cached or newly created
++   */
++  @NotNull
++  public static synchronized HunspellDictionary forDictionaryInResources(String language, String dicPath, String affPath) {
++    // Check cache first using resource paths as key (before creating any temp files)
++    var key = new ResourcePair(dicPath, affPath);
++    var cached = resourceCache.get(key);
++    if (cached != null && !cached.isClosed()) {
++      log.trace("Returning cached dictionary for resource language {}", language);
++      return cached;
+     }
+
+     ResourceDataBroker broker = JLanguageTool.getDataBroker();
++
++    // Try to get file:// URLs - if available, use files directly (no temp files needed)
+     URL dicUrl = broker.getFromResourceDirAsUrl(dicPath);
+     URL affUrl = broker.getFromResourceDirAsUrl(affPath);
+     if (dicUrl != null && affUrl != null &&
+       dicUrl.getProtocol().equals("file") && affUrl.getProtocol().equals("file")) {
+       try {
+-        return hunspellDictionaryStreamFactory.createFromLocalFiles(language, Path.of(dicUrl.toURI()), Path.of(affUrl.toURI()));
+-      } catch (IOException | URISyntaxException e) {
+-        throw new RuntimeException(e);
++        // Resources are real files on disk - use getDictionary which caches by path
++        var dict = getDictionary(Path.of(dicUrl.toURI()), Path.of(affUrl.toURI()));
++        // Also cache in resource cache for faster lookup next time
++        resourceCache.put(key, dict);
++        log.trace("Cached dictionary from file:// resource for language {}", language);
++        return dict;
++      } catch (URISyntaxException e) {
++        throw new RuntimeException("Failed to convert resource URL to file path", e);
+       }
+     }
+
+-    try (var dic = broker.getFromResourceDirAsStream(dicPath); var aff = broker.getFromResourceDirAsStream(affPath)) {
+-      if (dic == null || aff == null) {
++    // Resources are in JARs or other non-file sources - must create temp files
++    // These temp files live for the JVM lifetime (deleteOnClose=false)
++    try (var dictionaryStream = broker.getFromResourceDirAsStream(dicPath);
++         var affixStream = broker.getFromResourceDirAsStream(affPath)) {
++      if (dictionaryStream == null || affixStream == null) {
+         throw new RuntimeException("Could not find the dictionary for language \"" + language + "\" in the classpath");
+       }
+-      return hunspellDictionaryStreamFactory.createFromStreams(language, dic, aff);
++
++      var tempFiles = createTempFilesFromStreams(language, dictionaryStream, affixStream);
++      var dict = new DumontsHunspellDictionary(tempFiles.dictionary, tempFiles.affix, false);
++
++      // Cache by resource path for future lookups (fixes #11380)
++      resourceCache.put(key, dict);
++      log.trace("Created and cached dictionary from JAR resource for language {}: {} and {}",
++                language, tempFiles.dictionary, tempFiles.affix);
++
++      return dict;
+     } catch (IOException e) {
+       throw new RuntimeException("Could not create temporary dictionaries for language \"" + language + "\"", e);
+     }
+   }
+
++  @NotNull
+   public static HunspellDictionary forDictionaryInResources(String language) {
+     return forDictionaryInResources(language, "");
+   }
+
+   public interface Factory {
+     /**
+-     * An equivalent of {@link #createFromStreams(String, InputStream, InputStream)} that can be used
+-     * if the caller is sure that the Hunspell dictionaries are located in the files in the local file system.
+-     * This allows for more efficient implementation.
++     * Create a {@link HunspellDictionary} from files that already exist on the local filesystem.
++     * These files are owned by the caller and should NOT be deleted when the dictionary is closed.
++     * The returned dictionary should have {@code deleteOnClose=false}.
++     *
++     * @param languageCode Language code for the dictionary
++     * @param dictionary {@link Path} to dictionary file (.dic) on disk
++     * @param affix {@link Path} to affix file (.aff) on disk
++     * @return {@link HunspellDictionary} that will not delete the files on close
++     * @throws IOException if an I/O error occurs while reading the files
+      */
+     default HunspellDictionary createFromLocalFiles(String languageCode, Path dictionary, Path affix) throws IOException {
+       try (InputStream dic = Files.newInputStream(dictionary); InputStream aff = Files.newInputStream(affix)) {
+@@ -168,9 +204,20 @@ default HunspellDictionary createFromLocalFiles(String languageCode, Path dictio
+     }
+
+     /**
+-     * Create a Hunspell dictionary from the given streams.
+-     * All necessary information should be extracted from both streams by the time this method returns.
+-     * Closing the streams is not necessary in the implementation of this method, as the caller will close them itself.
++     * Create a {@link HunspellDictionary} from {@link InputStream InputStreams}.
++     * Implementations must extract all necessary data from the streams before returning.
++     * <p>
++     * <strong>Important:</strong> The caller will close the streams, so implementations should not close them.
++     * <p>
++     * Implementations typically create temporary files and should use {@code deleteOnClose=true}
++     * to clean them up when the dictionary is closed (unless the dictionary will be cached
++     * for the lifetime of the JVM).
++     *
++     * @param languageCode Language code for the dictionary
++     * @param dictionary {@link InputStream} for dictionary data (.dic)
++     * @param affix {@link InputStream} for affix data (.aff)
++     * @return {@link HunspellDictionary} (usually with {@code deleteOnClose=true} for temp file cleanup)
++     * @throws IOException if an I/O error occurs while reading the streams
+      */
+     HunspellDictionary createFromStreams(String languageCode, InputStream dictionary, InputStream affix) throws IOException;
+   }
+diff --git a/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/HunspellRule.java b/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/HunspellRule.java
+index 0386feda01da..73b4fc49d42c 100644
+--- a/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/HunspellRule.java
++++ b/languagetool-core/src/main/java/org/languagetool/rules/spelling/hunspell/HunspellRule.java
+@@ -513,23 +513,11 @@ protected synchronized void init() throws IOException {
+     if(!Tools.isExternSpeller()) {    //  use of external speller for OO extension (32-bit)
+                                       //  hunspell doesn't support 32-bit java
+       if (JLanguageTool.getDataBroker().resourceExists(shortDicPath)) {
+-        if (Hunspell.FORCE_TEMP_FILES) {
+-          String path = getDictionaryPath(langCountry, shortDicPath);
+-          if ("".equals(path)) {
+-            hunspell = null;
+-          } else {
+-            Path affPath = Paths.get(path + ".aff");
+-            hunspell = Hunspell.getDictionary(Paths.get(path + ".dic"), affPath);
+-            addIgnoreWords();
+-            nonWordPattern = nonWordPatternFromPath(affPath);
+-          }
+-        } else {
+-          String aff = shortDicPath.substring(0, shortDicPath.length() - 3) + "aff";
+-          hunspell = Hunspell.forDictionaryInResources(langCountry, shortDicPath, aff);
+-          addIgnoreWords();
+-          nonWordPattern = nonWordPatterns.computeIfAbsent("resource:" + shortDicPath, __ ->
+-            computeNonWordPattern(JLanguageTool.getDataBroker().getFromResourceDirAsStream(aff)));
+-        }
++        String aff = shortDicPath.substring(0, shortDicPath.length() - 3) + "aff";
++        hunspell = Hunspell.forDictionaryInResources(langCountry, shortDicPath, aff);
++        addIgnoreWords();
++        nonWordPattern = nonWordPatterns.computeIfAbsent("resource:" + shortDicPath, __ ->
++          computeNonWordPattern(JLanguageTool.getDataBroker().getFromResourceDirAsStream(aff)));
+       } else if (new File(shortDicPath + ".dic").exists()) {
+         // for dynamic languages
+         Path affPath = Paths.get(shortDicPath + ".aff");
