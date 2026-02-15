@@ -8,7 +8,7 @@ The Docker Hub repository can be found [here](https://hub.docker.com/r/meyay/lan
 ## Features
 
 - Built directly from [LanguageTool repository tags](https://github.com/languagetool-org/languagetool/tags) since official release zips were [discontinued after v6.6](https://github.com/languagetool-org/languagetool/blob/master/languagetool-standalone/CHANGES.md#66-2025-03-27)
-- Built on latest Alpine 3.22 base image
+- Built on latest Alpine 3.23 base image
 - Custom Eclipse Temurin 21 JRE (optimized with required modules only)
 - Uses `tini` to handle container signals properly
 - includes `fasttext`
@@ -32,10 +32,10 @@ The Docker Hub repository can be found [here](https://hub.docker.com/r/meyay/lan
 >Either update your port mapping configuration to use the new port, or set the environment
 >variable `LISTEN_PORT` to `8010` to retain old behavior.
 
->⚠️ WARNING for version 6.7 ⚠️
+>~~⚠️ WARNING for version 6.7 ⚠️~~
 >
->There might be a potential memory leak that results in unlimited memory growth.
->Please remain on the image from the 6.6 tag for day to day use, and try the 6.7 tag only for testing purposes.
+>~~There might be a potential memory leak that results in unlimited memory growth.~~
+>~~Please remain on the image from the 6.6 tag for day to day use, and try the 6.7 tag only for testing purposes.~~
 
 ## Setup
 
@@ -228,11 +228,14 @@ Once the image is build, you can `docker compose up -d` like you would do with t
 
 >NOTE2: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
 
+>NOTE3: The custom build still uses Alpine 3.22.3, as compilation of fasttext doesn't seem to work with Alpine 3.23.3.
+
 ## Changelog
 
 | Date                          | Tag       | Change                                                                                                                                                                                                                                                                                       |
 |-------------------------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 2025-11-25                    | 6.7-3     | - Refactor mechanism for CVE upgrades on Java dependencies: patch pom.xml for direct dependencies, override  libraries for transitive dependencies where the dependant artifact can't be upgraded using the pom.xml.                                                                       |
+| 2026-02-15                    | 6.7-4     | - Patch Languagetool 6.7 Memory Leak<br/> - Update Alpine to 3.23.3<br/> - Update Java to jdk-21.0.10+7<br/> - Fix CVE-2026-1225 (Low) by updating ch.qos.logback.version to 1.5.25.                                                                                                         |
+| 2025-11-25                    | 6.7-3     | - Refactor mechanism for CVE upgrades on Java dependencies: patch pom.xml for direct dependencies, override  libraries for transitive dependencies where the dependant artifact can't be upgraded using the pom.xml.                                                                         |
 | 2025-10-25                    | 6.7-2     | - Fix extraction issue for downloads caused by `unzip` in-box version from Alpine 3.22.2 (using edge package instead)<br/> - Update Java to 21.0.9+10<br/>  - Fix CVE-2025-11226 (Medium)                                                                                                    |
 | 2025-10-10                    | 6.7-1     | - Update Alpine to 3.22.2                                                                                                                                                                                                                                                                    |
 | 2025-10-09                    | 6.7-0     | - Update to LaguageTool 6.7<br/> - Fix CVE-2025-49796 (Critical), CVE-2025-49794 (Critical), CVE-2025-49795 (High), CVE-2025-6021 (High), CVE-2025-6170 (Low)                                                                                                                                |

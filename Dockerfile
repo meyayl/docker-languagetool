@@ -1,7 +1,7 @@
 ARG LT_VERSION=6.7
-ARG JAVA_VERSION=jdk-21.0.9+10
-ARG MAVEN_VERSION=3.9.11
-FROM alpine:3.22.2 AS base
+ARG JAVA_VERSION=jdk-21.0.10+7
+ARG MAVEN_VERSION=3.9.12
+FROM alpine:3.23.3 AS base
 
 FROM base AS java_base
 
@@ -10,9 +10,7 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 RUN set -eux; \
-    apk add --upgrade --no-cache libretls musl-locales musl-locales-lang tzdata zlib; \
-    # Fix HIGH CVE-2008-0888
-    apk add --upgrade --no-cache unzip --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main; \
+    apk add --upgrade --no-cache libretls musl-locales musl-locales-lang tzdata zlib unzip; \
     rm -rf /var/cache/apk/*
 
 FROM java_base AS prepare
@@ -64,16 +62,18 @@ RUN set -eux; \
     ; \
     rm /tmp/maven.tar.gz;
 
+COPY patches/ /patches/
 RUN set -eux; \
     apk add --upgrade --no-cache git xmlstarlet ; \
     rm -rf /var/cache/apk/* ;\
     git clone --depth 1 -b v${LT_VERSION} https://github.com/languagetool-org/languagetool.git /tmp/languagetool ; \
+    git --git-dir /tmp/languagetool apply --stat /patches/lt6_7_memory_leak_fix.patch ; \
     patch_property() { \
       local _xpath=${1} ; \
       local _value=${2} ; \
       xml edit --inplace --update "${_xpath}" --value "${_value}" /tmp/languagetool/pom.xml ; \
     }; \
-    patch_property "//*[name()='ch.qos.logback.version']" "1.5.21" ; \
+    patch_property "//*[name()='ch.qos.logback.version']" "1.5.25" ; \
     /opt/maven/bin/mvn --file /tmp/languagetool/pom.xml --projects languagetool-standalone --also-make package -DskipTests --quiet; \
     unzip "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" -d "/"; \
     mv /LanguageTool-*/ "/languagetool"; \
@@ -152,8 +152,8 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.7-2"
-LABEL org.opencontainers.image.created="2025-10-25"
+LABEL org.opencontainers.image.version="6.7-4"
+LABEL org.opencontainers.image.created="2026-02-15"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
 LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"
