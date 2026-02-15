@@ -67,7 +67,10 @@ RUN set -eux; \
     apk add --upgrade --no-cache git xmlstarlet ; \
     rm -rf /var/cache/apk/* ;\
     git clone --depth 1 -b v${LT_VERSION} https://github.com/languagetool-org/languagetool.git /tmp/languagetool ; \
-    git --git-dir /tmp/languagetool apply --stat /patches/lt6_7_memory_leak_fix.patch ; \
+    cd /tmp/languagetool ; \
+    git apply --stat /patches/lt6_7_memory_leak_fix.patch ; \
+    git apply --check /patches/lt6_7_memory_leak_fix.patch ; \
+    git apply /patches/lt6_7_memory_leak_fix.patch ; \
     patch_property() { \
       local _xpath=${1} ; \
       local _value=${2} ; \
@@ -152,7 +155,7 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.7-4"
+LABEL org.opencontainers.image.version="6.7-5"
 LABEL org.opencontainers.image.created="2026-02-15"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
