@@ -1,7 +1,7 @@
 ARG LT_VERSION=6.7
 ARG JAVA_VERSION=jdk-21.0.10+7
 ARG MAVEN_VERSION=3.9.12
-FROM alpine:3.22.3 AS base
+FROM alpine:3.23.3 AS base
 
 FROM base AS java_base
 
@@ -50,20 +50,16 @@ RUN set -eux; \
 RUN set -eux; \
     URL="https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" ; \
     CHKSUM=$(wget --quiet -O - "${URL}.sha512") ; \
-    MAVEN_HOME=/opt/maven : \
-    echo "b" ;\
+    MAVEN_HOME=/opt/maven ; \
     wget -O /tmp/maven.tar.gz ${URL} ; \
-    echo "c" ;\
     echo "${CHKSUM} */tmp/maven.tar.gz" | sha512sum -c - ; \
     mkdir -p "${MAVEN_HOME}"; \
-    echo "d" ;\
     tar --extract \
         --file /tmp/maven.tar.gz \
         --directory "${MAVEN_HOME}" \
         --strip-components 1 \
         --no-same-owner \
     ; \
-    echo "d" ;\
     rm /tmp/maven.tar.gz;
 
 COPY patches/ /patches/
@@ -71,7 +67,10 @@ RUN set -eux; \
     apk add --upgrade --no-cache git xmlstarlet ; \
     rm -rf /var/cache/apk/* ;\
     git clone --depth 1 -b v${LT_VERSION} https://github.com/languagetool-org/languagetool.git /tmp/languagetool ; \
-    git --git-dir /tmp/languagetool apply --stat /patches/lt6_7_memory_leak_fix.patch ; \
+    cd /tmp/languagetool ; \
+    git apply --stat /patches/lt6_7_memory_leak_fix.patch ; \
+    git apply --check /patches/lt6_7_memory_leak_fix.patch ; \
+    git apply /patches/lt6_7_memory_leak_fix.patch ; \
     patch_property() { \
       local _xpath=${1} ; \
       local _value=${2} ; \
@@ -117,6 +116,7 @@ RUN set -eux; \
         --output /opt/java/customjre
 
 FROM base AS fasttext
+FROM base AS fasttext
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
@@ -129,8 +129,10 @@ RUN set -eux; \
     git clone https://github.com/facebookresearch/fastText.git; \
     cp /patches/* fastText/; \
     cd fastText; \
+    git apply --stat gcc13.patch; \
+    git apply --check gcc13.patch; \
     git apply gcc13.patch; \
-    cmake . ; \
+    cmake  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . ; \
     make ; \
     upx -5 -o /fastText/fasttext-upx /fastText/fasttext
 
@@ -175,7 +177,7 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.7-4"
+LABEL org.opencontainers.image.version="6.7-5"
 LABEL org.opencontainers.image.created="2026-02-15"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
