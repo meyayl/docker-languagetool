@@ -228,8 +228,6 @@ Once the image is build, you can `docker compose up -d` like you would do with t
 
 >NOTE2: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
 
->NOTE3: The custom build still uses Alpine 3.22.3, as compilation of fasttext doesn't seem to work with Alpine 3.23.3.
-
 ## Changelog
 
 | Date                          | Tag       | Change                                                                                                                                                                                                                                                                                       |
