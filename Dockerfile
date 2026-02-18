@@ -10,7 +10,7 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 RUN set -eux; \
-    apk add --upgrade --no-cache libretls musl-locales musl-locales-lang tzdata zlib unzip; \
+    apk add --upgrade --no-cache libretls musl-locales musl-locales-lang tzdata zlib 7zip; \
     rm -rf /var/cache/apk/*
 
 FROM java_base AS prepare
@@ -78,7 +78,7 @@ RUN set -eux; \
     }; \
     patch_property "//*[name()='ch.qos.logback.version']" "1.5.25" ; \
     /opt/maven/bin/mvn --file /tmp/languagetool/pom.xml --projects languagetool-standalone --also-make package -DskipTests --quiet; \
-    unzip "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" -d "/"; \
+    7z x "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" -o"/" -bb1 -bso1 -bse1 -bsp1 -y; \
     mv /LanguageTool-*/ "/languagetool"; \
 	cd "/languagetool"; \
     ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml; \
@@ -155,8 +155,8 @@ ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.7-5"
-LABEL org.opencontainers.image.created="2026-02-15"
+LABEL org.opencontainers.image.version="6.7-6"
+LABEL org.opencontainers.image.created="2026-02-18"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
 LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"
