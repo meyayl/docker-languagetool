@@ -51,7 +51,7 @@ download_and_extract_ngram_language_model(){
   ngrams_filesnames[nl]=ngrams-nl-20181229.zip
 
   if [[ ! -d "${langtool_languageModel}/${_LANG}" ]]; then
-    if [[ ! -e "${langtool_languageModel}/ngrams-${_LANG}.zip" ]] || ! unzip -t "${langtool_languageModel}/ngrams-${_LANG}.zip" > /dev/null 2>&1; then
+    if [[ ! -e "${langtool_languageModel}/ngrams-${_LANG}.zip" ]] || ! 7z t "${langtool_languageModel}/ngrams-${_LANG}.zip" -bb0 > /dev/null 2>&1; then
       echo -e "${INFO}: Downloading \"${_LANG}\" ngrams."
       wget -O "${langtool_languageModel}/ngrams-${_LANG}.zip" "${_BASE_URL}/${ngrams_filesnames[${_LANG}]}" || {
         echo -e "${ERROR}: Failed to download ngrams for language ${_LANG}."
@@ -61,7 +61,7 @@ download_and_extract_ngram_language_model(){
     fi
     if [[ -e "${langtool_languageModel}/ngrams-${_LANG}.zip" ]]; then
       echo -e "${INFO}: Extracting \"${_LANG}\" ngram language model."
-      unzip "${langtool_languageModel}/ngrams-${_LANG}.zip" -d "${langtool_languageModel}" || {
+      7z x "${langtool_languageModel}/ngrams-${_LANG}.zip" -o"${langtool_languageModel}" -bb1 -bso1 -bse1 -bsp1 -y || {
         echo -e "${ERROR}: Failed to extract ngrams for language ${_LANG}."
         rm -f "${langtool_languageModel}/ngrams-${_LANG}.zip"
         exit 1
