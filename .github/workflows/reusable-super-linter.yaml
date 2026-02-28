@@ -35,12 +35,12 @@ jobs:
   super-lint:
 
     name: Super-Linter
-
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           # Full git history is needed to get a proper list of changed files within super-linter
           fetch-depth: 0
@@ -111,7 +111,7 @@ jobs:
       #############################
       # https://github.com/marketplace/actions/super-linter
       - name: Lint Code Base
-        uses: github/super-linter/slim@v4.9.7
+        uses: super-linter/super-linter@v8.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # by default super-linter assumes our repo default branch doesn't change

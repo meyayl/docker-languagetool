@@ -1,0 +1,24 @@
+---
+services:
+  languagetool:
+    image: meyay/languagetool:latest
+    restart: unless-stopped
+    tmpfs:
+      - /tmp:exec
+    cap_drop:
+      - ALL
+    cap_add:
+      - CAP_CHOWN
+      - CAP_DAC_OVERRIDE
+      - CAP_SETUID
+      - CAP_SETGID
+    security_opt:
+      - no-new-privileges
+    ports:
+      - 8081:8081
+    environment:
+      MAP_UID: 1001
+      MAP_GID: 1001
+    volumes:
+      - ./ngrams:/ngrams
+      - ./fasttext:/fasttext

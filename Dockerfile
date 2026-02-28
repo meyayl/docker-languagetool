@@ -1,6 +1,8 @@
 ARG LT_VERSION=6.7
 ARG JAVA_VERSION=jdk-21.0.10+7
 ARG MAVEN_VERSION=3.9.12
+ARG IMAGE_VERSION=6.7-7
+ARG IMAGE_CREATED=2026-02-18
 FROM alpine:3.23.3 AS base
 
 FROM base AS java_base
@@ -154,10 +156,13 @@ EXPOSE ${LISTEN_PORT}
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
+ARG IMAGE_VERSION
+ARG IMAGE_CREATED
+
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.7-6"
-LABEL org.opencontainers.image.created="2026-02-18"
+LABEL org.opencontainers.image.version="${IMAGE_VERSION}"
+LABEL org.opencontainers.image.created="${IMAGE_CREATED}"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
 LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"

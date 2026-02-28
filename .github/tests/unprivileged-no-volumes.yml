@@ -1,0 +1,16 @@
+---
+services:
+  languagetool:
+    image: meyay/languagetool:latest
+    restart: unless-stopped
+    user: "1001:1001"
+    tmpfs:
+      - /tmp:exec
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges
+    ports:
+      - 8081:8081
+    environment:
+      DISABLE_FASTTEXT: "true"
