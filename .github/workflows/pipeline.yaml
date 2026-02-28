@@ -3,20 +3,28 @@ name: Build and verify image
 
 on:
   workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - 'README.md'
+      - 'docker-compose.yml'
+      - '.gitignore'
+      - '.github/linters*'
+      - '.github/tests*'
+      - '.github/workflows/reusable-super-linter.yaml'
   push:
     paths-ignore:
       - 'README.md'
       - 'docker-compose.yml'
       - '.gitignore'
       - '.github/linters*'
+      - '.github/tests*'
       - '.github/workflows/reusable-super-linter.yaml'
     branches:
       - 'main'
       - 'feature/*'
     tags:
       - '[0-9]+.[0-9]+-[0-9]+'
-  pull_request:
-
 jobs:
   super-linter:
     name: Super-Linter
@@ -190,7 +198,7 @@ jobs:
 
   cve-check-image-and-report:
     name: Scan Image with Ancore for CVEs and report
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/')
     needs: [ build-test-image ]
     runs-on: ubuntu-latest
     outputs:
@@ -234,7 +242,7 @@ jobs:
 
   update-pr:
     name: Update PullRequest
-    needs: [ super-linter, build-test-image, integration-test-image, scan-image, cve-check-image-and-report ]
+    needs: [ super-linter, build-test-image, integration-test-image, cve-check-image-and-report ]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
