@@ -36,7 +36,6 @@ jobs:
 
     name: Super-Linter
     runs-on: ubuntu-latest
-    continue-on-error: true
 
     steps:
       - name: Checkout Code
@@ -112,6 +111,7 @@ jobs:
       # https://github.com/marketplace/actions/super-linter
       - name: Lint Code Base
         uses: super-linter/super-linter@v8.5.0
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # by default super-linter assumes our repo default branch doesn't change
