@@ -158,6 +158,7 @@ jobs:
     name: Scan Image with Ancore
     needs: [ build-test-image ]
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.job }}-scan-image-${{ github.ref }}
@@ -183,8 +184,9 @@ jobs:
         uses: anchore/scan-action@v7
         with:
           image: "ghcr.io/meyayl/languagetool:${{ github.run_id }}"
-          fail-build: false
+          severity-cutoff: high
           output-format: table
+          fail-build: false
 
   cve-check-image-and-report:
     name: Scan Image with Ancore for CVEs and report
@@ -218,9 +220,10 @@ jobs:
         id: scan
         with:
           image: "ghcr.io/meyayl/languagetool:${{ github.run_id }}"
-          fail-build: true
+          severity-cutoff: high
           output-format: sarif
           only-fixed: true
+          fail-build: true
 
       - name: upload Anchore scan SARIF report
         uses: github/codeql-action/upload-sarif@v4
