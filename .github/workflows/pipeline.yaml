@@ -87,6 +87,7 @@ jobs:
       - name: Build and Push to GHCR
         uses: docker/build-push-action@v6
         with:
+          sbom: true
           pull: true
           push: true
           tags: ghcr.io/meyayl/languagetool:${{ github.run_id }}
@@ -154,7 +155,7 @@ jobs:
           docker compose down
 
   scan-image:
-    name: Scan Image with Trivy
+    name: Scan Image with Ancore
     needs: [ build-test-image ]
     runs-on: ubuntu-latest
 
@@ -178,18 +179,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull image to scan
-        run: docker pull ghcr.io/meyayl/languagetool:${{ github.run_id }}
-
-      - name: Run Trivy for all CVEs (non-blocking)
-        uses: aquasecurity/trivy-action@master
+      - name: Run Ancore Scan for all CVEs (non-blocking)
+        uses: anchore/scan-action@v7
         with:
-          image-ref: ghcr.io/meyayl/languagetool:${{ github.run_id }}
-          exit-code: 0
-          format: table
+          image: "ghcr.io/meyayl/languagetool:${{ github.run_id }}"
+          fail-build: false
+          output-format: table
 
   cve-check-image-and-report:
-    name: Scan Image with Trivy for CVEs and report
+    name: Scan Image with Ancore for CVEs and report
     if: github.event_name == 'pull_request'
     needs: [ build-test-image ]
     runs-on: ubuntu-latest
@@ -215,24 +213,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull image to scan
-        run: docker pull ghcr.io/meyayl/languagetool:${{ github.run_id }}
-
-      - name: Run Trivy for HIGH,CRITICAL CVEs and report
-        uses: aquasecurity/trivy-action@master
+      - name: Run Ancore scan for all CVEs (non-blocking)
+        uses: anchore/scan-action@v7
+        id: scan
         with:
-          image-ref: ghcr.io/meyay/languagetool:${{ github.run_id }}
-          exit-code: 1
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'HIGH,CRITICAL'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          image: "ghcr.io/meyayl/languagetool:${{ github.run_id }}"
+          fail-build: true
+          output-format: sarif
+          only-fixed: true
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+      - name: upload Anchore scan SARIF report
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: ${{ steps.scan.outputs.sarif }}
 
   update-pr:
     name: Update PullRequest
