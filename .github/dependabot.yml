@@ -17,4 +17,4 @@ registries:
     type: docker-registry
     url: registry.hub.docker.com
     username: ${{ secrets.DOCKERHUB_USERNAME }}
-    password: ${{ ssecrets.DOCKERHUB_TOKEN }}
+    password: ${{ secrets.DOCKERHUB_TOKEN }}
