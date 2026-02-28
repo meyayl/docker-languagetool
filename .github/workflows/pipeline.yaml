@@ -193,6 +193,8 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: [ build-test-image ]
     runs-on: ubuntu-latest
+    outputs:
+      cve_report: ${{ steps.scan.outputs.sarif }}
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.job }}-check-cve-${{ github.ref }}
@@ -258,12 +260,12 @@ jobs:
           body: |
             Docker image tag(s) pushed:
             ```text
-            ${{ steps.docker_meta.outputs.tags }}
+            ghcr.io/meyayl/languagetool:${{ github.run_id }}
             ```
-
-            Labels added to images:
-            ```text
-            ${{ steps.docker_meta.outputs.labels }}
+            
+            Known vulnerabilites:
+            ```
+            ${{ needs.cve-check-image-and-report.outputs.cve_report }}
             ```
           edit-mode: replace
 
