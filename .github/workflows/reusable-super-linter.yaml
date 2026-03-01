@@ -52,6 +52,7 @@ jobs:
         # we save the PR target branch name to a variable for use in linter config
         # we pass string between job steps by echoing to $GITHUB_ENV, making it available in $env later
         if: ${{ github.base_ref != '' }}
+        # language="Shell Script"
         run: |
           # shellcheck disable=2086
           echo "DEFAULT_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
@@ -63,6 +64,7 @@ jobs:
         # then save the current branch name to a variable for use in linter config later
         # we pass strings between job steps by echoing to $GITHUB_ENV, making it available in $env later
         if: ${{ github.base_ref == '' }}
+        # language="Shell Script"
         run: |
           # shellcheck disable=2086
           echo "DEFAULT_BRANCH=$(echo '${{ github.ref }}' | sed 's/refs\/heads\///')" >> $GITHUB_ENV
@@ -70,12 +72,14 @@ jobs:
 
       # used as a debug step to ensure we're only linting all files on release branches
       - name: Are we linting all files?
+        # language="Shell Script"
         run: |
           echo VALIDATE_ALL_CODEBASE=${{ !contains(github.event_name, 'pull_request') }}
 
       # customize excluded paths and files with regex
       - name: FILTER_REGEX_EXCLUDE
         if: ${{ inputs.filter-regex-exclude }}
+        # language="Shell Script"
         run: |
           # shellcheck disable=2086
           {
@@ -86,6 +90,7 @@ jobs:
       # these env's will get pass to the next step
       - name: Disable non-DevOps linters
         if: ${{ inputs.devops-only == true }}
+        # language="Shell Script"
         run: |
           # shellcheck disable=2086
           { 
