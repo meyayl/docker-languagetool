@@ -236,7 +236,7 @@ jobs:
             
             Known vulnerabilites:
             ```
-            ${{ fromJSON(needs.scan-image.outputs.cve_report) }}
+            ${{ toJSON(needs.scan-image.outputs.cve_report) }}
             ```
           edit-mode: replace
 
