@@ -74,15 +74,16 @@ jobs:
 
       - name: Gather build args
         id: gather_build_args
+        # language="Shell Script"
         run: |
           LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2)
           TAGS=$(gh api repos/${{ github.repository }}/tags --jq '.[].name' || echo "")
           MAX_VERSION=-1
           for tag in $TAGS; do
-            if [[ $tag =~ ^${LT_VERSION}-([0-9]+)$ ]]; then
-              VERSION=${BASH_REMATCH[1]}
-              if [ $VERSION -gt $MAX_VERSION ]; then
-                MAX_VERSION=$VERSION
+            if [[ ${tag} =~ ^${LT_VERSION}-([0-9]+)$ ]]; then
+              VERSION="${BASH_REMATCH[1]}"
+              if [ "${$VERSION}" -gt "${MAX_VERSION}" ]; then
+                MAX_VERSION="${VERSION}"
               fi
             fi
           done
@@ -111,7 +112,7 @@ jobs:
     needs: [ build-test-image ]
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 1
+      # max-parallel: 1
       matrix:
         compose-file:
           - privileged-rw.yml
@@ -140,6 +141,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run integration tests
+        # language="Shell Script"
         run: |
           export COMPOSE_FILE=".github/tests/${{ matrix.compose-file }}"
           COMPOSE_PROJECT_NAME="${{ matrix.compose-file }}"
@@ -158,15 +160,18 @@ jobs:
           echo "📖 Checking LanguageTool help..."
           docker compose exec languagetool /entrypoint.sh help
           echo "🧪 Testing LanguageTool API..."
-          curl --data "language=en-US&text=a simple test" http://127.0.0.1:8081/v2/check | tee /dev/stderr | grep -q detectedLanguage
+          curl --data "language=en-US&text=a simple test" \
+            http://127.0.0.1:8081/v2/check | tee /dev/stderr | grep -q detectedLanguage
           echo "🛑 Stopping container..."
           docker compose down
 
   scan-image:
-    name: Scan Image with Ancore
+    name: Scan Image with Grype
     needs: [ build-test-image ]
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/')
+    outputs:
+      cve_report: ${{ steps.scan.outputs.json }}
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.job }}-scan-image-${{ github.ref }}
@@ -188,21 +193,59 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Ancore Scan for all CVEs (non-blocking)
+      - name: Run Grype Scan for all CVEs (non-blocking)
         uses: anchore/scan-action@v7
+        id: scan
         with:
           image: "ghcr.io/meyayl/languagetool:${{ github.run_id }}"
           severity-cutoff: high
-          output-format: table
+          output-format: json
           fail-build: false
+
+  update-pr:
+    name: Update PullRequest
+    needs: [ super-linter, build-test-image, integration-test-image, scan-image ]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Find comment for image tags
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Docker image tag(s) pushed
+
+        # If PR, put image tags in the PR comments
+      - name: Create or update comment for image tags
+        uses: peter-evans/create-or-update-comment@v5
+        if: github.event_name == 'pull_request'
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          # language="Markdown"
+          body: |
+            Docker image tag(s) pushed:
+            ```text
+            ghcr.io/meyayl/languagetool:${{ github.run_id }}
+            ```
+            
+            Known vulnerabilites:
+            ```
+            ${{ fromJSON(needs.scan-image.outputs.cve_report) }}
+            ```
+          edit-mode: replace
+
 
   cve-check-image-and-report:
     name: Scan Image with Ancore for CVEs and report
-    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/')
     needs: [ build-test-image ]
     runs-on: ubuntu-latest
-    outputs:
-      cve_report: ${{ steps.scan.outputs.sarif }}
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.job }}-check-cve-${{ github.ref }}
@@ -240,42 +283,6 @@ jobs:
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
-  update-pr:
-    name: Update PullRequest
-    needs: [ super-linter, build-test-image, integration-test-image, cve-check-image-and-report ]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    permissions:
-      pull-requests: write
-
-    steps:
-      - name: Find comment for image tags
-        uses: peter-evans/find-comment@v3
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Docker image tag(s) pushed
-        
-        # If PR, put image tags in the PR comments
-      - name: Create or update comment for image tags
-        uses: peter-evans/create-or-update-comment@v5
-        if: github.event_name == 'pull_request'
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            Docker image tag(s) pushed:
-            ```text
-            ghcr.io/meyayl/languagetool:${{ github.run_id }}
-            ```
-            
-            Known vulnerabilites:
-            ```
-            ${{ needs.cve-check-image-and-report.outputs.cve_report }}
-            ```
-          edit-mode: replace
 
   retag-and-push-final-image:
     name: Retag and push final image
@@ -301,28 +308,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Gather final image tags
+      - name: Gather final image tag
         id: image_tags
+        # language="Shell Script"
         run: |
           LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2)
-          TAGS=$(gh api repos/${{ github.repository }}/tags --jq '.[].name' || echo "")
-          MAX_VERSION=-1
-          for tag in $TAGS; do
-            if [[ $tag =~ ^${LT_VERSION}-([0-9]+)$ ]]; then
-              VERSION=${BASH_REMATCH[1]}
-              if [ $VERSION -gt $MAX_VERSION ]; then
-                MAX_VERSION=$VERSION
-              fi
-            fi
-          done
-          IMAGE_VERSION=$((MAX_VERSION + 1))
+          IMAGE_VERSION=${GITHUB_REF#refs/tags/}
           echo "IMAGE_VERSION=${LT_VERSION}-${IMAGE_VERSION}" >> $GITHUB_OUTPUT
           echo "LT_VERSION=${LT_VERSION}" >> $GITHUB_OUTPUT
-        env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Pull and retag image
-        run: |
+        # language="Shell Script"
+        run:
           docker pull ghcr.io/meyayl/languagetool:${{ github.run_id }}
           docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:${{ steps.image_tags.outputs.IMAGE_VERSION }}
           docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:${{ steps.image_tags.outputs.LT_VERSION }}
