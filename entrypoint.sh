@@ -218,7 +218,7 @@ user_map(){
   if [[ -n "${MAP_GID}" ]]; then
     CURRENT_GID="$(id languagetool -g)"
     if [[ "${MAP_GID}" != "${CURRENT_GID}" ]]; then
-      EXISTING_GROUP=$(getent group ${MAP_GID} | cut -d: -f1) || true
+      EXISTING_GROUP=$(getent group "${MAP_GID}" | cut -d: -f1) || true
       if [[ -n "${EXISTING_GROUP}" ]]; then
         echo -e "${INFO}: Group \"${EXISTING_GROUP}\" already exists with gid ${MAP_GID}."
         echo -e "${INFO}: Setting primary gid for user \"languagetool\" from ${CURRENT_GID} to ${MAP_GID}."
@@ -295,9 +295,13 @@ if is_root; then
 
   echo -e "${INFO}: Container started as root user."
   echo -e "${INFO}: Available capabilities:"
+  # shellcheck disable=SC2015
   echo -e "  CAP_CHOWN         Can change owner of files and directories: $(is_cap_enabled CAP_CHOWN && print_capability_status true || print_capability_status false)"
+  # shellcheck disable=SC2015
   echo -e "  CAP_DAC_OVERRIDE  Can bypass file permission checks when changing owner: $(is_cap_enabled CAP_DAC_OVERRIDE  && print_capability_status true || print_capability_status false)"
+  # shellcheck disable=SC2015
   echo -e "  CAP_SETUID        Can execute languagetool with arbitrary uid: $(is_cap_enabled CAP_SETUID && print_capability_status true || print_capability_status false)"
+  # shellcheck disable=SC2015
   echo -e "  CAP_SETGUID       Can execute languagetool with arbitrary gid: $(is_cap_enabled CAP_SETGID && print_capability_status true || print_capability_status false)"
 
   if is_ro_mount "/"; then
@@ -317,7 +321,9 @@ if is_root; then
     fi
     if [[ "${USE_NSS_WRAPPER}" == "true" ]]; then
    		export LD_PRELOAD='/usr/lib/libnss_wrapper.so'
+   		# shellcheck disable=SC2155
    		export NSS_WRAPPER_PASSWD="$(mktemp)"
+   		# shellcheck disable=SC2155
    		export NSS_WRAPPER_GROUP="$(mktemp)"
 
       echo "languagetool:x:${MAP_UID}:${MAP_GID}:languagetool gecos:/home/languagetool:/sbin/nologin" > "${NSS_WRAPPER_PASSWD}"
