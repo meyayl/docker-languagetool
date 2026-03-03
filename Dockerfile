@@ -106,7 +106,7 @@ RUN set -eux; \
     patch_property "//*[name()='ch.qos.logback.version']" "1.5.25"; \
     patch_property "//*[name()='jackson.version']" "2.18.6"; \
     /opt/maven/bin/mvn  \
-     \--file /tmp/languagetool/pom.xml \
+      --file /tmp/languagetool/pom.xml \
       --projects languagetool-standalone \
       --also-make package \
       -DskipTests \
