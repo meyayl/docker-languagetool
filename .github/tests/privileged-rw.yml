@@ -1,7 +1,7 @@
 ---
 services:
   languagetool:
-    image: meyay/languagetool:${IMAGE_TAG:?IMAGE_TAG required}
+    image: ${IMAGE:?IMAGE required}
     restart: unless-stopped
     tmpfs:
       - /tmp:exec

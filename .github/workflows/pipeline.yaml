@@ -141,9 +141,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run integration tests
+        env:
+          IMAGE: ghcr.io/meyayl/languagetool:${{ github.run_id }}
         # language="Shell Script"
         run: |
-          echo "IMAGE_TAG=${{ github.run_id }}" .github/tests/.env 
           export COMPOSE_FILE=".github/tests/${{ matrix.compose-file }}"
           COMPOSE_PROJECT_NAME="${{ matrix.compose-file }}"
           export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME%.yml}"
@@ -165,7 +166,6 @@ jobs:
             http://127.0.0.1:8081/v2/check | tee /dev/stderr | grep -q detectedLanguage
           echo "🛑 Stopping container..."
           docker compose down
-
   scan-image:
     name: Scan Image with Grype
     needs: [ build-test-image ]
