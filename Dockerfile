@@ -110,7 +110,7 @@ RUN set -eux; \
       --projects languagetool-standalone \
       --also-make package \
       -DskipTests \
-      --threads 1C \
+      --threads 2C \
       --quiet; \
     7z x "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" -o"/" -bb1 -bso1 -bse1 -bsp1 -y; \
     mv /LanguageTool-*/ "/languagetool"; \
