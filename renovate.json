@@ -2,5 +2,47 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^Dockerfile$/","/^Dockerfile.fasttext$/"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\sARG .*?_VERSION=\"(?<currentValue>.*)\"\\s"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+    }
+  ],
+  "platformAutomerge": true,
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest","pinDigest"],
+      "automerge": true
+    },
+    {
+      "groupName": "`alpine packages`",
+      "matchDatasources": ["repology"],
+      "automerge": true
+    },
+    {
+      "matchDatasources": ["github-tags"],
+      "matchPackageNames": ["apache/maven"],
+      "allowedVersions": "/^3\\./"
+    },
+    {
+      "matchDatasources": ["github-tags"],
+      "matchPackageNames": ["adoptium/temurin21-binaries"],
+      "allowedVersions": "/^jdk-21\\./"
+    },
+    {
+      "matchDatasources": ["github-tags"],
+      "matchPackageNames": ["languagetool-org/languagetool"],
+      "allowedVersions": "/^6\\./"
+    }
   ]
 }
