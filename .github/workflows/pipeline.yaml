@@ -143,6 +143,7 @@ jobs:
       - name: Run integration tests
         # language="Shell Script"
         run: |
+          echo "IMAGE_TAG=${{ github.run_id }}" .github/tests/.env 
           export COMPOSE_FILE=".github/tests/${{ matrix.compose-file }}"
           COMPOSE_PROJECT_NAME="${{ matrix.compose-file }}"
           export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME%.yml}"
@@ -233,10 +234,6 @@ jobs:
             ```text
             ghcr.io/meyayl/languagetool:${{ github.run_id }}
             ```
-            
-            Known vulnerabilites:
-            ```
-            ${{ toJSON(needs.scan-image.outputs.cve_report) }}
             ```
           edit-mode: replace
 

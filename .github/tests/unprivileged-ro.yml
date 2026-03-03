@@ -1,7 +1,7 @@
 ---
 services:
   languagetool:
-    image: meyay/languagetool:latest
+    image: meyay/languagetool:${IMAGE_TAG:?IMAGE_TAG required}
     restart: unless-stopped
     user: "1001:1001"
     read_only: true
