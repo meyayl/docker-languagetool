@@ -1,6 +1,11 @@
-ARG LT_VERSION=6.7
-ARG JAVA_VERSION=jdk-21.0.10+7
-ARG MAVEN_VERSION=3.9.12
+ARG IMAGE_VERSION="6.7-7"
+ARG IMAGE_CREATED="2026-02-18"
+# renovate: datasource=github-tags depName=languagetool-org/languagetool versioning=loose
+ARG LT_VERSION="6.7"
+# renovate: datasource=github-tags depName=adoptium/temurin21-binaries versioning=loose
+ARG JAVA_VERSION="jdk-21.0.10+7"
+# renovate: datasource=github-tags depName=apache/maven versioning=loose
+ARG MAVEN_VERSION="3.9.12"
 FROM alpine:3.23.3 AS base
 
 FROM base AS java_base
@@ -9,8 +14,27 @@ ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 
+# renovate: datasource=repology depName=alpine_3_23/libretls versioning=loose
+ARG LIBRETLS_VERSION="3.8.1-r0"
+# renovate: datasource=repology depName=alpine_3_23/musl-locales versioning=loose
+ARG MUSL_LOCALES_VERSION="0.1.0-r1"
+# renovate: datasource=repology depName=alpine_3_23/musl-locales-lang versioning=loose
+ARG MUSL_LOCALES_LANG_VERSION="0.1.0-r1"
+# renovate: datasource=repology depName=alpine_3_23/tzdata versioning=loose
+ARG TZDATA_VERSION="2025c-r0"
+# renovate: datasource=repology depName=alpine_3_23/zlib versioning=loose
+ARG ZLIB_VERSION="1.3.1-r2"
+# renovate: datasource=repology depName=alpine_3_23/7zip versioning=loose
+ARG SEVEN_ZIP_VERSION="25.01-r0"
+
 RUN set -eux; \
-    apk add --upgrade --no-cache libretls musl-locales musl-locales-lang tzdata zlib 7zip; \
+    apk add --upgrade --no-cache \
+     libretls="${LIBRETLS_VERSION}" \
+     musl-locales="${MUSL_LOCALES_VERSION}" \
+     musl-locales-lang="${MUSL_LOCALES_LANG_VERSION}" \
+     tzdata="${TZDATA_VERSION}" \
+     zlib="${ZLIB_VERSION}" \
+     7zip="${SEVEN_ZIP_VERSION}"; \
     rm -rf /var/cache/apk/*
 
 FROM java_base AS prepare
@@ -43,42 +67,51 @@ RUN set -eux; \
         --file /tmp/openjdk.tar.gz \
         --directory "${JAVA_HOME}" \
         --strip-components 1 \
-        --no-same-owner \
-    ; \
+        --no-same-owner; \
     rm /tmp/openjdk.tar.gz;
 
 RUN set -eux; \
-    URL="https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" ; \
-    CHKSUM=$(wget --quiet -O - "${URL}.sha512") ; \
-    MAVEN_HOME=/opt/maven ; \
-    wget -O /tmp/maven.tar.gz ${URL} ; \
-    echo "${CHKSUM} */tmp/maven.tar.gz" | sha512sum -c - ; \
+    URL="https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"; \
+    CHKSUM=$(wget --quiet -O - "${URL}.sha512"); \
+    MAVEN_HOME=/opt/maven; \
+    wget -O /tmp/maven.tar.gz ${URL}; \
+    echo "${CHKSUM} */tmp/maven.tar.gz" | sha512sum -c -; \
     mkdir -p "${MAVEN_HOME}"; \
     tar --extract \
         --file /tmp/maven.tar.gz \
         --directory "${MAVEN_HOME}" \
         --strip-components 1 \
-        --no-same-owner \
-    ; \
+        --no-same-owner; \
     rm /tmp/maven.tar.gz;
 
 COPY patches/ /patches/
+
+# hadolint ignore=SC2086 - we need file globbing when deleting apk packages, and moving the LanguageTool-${LT_VERSION}
+# hadolint ignore=DL3003 - we need to change into directories withing the RUN instruction, bjt don't want extra layers
 RUN set -eux; \
-    apk add --upgrade --no-cache git xmlstarlet ; \
-    rm -rf /var/cache/apk/* ;\
-    git clone --depth 1 -b v${LT_VERSION} https://github.com/languagetool-org/languagetool.git /tmp/languagetool ; \
-    cd /tmp/languagetool ; \
-    git apply --stat /patches/lt6_7_memory_leak_fix.patch ; \
-    git apply --check /patches/lt6_7_memory_leak_fix.patch ; \
-    git apply /patches/lt6_7_memory_leak_fix.patch ; \
+    apk add --upgrade --no-cache git xmlstarlet; \
+    rm -rf /var/cache/apk/*; \
+    git clone --depth 1 -b v${LT_VERSION} https://github.com/languagetool-org/languagetool.git /tmp/languagetool; \
+    cd /tmp/languagetool; \
+    if [ "${LT_VERSION}" == "6.7" ]; then \
+        git apply --stat /patches/lt6_7_memory_leak_fix.patch; \
+        git apply --check /patches/lt6_7_memory_leak_fix.patch; \
+        git apply /patches/lt6_7_memory_leak_fix.patch; \
+    fi ; \
     patch_property() { \
-      local _xpath=${1} ; \
-      local _value=${2} ; \
-      xml edit --inplace --update "${_xpath}" --value "${_value}" /tmp/languagetool/pom.xml ; \
+      local _xpath=${1}; \
+      local _value=${2}; \
+      xml edit --inplace --update "${_xpath}" --value "${_value}" /tmp/languagetool/pom.xml; \
     }; \
-    patch_property "//*[name()='ch.qos.logback.version']" "1.5.25" ; \
-    patch_property "//*[name()='jackson.version']" "2.18.6" ; \
-    /opt/maven/bin/mvn --file /tmp/languagetool/pom.xml --projects languagetool-standalone --also-make package -DskipTests --quiet; \
+    patch_property "//*[name()='ch.qos.logback.version']" "1.5.25"; \
+    patch_property "//*[name()='jackson.version']" "2.18.6"; \
+    /opt/maven/bin/mvn  \
+      --file /tmp/languagetool/pom.xml \
+      --projects languagetool-standalone \
+      --also-make package \
+      -DskipTests \
+      --threads 2C \
+      --quiet; \
     7z x "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" -o"/" -bb1 -bso1 -bse1 -bsp1 -y; \
     mv /LanguageTool-*/ "/languagetool"; \
 	cd "/languagetool"; \
@@ -118,8 +151,36 @@ RUN set -eux; \
 
 FROM java_base
 
+# renovate: datasource=repology depName=alpine_3_23/bash versioning=loose
+ARG BASH_VERSION="5.3.3-r1"
+# renovate: datasource=repology depName=alpine_3_23/shadow versioning=loose
+ARG SHADOW_VERSION="4.18.0-r0"
+# renovate: datasource=repology depName=alpine_3_23/libstdc++ versioning=loose
+ARG LIBSTDCPP_VERSION="15.2.0-r2"
+# renovate: datasource=repology depName=alpine_3_23/gcompat versioning=loose
+ARG GCOMPAT_VERSION="1.1.0-r4"
+# renovate: datasource=repology depName=alpine_3_23/su-exec versioning=loose
+ARG SU_EXEC_VERSION="0.3-r0"
+# renovate: datasource=repology depName=alpine_3_23/tini versioning=loose
+ARG TINI_VERSION="0.19.0-r3"
+# renovate: datasource=repology depName=alpine_3_23/xmlstarlet versioning=loose
+ARG XMLSTARLET_VERSION="1.6.1-r2"
+# renovate: datasource=repology depName=alpine_3_23/fasttext versioning=loose
+ARG FASTTEXT_VERSION="0.9.2-r1"
+# renovate: datasource=repology depName=alpine_3_23/nss_wrapper versioning=loose
+ARG NSS_WRAPPER_VERSION="1.1.12-r1"
+
 RUN set -eux; \
-    apk add --no-cache bash shadow libstdc++ gcompat su-exec tini xmlstarlet fasttext nss_wrapper; \
+    apk add --no-cache \
+      bash="${BASH_VERSION}" \
+       shadow="${SHADOW_VERSION}" \
+       libstdc++="${LIBSTDCPP_VERSION}" \
+       gcompat="${GCOMPAT_VERSION}" \
+       su-exec="${SU_EXEC_VERSION}" \
+       tini="${TINI_VERSION}" \
+       xmlstarlet="${XMLSTARLET_VERSION}" \
+       fasttext="${FASTTEXT_VERSION}" \
+       nss_wrapper="${NSS_WRAPPER_VERSION}"; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
@@ -148,16 +209,21 @@ ENV PATH=${JAVA_HOME}/bin:${PATH}
 
 WORKDIR /languagetool
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s CMD wget --quiet --output-document - http://localhost:${LISTEN_PORT}/v2/healthcheck > /dev/null 2>&1  || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s \
+  CMD wget --quiet --output-document - http://localhost:${LISTEN_PORT}/v2/healthcheck > /dev/null 2>&1  || exit 1
+
 EXPOSE ${LISTEN_PORT}
 
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint.sh"]
 
+ARG IMAGE_VERSION
+ARG IMAGE_CREATED
+
 LABEL org.opencontainers.image.title="meyay/languagetool"
 LABEL org.opencontainers.image.description="Minimal Docker Image for LanguageTool with fasttext support and automatic ngrams download"
-LABEL org.opencontainers.image.version="6.7-6"
-LABEL org.opencontainers.image.created="2026-02-18"
+LABEL org.opencontainers.image.version="${IMAGE_VERSION}"
+LABEL org.opencontainers.image.created="${IMAGE_CREATED}"
 LABEL org.opencontainers.image.licenses="LGPL-2.1"
 LABEL org.opencontainers.image.documentation="https://github.com/meyayl/docker-languagetool"
 LABEL org.opencontainers.image.source="https://github.com/meyayl/docker-languagetool"
