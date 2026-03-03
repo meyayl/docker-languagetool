@@ -19,6 +19,10 @@
       "matchUpdateTypes": ["major"],
       "automerge": false
     },
+    {
+      "matchFileNames": ["docker-compose.yml", "**/docker-compose.yml"],
+      "pinDigests": false
+    },
 
     {
       "matchUpdateTypes": ["minor", "patch", "pin", "digest","pinDigest"],
