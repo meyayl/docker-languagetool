@@ -1,0 +1,329 @@
+---
+name: Build and verify image
+
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'docker-compose.yml'
+      - '.gitignore'
+      - '.github/linters*'
+      - '.github/tests*'
+      - '.github/workflows/reusable-super-linter.yaml'
+    branches:
+      - 'main'
+      - 'feature/*'
+    tags:
+      - '[0-9]+.[0-9]+-[0-9]+'
+  pull_request:
+#    types:
+#      - opened
+#      - synchronize
+#      - reopened
+jobs:
+  super-linter:
+    name: Super-Linter
+    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/feature/')
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.job }}-super-linter-${{ github.ref }}
+      cancel-in-progress: true
+
+    permissions:
+      contents: read
+      statuses: write
+
+    uses: ./.github/workflows/reusable-super-linter.yaml
+
+  build-test-image:
+    name: Build Image for Testing
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.job }}-buil-test-image--${{ github.ref }}
+      cancel-in-progress: true
+
+    permissions:
+      packages: write
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Gather build args
+        id: gather_build_args
+        # language="Shell Script"
+        run: |
+          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2)
+          TAGS=$(gh api repos/${{ github.repository }}/tags --jq '.[].name' || echo "")
+          MAX_VERSION=-1
+          for tag in $TAGS; do
+            if [[ ${tag} =~ ^${LT_VERSION}-([0-9]+)$ ]]; then
+              VERSION="${BASH_REMATCH[1]}"
+              if [ "${VERSION}" -gt "${MAX_VERSION}" ]; then
+                MAX_VERSION="${VERSION}"
+              fi
+            fi
+          done
+          IMAGE_VERSION=$((MAX_VERSION + 1))
+          echo "IMAGE_VERSION=${LT_VERSION}-${IMAGE_VERSION}" >> $GITHUB_OUTPUT
+          echo "IMAGE_CREATED=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Build and Push to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          sbom: true
+          pull: true
+          push: true
+          tags: ghcr.io/meyayl/languagetool:${{ github.run_id }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            IMAGE_VERSION=${{ steps.gather_build_args.outputs.IMAGE_VERSION }}
+            IMAGE_CREATED=${{ steps.gather_build_args.outputs.IMAGE_CREATED }}
+
+  integration-test-image:
+    name: Integration test Image
+    needs: [ build-test-image ]
+    runs-on: ubuntu-latest
+    strategy:
+      # max-parallel: 1
+      matrix:
+        compose-file:
+          - privileged-rw.yml
+          - privileged-ro.yml
+          - privileged-no-volumes.yml
+          - unprivileged-rw.yml
+          - unprivileged-ro.yml
+          - unprivileged-no-volumes.yml
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.job }}-${{ matrix.compose-file }}-${{ github.ref }}
+      cancel-in-progress: true
+
+    permissions:
+      packages: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run integration tests
+        env:
+          IMAGE: ghcr.io/meyayl/languagetool:${{ github.run_id }}
+        # language="Shell Script"
+        run: |
+          export COMPOSE_FILE=".github/tests/${{ matrix.compose-file }}"
+          COMPOSE_PROJECT_NAME="${{ matrix.compose-file }}"
+          export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME%.yml}"
+          mkdir .github/tests/ngrams .github/tests/fasttext
+          echo "🚀 Starting LanguageTool container with ${{ matrix.compose-file }}..."
+          docker compose up -d
+          echo "📦 Listing Deployed Compose Projects"
+          docker compose ls
+          echo "⏳ Waiting for container to start..."
+          sleep 10s
+          echo "📋 Container logs:"
+          docker compose logs 
+          echo "☕ Checking Java version..."
+          docker compose exec languagetool /opt/java/customjre/bin/java --version
+          echo "📖 Checking LanguageTool help..."
+          docker compose exec languagetool /entrypoint.sh help
+          echo "🧪 Testing LanguageTool API..."
+          curl --data "language=en-US&text=a simple test" \
+            http://127.0.0.1:8081/v2/check | tee /dev/stderr | grep -q detectedLanguage
+          echo "🛑 Stopping container..."
+          docker compose down
+  scan-image:
+    name: Scan Image with Grype
+    needs: [ build-test-image ]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/')
+    outputs:
+      cve_report: ${{ steps.scan.outputs.json }}
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.job }}-scan-image-${{ github.ref }}
+      cancel-in-progress: true
+
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Grype Scan for all CVEs (non-blocking)
+        uses: anchore/scan-action@v7
+        id: scan
+        with:
+          image: "ghcr.io/meyayl/languagetool:${{ github.run_id }}"
+          severity-cutoff: high
+          output-format: json
+          fail-build: false
+
+  update-pr:
+    name: Update PullRequest
+    needs: [ build-test-image, integration-test-image, scan-image ]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Find comment for image tags
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Docker image tag(s) pushed
+
+        # If PR, put image tags in the PR comments
+      - name: Create or update comment for image tags
+        uses: peter-evans/create-or-update-comment@v5
+        if: github.event_name == 'pull_request'
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          # language="Markdown"
+          body: |
+            Docker image tag(s) pushed:
+            ```text
+            ghcr.io/meyayl/languagetool:${{ github.run_id }}
+            ```
+          edit-mode: replace
+
+
+  cve-check-image-and-report:
+    name: Scan Image with Ancore for CVEs and report
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [ build-test-image ]
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.job }}-check-cve-${{ github.ref }}
+      cancel-in-progress: true
+
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Ancore scan for all CVEs (non-blocking)
+        uses: anchore/scan-action@v7
+        id: scan
+        with:
+          image: "ghcr.io/meyayl/languagetool:${{ github.run_id }}"
+          severity-cutoff: high
+          output-format: sarif
+          only-fixed: true
+          fail-build: true
+
+      - name: upload Anchore scan SARIF report
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
+
+
+  retag-and-push-final-image:
+    name: Retag and push final image
+    needs: [ build-test-image, integration-test-image, cve-check-image-and-report ]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    permissions:
+      packages: read
+
+    steps:
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Gather final image tag
+        id: image_tags
+        # language="Shell Script"
+        run: |
+          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2)
+          IMAGE_VERSION=${GITHUB_REF#refs/tags/}
+          echo "IMAGE_VERSION=${LT_VERSION}-${IMAGE_VERSION}" >> $GITHUB_OUTPUT
+          echo "LT_VERSION=${LT_VERSION}" >> $GITHUB_OUTPUT
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Pull and retag image
+        # language="Shell Script"
+        run:
+          docker pull ghcr.io/meyayl/languagetool:${{ github.run_id }}
+          docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:${{ steps.image_tags.outputs.IMAGE_VERSION }}
+          docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:${{ steps.image_tags.outputs.LT_VERSION }}
+          docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:latest
+          docker push meyay/languagetool:${{ steps.image_tags.outputs.IMAGE_VERSION }}
+          docker push meyay/languagetool:${{ steps.image_tags.outputs.LT_VERSION }}
+          docker push meyay/languagetool:latest
+
+      - name: Update repo description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: meyay/languagetool
