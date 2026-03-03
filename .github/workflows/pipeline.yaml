@@ -3,15 +3,6 @@ name: Build and verify image
 
 on:
   workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths-ignore:
-      - 'README.md'
-      - 'docker-compose.yml'
-      - '.gitignore'
-      - '.github/linters*'
-      - '.github/tests*'
-      - '.github/workflows/reusable-super-linter.yaml'
   push:
     paths-ignore:
       - 'README.md'
@@ -25,6 +16,11 @@ on:
       - 'feature/*'
     tags:
       - '[0-9]+.[0-9]+-[0-9]+'
+  pull_request:
+#    types:
+#      - opened
+#      - synchronize
+#      - reopened
 jobs:
   super-linter:
     name: Super-Linter
@@ -82,7 +78,7 @@ jobs:
           for tag in $TAGS; do
             if [[ ${tag} =~ ^${LT_VERSION}-([0-9]+)$ ]]; then
               VERSION="${BASH_REMATCH[1]}"
-              if [ "${$VERSION}" -gt "${MAX_VERSION}" ]; then
+              if [ "${VERSION}" -gt "${MAX_VERSION}" ]; then
                 MAX_VERSION="${VERSION}"
               fi
             fi
@@ -205,7 +201,7 @@ jobs:
 
   update-pr:
     name: Update PullRequest
-    needs: [ super-linter, build-test-image, integration-test-image, scan-image ]
+    needs: [ build-test-image, integration-test-image, scan-image ]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
@@ -233,7 +229,6 @@ jobs:
             Docker image tag(s) pushed:
             ```text
             ghcr.io/meyayl/languagetool:${{ github.run_id }}
-            ```
             ```
           edit-mode: replace
 
