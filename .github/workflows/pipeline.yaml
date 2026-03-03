@@ -11,6 +11,7 @@ on:
       - '.github/linters*'
       - '.github/tests*'
       - '.github/workflows/reusable-super-linter.yaml'
+      - 'renovate.json'
     branches:
       - 'main'
       - 'feature/*'

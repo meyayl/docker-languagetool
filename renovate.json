@@ -1,9 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
+    "config:best-practices",
     ":disableDependencyDashboard"
   ],
+  "description": "Schedule every Sunnday and Wednesday",
+  "schedule": ["* * * * 0,3"],
   "customManagers": [
     {
       "customType": "regex",
