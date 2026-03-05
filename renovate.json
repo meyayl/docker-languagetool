@@ -4,8 +4,8 @@
     "config:best-practices",
     ":disableDependencyDashboard"
   ],
-  "description": "Schedule every Sunnday and Wednesday",
-  "schedule": ["* * * * 0,3"],
+  "description": "Schedule every Monday and Thursday between 0 and 5",
+  "schedule": ["* 0-4 * * 1,4"],
   "customManagers": [
     {
       "customType": "regex",
