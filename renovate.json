@@ -39,11 +39,13 @@
     {
       "matchDatasources": ["github-release"],
       "matchPackageNames": ["apache/maven"],
+      "versioning": "loose",
       "allowedVersions": "/^3\\./"
     },
     {
       "matchDatasources": ["github-release"],
       "matchPackageNames": ["adoptium/temurin21-binaries"],
+      "versioning": "loose",
       "allowedVersions": "/^jdk-21\\./"
     },
     {
