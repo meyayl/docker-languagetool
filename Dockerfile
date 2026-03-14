@@ -2,9 +2,9 @@ ARG IMAGE_VERSION="6.7-7"
 ARG IMAGE_CREATED="2026-02-18"
 # renovate: datasource=github-tags depName=languagetool-org/languagetool versioning=loose
 ARG LT_VERSION="6.7"
-# renovate: datasource=github-tags depName=adoptium/temurin21-binaries versioning=loose
+# renovate: datasource=github-release depName=adoptium/temurin21-binaries versioning=loose
 ARG JAVA_VERSION="jdk-21.0.10+7"
-# renovate: datasource=github-tags depName=apache/maven versioning=loose
+# renovate: datasource=github-release depName=apache/maven versioning=loose
 ARG MAVEN_VERSION="3.9.14"
 FROM alpine:3.23.3@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659 AS base
 

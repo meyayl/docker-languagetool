@@ -37,12 +37,12 @@
       "automerge": true
     },
     {
-      "matchDatasources": ["github-tags"],
+      "matchDatasources": ["github-release"],
       "matchPackageNames": ["apache/maven"],
       "allowedVersions": "/^3\\./"
     },
     {
-      "matchDatasources": ["github-tags"],
+      "matchDatasources": ["github-release"],
       "matchPackageNames": ["adoptium/temurin21-binaries"],
       "allowedVersions": "/^jdk-21\\./"
     },
