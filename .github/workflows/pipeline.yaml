@@ -192,7 +192,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Grype Scan for all CVEs (non-blocking)
-        uses: anchore/scan-action@7037fa011853d5a11690026fb85feee79f4c946c # v7
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
         id: scan
         with:
           image: "ghcr.io/meyayl/languagetool:${{ github.run_id }}"
@@ -262,7 +262,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Ancore scan for all CVEs (non-blocking)
-        uses: anchore/scan-action@7037fa011853d5a11690026fb85feee79f4c946c # v7
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
         id: scan
         with:
           image: "ghcr.io/meyayl/languagetool:${{ github.run_id }}"
