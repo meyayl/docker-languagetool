@@ -41,6 +41,10 @@ download_and_extract_ngram_language_model(){
   _LANG="${1}"
   local _BASE_URL
   _BASE_URL="https://languagetool.org/download/ngram-data"
+  local _WGET_QUIET
+  _WGET_QUIET="--quiet"
+
+  [ -n "$is_debug" ] && _WGET_QUIET=""
 
   # mapping for ngram language models
   declare -A ngrams_filesnames
@@ -53,7 +57,7 @@ download_and_extract_ngram_language_model(){
   if [[ ! -d "${langtool_languageModel}/${_LANG}" ]]; then
     if [[ ! -e "${langtool_languageModel}/ngrams-${_LANG}.zip" ]] || ! 7z t "${langtool_languageModel}/ngrams-${_LANG}.zip" -bb0 > /dev/null 2>&1; then
       echo -e "${INFO}: Downloading \"${_LANG}\" ngrams."
-      wget -O "${langtool_languageModel}/ngrams-${_LANG}.zip" "${_BASE_URL}/${ngrams_filesnames[${_LANG}]}" || {
+      wget "${_WGET_QUIET}" -O "${langtool_languageModel}/ngrams-${_LANG}.zip" "${_BASE_URL}/${ngrams_filesnames[${_LANG}]}" || {
         echo -e "${ERROR}: Failed to download ngrams for language ${_LANG}."
         rm -f "${langtool_languageModel}/ngrams-${_LANG}.zip"
         exit 1
@@ -131,6 +135,11 @@ export -f handle_ngram_language_models
 download_fasttext_model(){
   is_debug && set -x
 
+  local _WGET_QUIET
+  _WGET_QUIET="--quiet"
+
+  [ -n "$is_debug" ] && _WGET_QUIET=""
+
   if [[ -z "${langtool_fasttextModel}" ]] || [[ "${DISABLE_FASTTEXT}" == "true" ]]; then
       echo -e "${INFO}: \"langtool_fasttextModel\" not specified or \"DISABLE_FASTTEXT\" is set to \"true\". Skipping download of fasttext model."
       unset langtool_fasttextModel
@@ -160,7 +169,7 @@ download_fasttext_model(){
   echo -e "${INFO}: Directory ${langtool_fasttextModel%/*} is owned by ${dir_uid}:${dir_gid}."
   if [[ ! -e "${langtool_fasttextModel}" ]]; then
     echo -e "${INFO}: Downloading fasttext model."
-    wget  -O "${langtool_fasttextModel}" "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
+    wget "${_WGET_QUIET}" -O "${langtool_fasttextModel}" "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
   else
     echo -e "${INFO}: Skipping download of fasttext model: already exists."
   fi
