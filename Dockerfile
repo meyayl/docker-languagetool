@@ -1,11 +1,11 @@
-ARG IMAGE_VERSION="6.7-7"
-ARG IMAGE_CREATED="2026-02-18"
+ARG IMAGE_VERSION="6.8-0"
+ARG IMAGE_CREATED="2026-05-09"
 # renovate: datasource=github-tags depName=languagetool-org/languagetool versioning=loose
-ARG LT_VERSION="6.7"
+ARG LT_VERSION="6.8"
 # renovate: datasource=github-release depName=adoptium/temurin21-binaries versioning=loose
-ARG JAVA_VERSION="jdk-21.0.10+7"
+ARG JAVA_VERSION="jdk-21.0.11+10"
 # renovate: datasource=github-release depName=apache/maven versioning=loose
-ARG MAVEN_VERSION="3.9.14"
+ARG MAVEN_VERSION="3.9.15"
 FROM alpine:3.23.4@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11 AS base
 
 FROM base AS java_base
@@ -21,11 +21,13 @@ ARG MUSL_LOCALES_VERSION="0.1.0-r1"
 # renovate: datasource=repology depName=alpine_3_23/musl-locales-lang versioning=loose
 ARG MUSL_LOCALES_LANG_VERSION="0.1.0-r1"
 # renovate: datasource=repology depName=alpine_3_23/tzdata versioning=loose
-ARG TZDATA_VERSION="2026a-r0"
+ARG TZDATA_VERSION="2026b-r0"
 # renovate: datasource=repology depName=alpine_3_23/zlib versioning=loose
 ARG ZLIB_VERSION="1.3.2-r0"
 # renovate: datasource=repology depName=alpine_3_23/7zip versioning=loose
 ARG SEVEN_ZIP_VERSION="25.01-r0"
+# renovate: datasource=repology depName=alpine_3_23/openssl versioning=loose
+ARG OPENSSL_VERSION="3.5.6-r0"
 
 RUN set -eux; \
     apk add --upgrade --no-cache \
@@ -71,7 +73,7 @@ RUN set -eux; \
     rm /tmp/openjdk.tar.gz;
 
 RUN set -eux; \
-    URL="https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"; \
+    URL="https://archive.apache.org/dist/maven/maven-${MAVEN_VERSION%%.*}/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"; \
     CHKSUM=$(wget --quiet -O - "${URL}.sha512"); \
     MAVEN_HOME=/opt/maven; \
     wget -O /tmp/maven.tar.gz ${URL}; \
@@ -123,15 +125,17 @@ RUN set -eux; \
       local _FILENAME=${_FILENAME%\-*}.jar; \
       wget "${_URL}" -O /languagetool/libs/${_FILENAME}; \
     }; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-buffer/4.1.131.Final/netty-buffer-4.1.131.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.1.131.Final/netty-codec-dns-4.1.131.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec/4.1.131.Final/netty-codec-4.1.131.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-common/4.1.131.Final/netty-common-4.1.131.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-handler/4.1.131.Final/netty-handler-4.1.131.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.1.131.Final/netty-resolver-dns-4.1.131.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-resolver/4.1.131.Final/netty-resolver-4.1.131.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-transport-native-unix-common/4.1.131.Final/netty-transport-native-unix-common-4.1.131.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-transport/4.1.131.Final/netty-transport-4.1.131.Final.jar;
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-buffer/4.2.13.Final/netty-buffer-4.2.13.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.2.13.Final/netty-codec-dns-4.2.13.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec/4.2.13.Final/netty-codec-4.2.13.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-common/4.2.13.Final/netty-common-4.2.13.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-handler/4.2.13.Final/netty-handler-4.2.13.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.2.13.Final/netty-resolver-dns-4.2.13.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-resolver/4.2.13.Final/netty-resolver-4.2.13.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-transport-native-unix-common/4.2.13.Final/netty-transport-native-unix-common-4.2.13.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-transport/4.2.13.Final/netty-transport-4.2.13.Final.jar; \
+    update_maven_dependency https://repo1.maven.org/maven2/org/apache/opennlp/opennlp-tools/2.5.9/opennlp-tools-2.5.9.jar; \
+    echo "patches applied"
 
 RUN set -eux; \
     LT_DEPS=$("${JAVA_HOME}/bin/jdeps" \
