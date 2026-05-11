@@ -11,7 +11,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^Dockerfile$/","/^Dockerfile.fasttext$/"],
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\sARG .*?_VERSION=\"(?<currentValue>.*)\"\\s"
+        "#\\s*renovate:\\s*datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>[^\\s]*?))?( extractVersion=(?<extractVersion>[^\\s]*?))?\\sARG .*?_VERSION=\"(?<currentValue>.*)\"\\s"
       ],
       "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
     }
@@ -40,11 +40,6 @@
       "matchDatasources": ["github-release"],
       "matchPackageNames": ["apache/maven"],
       "allowedVersions": "/^3\\.[0-9]+\\.[0-9]+$/"
-    },
-    {
-      "matchDatasources": ["github-release"],
-      "matchPackageNames": ["adoptium/temurin21-binaries"],
-      "allowedVersions": "/^jdk-21\\.[0-9]+\\.[0-9]+\\+[0-9]+$/"
     },
     {
       "matchDatasources": ["github-tags"],
