@@ -37,7 +37,7 @@
       "automerge": true
     },
     {
-      "matchDatasources": ["github-release"],
+      "matchDatasources": ["github-releases"],
       "matchPackageNames": ["apache/maven"],
       "allowedVersions": "/^3\\.[0-9]+\\.[0-9]+$/"
     },
