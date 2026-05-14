@@ -1,3 +1,5 @@
+// Package download handles HTTPS downloads and zip extraction for ngram
+// language models and the fasttext language-identification model.
 package download
 
 import (
@@ -29,12 +31,14 @@ type downloadsConfig struct {
 	} `yaml:"fasttext"`
 }
 
-var cfg downloadsConfig
+var cfg = mustParseConfig()
 
-func init() {
-	if err := yaml.Unmarshal(downloadsConfigData, &cfg); err != nil {
+func mustParseConfig() downloadsConfig {
+	var c downloadsConfig
+	if err := yaml.Unmarshal(downloadsConfigData, &c); err != nil {
 		panic(fmt.Sprintf("parse downloads.yaml: %v", err))
 	}
+	return c
 }
 
 // HandleNgramLanguageModels handles downloading and extracting ngram models.
@@ -55,9 +59,10 @@ func HandleNgramLanguageModels(languageModelDir, downloadLangs string) error {
 		return err
 	}
 
-	st, _ := os.Stat(languageModelDir)
-	if stat, ok := st.Sys().(*syscall.Stat_t); ok {
-		ilog.Info("Directory %s is owned by %d:%d", languageModelDir, stat.Uid, stat.Gid)
+	if st, err := os.Stat(languageModelDir); err == nil {
+		if stat, ok := st.Sys().(*syscall.Stat_t); ok {
+			ilog.Info("Directory %s is owned by %d:%d", languageModelDir, stat.Uid, stat.Gid)
+		}
 	}
 
 	for _, lang := range strings.Split(downloadLangs, ",") {
@@ -90,9 +95,10 @@ func DownloadFasttextModel(fasttextModelPath string, disableFasttext bool) error
 		return err
 	}
 
-	st, _ := os.Stat(parentDir)
-	if stat, ok := st.Sys().(*syscall.Stat_t); ok {
-		ilog.Info("Directory %s is owned by %d:%d.", parentDir, stat.Uid, stat.Gid)
+	if st, err := os.Stat(parentDir); err == nil {
+		if stat, ok := st.Sys().(*syscall.Stat_t); ok {
+			ilog.Info("Directory %s is owned by %d:%d.", parentDir, stat.Uid, stat.Gid)
+		}
 	}
 
 	if _, err := os.Stat(fasttextModelPath); err == nil {

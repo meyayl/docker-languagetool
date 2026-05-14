@@ -1,3 +1,5 @@
+// Package log provides coloured INFO/WARN/ERROR helpers for the entrypoint.
+// It is imported under the alias "ilog" to avoid shadowing the standard library.
 package log
 
 import "fmt"

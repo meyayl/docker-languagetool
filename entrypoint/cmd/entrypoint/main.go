@@ -143,12 +143,12 @@ func run() error {
 			ilog.Info("Container started with DISABLE_FILE_OWNER_FIX=%v. This disables the ownership fix of directories.", cfg.DisableFileOwnerFix)
 		}
 
-		capChown, _ := caps.IsEnabled(caps.CAP_CHOWN)
-		capDAC, _ := caps.IsEnabled(caps.CAP_DAC_OVERRIDE)
+		capChown, _ := caps.IsEnabled(caps.CapChown)
+		capDAC, _ := caps.IsEnabled(caps.CapDACOverride)
 
 		if ownerFix && capChown && capDAC {
 			if err := ownership.FixOwnership(cfg.LangtoolLanguageModel, cfg.LangtoolFasttextModel,
-				effectiveUID, effectiveGID, os.Stdout); err != nil {
+				effectiveUID, effectiveGID); err != nil {
 				ilog.Warn("ownership fix error: %v", err)
 			}
 		} else {
@@ -187,15 +187,15 @@ func run() error {
 		if cfg.LangtoolFasttextBinary == "" {
 			ilog.Info("Variable \"langtool_fasttextBinary\" not set. Fasttext can not be used.")
 			cfg.DisableFasttext = true
-		} else if _, err := os.Stat(cfg.LangtoolFasttextBinary); os.IsNotExist(err) {
+		} else if info, err := os.Stat(cfg.LangtoolFasttextBinary); os.IsNotExist(err) {
 			ilog.Warn("Fasttext binary not found at \"%s\". Fasttext can not be used.", cfg.LangtoolFasttextBinary)
 			cfg.DisableFasttext = true
-		} else {
-			info, _ := os.Stat(cfg.LangtoolFasttextBinary)
-			if info.Mode()&0111 == 0 {
-				ilog.Warn("Fasttext binary has not execution permission \"%s\". Fasttext can not be used.", cfg.LangtoolFasttextBinary)
-				cfg.DisableFasttext = true
-			}
+		} else if err != nil {
+			ilog.Warn("Fasttext binary stat \"%s\": %v. Fasttext can not be used.", cfg.LangtoolFasttextBinary, err)
+			cfg.DisableFasttext = true
+		} else if info.Mode()&0111 == 0 {
+			ilog.Warn("Fasttext binary has no execution permission \"%s\". Fasttext can not be used.", cfg.LangtoolFasttextBinary)
+			cfg.DisableFasttext = true
 		}
 
 		if cfg.LangtoolFasttextModel == "" {
@@ -258,7 +258,7 @@ func run() error {
 	}
 
 	// Start LanguageTool server
-	ilog.Info("StartingLanguage Tool Standalone Server (or custom command)")
+	ilog.Info("Starting Language Tool Standalone Server (or custom command)")
 	ilog.Line("--------------------------------------------------------------------")
 
 	javaPath, err := exec.LookPath("java")
@@ -311,7 +311,6 @@ func runHelp() error {
 			fmt.Println(line)
 		}
 	}
-	os.Exit(0)
 	return nil
 }
 
@@ -447,7 +446,7 @@ func parseConfig() Config {
 	return cfg
 }
 
-func parseUint32Env(key string) (val uint32, set bool, err error) {
+func parseUint32Env(key string) (uint32, bool, error) {
 	s := os.Getenv(key)
 	if s == "" {
 		return 0, false, nil

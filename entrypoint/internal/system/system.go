@@ -1,3 +1,5 @@
+// Package system provides atomic modification of /etc/passwd and /etc/group
+// to remap the languagetool user/group UID and GID at container startup.
 package system
 
 import (
@@ -156,8 +158,7 @@ func UpdateUserMapping(mapUID uint32, mapUIDSet bool, mapGID uint32, mapGIDSet b
 			return fmt.Errorf("lookup languagetool: %w", err)
 		}
 		if u.GID != mapGID {
-			existing, err := LookupGroupByGID(mapGID)
-			if err == nil {
+			if existing, err := LookupGroupByGID(mapGID); err == nil {
 				ilog.Info("Group %q already exists with gid %d.", existing.Name, mapGID)
 				ilog.Info("Setting primary gid for user \"languagetool\" from %d to %d.", u.GID, mapGID)
 				if err := SetUserGID("languagetool", mapGID); err != nil {
