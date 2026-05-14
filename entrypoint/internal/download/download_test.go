@@ -80,11 +80,11 @@ func TestExtractZip(t *testing.T) {
 	if _, writeErr = f.Write([]byte("hello world")); writeErr != nil {
 		t.Fatalf("zip write: %v", writeErr)
 	}
-	if err := zw.Close(); err != nil {
-		t.Fatalf("zip close: %v", err)
+	if closeErr := zw.Close(); closeErr != nil {
+		t.Fatalf("zip close: %v", closeErr)
 	}
-	if err := w.Close(); err != nil {
-		t.Fatalf("file close: %v", err)
+	if closeErr := w.Close(); closeErr != nil {
+		t.Fatalf("file close: %v", closeErr)
 	}
 
 	if err := extractZip(zipPath, destDir); err != nil {
