@@ -36,10 +36,10 @@ func TestIsEnabledLogic(t *testing.T) {
 		bit  int
 		want bool
 	}{
-		{CAP_CHOWN, false},
-		{CAP_DAC_OVERRIDE, false},
-		{CAP_SETUID, true},
-		{CAP_SETGID, true},
+		{CapChown, false},
+		{CapDACOverride, false},
+		{CapSetUID, true},
+		{CapSetGID, true},
 	}
 
 	for _, tc := range cases {

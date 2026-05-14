@@ -1,3 +1,5 @@
+// Package nss creates temporary nss_wrapper passwd/group files so the
+// container can present a remapped user identity on read-only root filesystems.
 package nss
 
 import (
@@ -52,9 +54,14 @@ func SetupNSSWrapper(uid, gid uint32) error {
 		return fmt.Errorf("chmod nss group: %w", err)
 	}
 
-	os.Setenv("LD_PRELOAD", "/usr/lib/libnss_wrapper.so")
-	os.Setenv("NSS_WRAPPER_PASSWD", passwdPath)
-	os.Setenv("NSS_WRAPPER_GROUP", groupPath)
-
+	for k, v := range map[string]string{
+		"LD_PRELOAD":         "/usr/lib/libnss_wrapper.so",
+		"NSS_WRAPPER_PASSWD": passwdPath,
+		"NSS_WRAPPER_GROUP":  groupPath,
+	} {
+		if err := os.Setenv(k, v); err != nil {
+			return fmt.Errorf("setenv %s: %w", k, err)
+		}
+	}
 	return nil
 }

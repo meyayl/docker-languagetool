@@ -1,3 +1,4 @@
+// Package caps reads and queries Linux process capabilities from /proc/self/status.
 package caps
 
 import (
@@ -10,11 +11,17 @@ import (
 )
 
 const (
-	CAP_CHOWN        = 0
-	CAP_DAC_OVERRIDE = 1
-	CAP_SETUID       = 6
-	CAP_SETGID       = 7
+	CapChown       = 0
+	CapDACOverride = 1
+	CapSetUID      = 6
+	CapSetGID      = 7
 )
+
+type capEntry struct {
+	bit  int
+	name string
+	desc string
+}
 
 // ReadPermitted reads the CapPrm bitmask from /proc/self/status.
 func ReadPermitted() (uint64, error) {
@@ -54,16 +61,11 @@ func IsEnabled(bit int) (bool, error) {
 // PrintCapabilities writes a 4-line capability status table to w matching
 // the original shell script format.
 func PrintCapabilities(w io.Writer) error {
-	type entry struct {
-		bit  int
-		name string
-		desc string
-	}
-	entries := []entry{
-		{CAP_CHOWN, "CAP_CHOWN", "Can change owner of files and directories"},
-		{CAP_DAC_OVERRIDE, "CAP_DAC_OVERRIDE", "Can bypass file permission checks when changing owner"},
-		{CAP_SETUID, "CAP_SETUID", "Can execute languagetool with arbitrary uid"},
-		{CAP_SETGID, "CAP_SETGUID", "Can execute languagetool with arbitrary gid"},
+	entries := []capEntry{
+		{CapChown, "CAP_CHOWN", "Can change owner of files and directories"},
+		{CapDACOverride, "CAP_DAC_OVERRIDE", "Can bypass file permission checks when changing owner"},
+		{CapSetUID, "CAP_SETUID", "Can execute languagetool with arbitrary uid"},
+		{CapSetGID, "CAP_SETGID", "Can execute languagetool with arbitrary gid"},
 	}
 
 	const (

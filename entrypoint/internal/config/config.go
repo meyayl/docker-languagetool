@@ -1,3 +1,4 @@
+// Package config writes LanguageTool's config.properties from langtool_* env vars.
 package config
 
 import (

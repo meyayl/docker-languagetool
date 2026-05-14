@@ -1,8 +1,9 @@
+// Package ownership fixes file and directory ownership on volume mounts so
+// they are writable by the mapped UID/GID before the privilege drop.
 package ownership
 
 import (
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,7 +14,7 @@ import (
 
 // FixDirOwnership walks path and chowns any entry not already owned by uid:gid.
 // If path is not accessible it logs a warning and returns nil (non-fatal).
-func FixDirOwnership(path string, uid, gid uint32, _ io.Writer) error {
+func FixDirOwnership(path string, uid, gid uint32) error {
 	info, err := os.Stat(path)
 	if err != nil {
 		ilog.Warn("permissions on %q do not allow to fix ownership.\n      "+
@@ -47,17 +48,17 @@ func FixDirOwnership(path string, uid, gid uint32, _ io.Writer) error {
 
 // FixOwnership calls FixDirOwnership on the ngram model directory and the
 // parent directory of the fasttext model path, when those vars are non-empty.
-func FixOwnership(languageModelDir, fasttextModelPath string, uid, gid uint32, w io.Writer) error {
+func FixOwnership(languageModelDir, fasttextModelPath string, uid, gid uint32) error {
 	if languageModelDir != "" {
 		ilog.Info("Fixing ownership for ngrams base folder if necessary.")
-		if err := FixDirOwnership(languageModelDir, uid, gid, w); err != nil {
+		if err := FixDirOwnership(languageModelDir, uid, gid); err != nil {
 			return err
 		}
 	}
 	if fasttextModelPath != "" {
 		ilog.Info("Fixing ownership for fasttext model file if necessary.")
 		parent := filepath.Dir(fasttextModelPath)
-		if err := FixDirOwnership(parent, uid, gid, w); err != nil {
+		if err := FixDirOwnership(parent, uid, gid); err != nil {
 			return err
 		}
 	}

@@ -14,12 +14,24 @@ func TestIsValidZip(t *testing.T) {
 
 	// Create a valid zip
 	validPath := filepath.Join(dir, "valid.zip")
-	w, _ := os.Create(validPath)
+	w, err := os.Create(validPath)
+	if err != nil {
+		t.Fatalf("create valid zip: %v", err)
+	}
 	zw := zip.NewWriter(w)
-	f, _ := zw.Create("test.txt")
-	f.Write([]byte("hello"))
-	zw.Close()
-	w.Close()
+	f, err := zw.Create("test.txt")
+	if err != nil {
+		t.Fatalf("zip create entry: %v", err)
+	}
+	if _, err := f.Write([]byte("hello")); err != nil {
+		t.Fatalf("zip write: %v", err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatalf("zip close: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("file close: %v", err)
+	}
 
 	if !isValidZip(validPath) {
 		t.Error("expected valid zip to return true")
@@ -45,15 +57,29 @@ func TestExtractZip(t *testing.T) {
 	os.MkdirAll(destDir, 0755)
 
 	// Build a zip with a file and a directory entry
-	w, _ := os.Create(zipPath)
+	w, err := os.Create(zipPath)
+	if err != nil {
+		t.Fatalf("create zip: %v", err)
+	}
 	zw := zip.NewWriter(w)
 	dh := &zip.FileHeader{Name: "subdir/"}
 	dh.SetMode(0755 | os.ModeDir)
-	zw.CreateHeader(dh)
-	f, _ := zw.Create("subdir/hello.txt")
-	f.Write([]byte("hello world"))
-	zw.Close()
-	w.Close()
+	if _, err := zw.CreateHeader(dh); err != nil {
+		t.Fatalf("zip create dir header: %v", err)
+	}
+	f, err := zw.Create("subdir/hello.txt")
+	if err != nil {
+		t.Fatalf("zip create entry: %v", err)
+	}
+	if _, err := f.Write([]byte("hello world")); err != nil {
+		t.Fatalf("zip write: %v", err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatalf("zip close: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("file close: %v", err)
+	}
 
 	if err := extractZip(zipPath, destDir); err != nil {
 		t.Fatalf("extractZip: %v", err)
@@ -75,15 +101,26 @@ func TestExtractZipPathTraversal(t *testing.T) {
 	os.MkdirAll(destDir, 0755)
 
 	// Build a zip with a path-traversal entry
-	w, _ := os.Create(zipPath)
+	w, err := os.Create(zipPath)
+	if err != nil {
+		t.Fatalf("create zip: %v", err)
+	}
 	zw := zip.NewWriter(w)
-	f, _ := zw.Create("../evil.txt")
-	f.Write([]byte("pwned"))
-	zw.Close()
-	w.Close()
+	f, err := zw.Create("../evil.txt")
+	if err != nil {
+		t.Fatalf("zip create entry: %v", err)
+	}
+	if _, err := f.Write([]byte("pwned")); err != nil {
+		t.Fatalf("zip write: %v", err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatalf("zip close: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("file close: %v", err)
+	}
 
-	err := extractZip(zipPath, destDir)
-	if err == nil {
+	if err := extractZip(zipPath, destDir); err == nil {
 		t.Fatal("expected error for path traversal")
 	}
 }
