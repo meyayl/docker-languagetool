@@ -47,7 +47,9 @@ func TestExtractZip(t *testing.T) {
 	// Build a zip with a file and a directory entry
 	w, _ := os.Create(zipPath)
 	zw := zip.NewWriter(w)
-	zw.Mkdir("subdir/", 0755)
+	dh := &zip.FileHeader{Name: "subdir/"}
+	dh.SetMode(0755 | os.ModeDir)
+	zw.CreateHeader(dh)
 	f, _ := zw.Create("subdir/hello.txt")
 	f.Write([]byte("hello world"))
 	zw.Close()
