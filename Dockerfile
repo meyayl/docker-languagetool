@@ -55,8 +55,7 @@ RUN set -eux; \
     apk add --no-cache binutils 7zip="${SEVEN_ZIP_VERSION}"; \
     rm -rf /var/cache/apk/*
 
-# hadolint ignore=SC3060
-# hadolint ignore=DL4006
+# hadolint ignore=SC3060,DL4006,SC2086
 RUN set -eux; \
     RELEASE_PATH="${JAVA_VERSION/+/%2B}"; \
     RELEASE_TYPE="${JAVA_VERSION%-*}"; \
@@ -74,7 +73,7 @@ RUN set -eux; \
         --no-same-owner; \
     rm /tmp/openjdk.tar.gz;
 
-# hadolint ignore=DL4006 - pipefail already set via SHELL ["/bin/sh", "-o", "pipefail", "-c"] above
+# hadolint ignore=DL4006,SC2086
 RUN set -eux; \
     URL="https://archive.apache.org/dist/maven/maven-${MAVEN_VERSION%%.*}/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"; \
     CHKSUM=$(wget --quiet -O - "${URL}.sha512"); \
@@ -91,7 +90,7 @@ RUN set -eux; \
 
 COPY patches/ /patches/
 
-# hadolint ignore=SC2086,DL3003 - file globbing needed for apk/mv; cd needed within RUN to avoid extra layers
+# hadolint ignore=SC2086,DL3003
 RUN set -eux; \
     apk add --upgrade --no-cache git xmlstarlet; \
     rm -rf /var/cache/apk/*; \

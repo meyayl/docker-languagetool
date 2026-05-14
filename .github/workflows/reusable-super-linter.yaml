@@ -14,7 +14,6 @@ name: Lint all the codes
 #
 
 on:
-
   workflow_call:
     inputs:
       devops-only:
@@ -28,13 +27,12 @@ on:
         type: string
 
 permissions:
-  contents: read            # git permissions to repo pull/push
-  statuses: write           # read/write to repo custom statuses and checks
-  pull-requests: write      # post linter summary as PR comment
+  contents: read # git permissions to repo pull/push
+  statuses: write # read/write to repo custom statuses and checks
+  pull-requests: write # post linter summary as PR comment
 
 jobs:
   super-lint:
-
     name: Super-Linter
     runs-on: ubuntu-latest
 
@@ -44,6 +42,7 @@ jobs:
         with:
           # Full git history is needed to get a proper list of changed files within super-linter
           fetch-depth: 0
+          persist-credentials: false
 
       #############################
       # custom DEFAULT_BRANCH for repos where PR target isn't always main/master

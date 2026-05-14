@@ -1,15 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:best-practices",
-    ":disableDependencyDashboard"
-  ],
+  "extends": ["config:best-practices", ":disableDependencyDashboard"],
   "description": "Schedule every day between 0 and 5",
   "schedule": ["* 0-4 * * *"],
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile$/","/^Dockerfile.fasttext$/"],
+      "managerFilePatterns": ["/^Dockerfile$/", "/^Dockerfile.fasttext$/"],
       "matchStrings": [
         "#\\s*renovate:\\s*datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>[^\\s]*?))?( extractVersion=(?<extractVersion>[^\\s]*?))?\\sARG .*?_VERSION=\"(?<currentValue>.*)\"\\s"
       ],
