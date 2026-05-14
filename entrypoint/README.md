@@ -30,7 +30,7 @@ On every container start the binary runs the following sequence:
 ## Environment variables
 
 | Variable | Default | Description |
-|---|---|---|
+| --- | --- | --- |
 | `MAP_UID` | `783` | UID to run the `languagetool` user as |
 | `MAP_GID` | `783` | GID to run the `languagetool` group as |
 | `DISABLE_FILE_OWNER_FIX` | `false` | Skip the volume ownership walk |
@@ -51,7 +51,7 @@ On every container start the binary runs the following sequence:
 
 ## Special invocation
 
-```
+```text
 /entrypoint help
 ```
 
@@ -59,7 +59,7 @@ Runs `java -cp languagetool-server.jar org.languagetool.server.HTTPServer --help
 
 ## Package layout
 
-```
+```text
 cmd/entrypoint/main.go   – startup orchestration, privilege drop, Java exec
 internal/caps/           – read Linux capabilities from /proc/self/status
 internal/config/         – write /tmp/config.properties from langtool_* env vars

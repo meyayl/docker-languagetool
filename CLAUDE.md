@@ -41,6 +41,7 @@ Both `Dockerfile` and `Dockerfile.fasttext` use the same multi-stage pattern:
 Every pinned version in the Dockerfiles has a `# renovate:` comment above it. Renovate bot uses regex matching to track and auto-update these versions. When bumping any package or tool version, always update the corresponding `ARG` line and its renovate comment.
 
 Direct CVE fixes are applied two ways:
+
 - `pom.xml` patches via `xmlstarlet` (logback, Jackson) during the Maven build
 - Direct JAR replacements via `wget` into `/languagetool/libs/` after extraction (netty, opennlp)
 

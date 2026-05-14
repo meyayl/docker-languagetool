@@ -2,8 +2,8 @@
 
 > [LanguageTool](https://www.languagetool.org/) is an Open Source proofreading software for English, French, German, Polish, Russian, and [more than 20 other languages](https://languagetool.org/languages/). It finds many errors that a simple spell checker cannot detect.
 
-The source repository can be found [here](https://github.com/meyayl/docker-languagetool). <br/>
-The Docker Hub repository can be found [here](https://hub.docker.com/r/meyay/languagetool).
+The source repository can be found on [GitHub](https://github.com/meyayl/docker-languagetool).
+The Docker Hub repository can be found on [Docker Hub](https://hub.docker.com/r/meyay/languagetool).
 
 ## Features
 
@@ -26,11 +26,14 @@ The Docker Hub repository can be found [here](https://hub.docker.com/r/meyay/lan
 >⚠️ BREAKING CHANGE in version 6.6-0 ⚠️
 >
 >The default listen port inside the container has changed:
+>
 >- Previous versions: port 8010
 >- New version (6.6-0): port 8081
 >
 >Either update your port mapping configuration to use the new port, or set the environment
 >variable `LISTEN_PORT` to `8010` to retain old behavior.
+
+<!-- -->
 
 >~~⚠️ WARNING for version 6.7 ⚠️~~
 >
