@@ -1,48 +1,13 @@
 package mount
 
-import (
-	"io"
-	"os"
-	"strings"
-)
+import "syscall"
 
-// IsROMount reports whether the root filesystem "/" is mounted read-only
-// by parsing /proc/mounts.
+// IsROMount reports whether the root filesystem "/" is mounted read-only.
+// It uses syscall.Statfs which sets ST_RDONLY (0x1) in Flags for ro mounts.
 func IsROMount() (bool, error) {
-	f, err := os.Open("/proc/mounts")
-	if err != nil {
+	var stat syscall.Statfs_t
+	if err := syscall.Statfs("/", &stat); err != nil {
 		return false, err
 	}
-	defer f.Close()
-	return parseROMount(f)
-}
-
-func parseROMount(r io.Reader) (bool, error) {
-	data, err := io.ReadAll(r)
-	if err != nil {
-		return false, err
-	}
-
-	for _, line := range strings.Split(string(data), "\n") {
-		if line == "" {
-			continue
-		}
-		fields := strings.Fields(line)
-		if len(fields) < 4 {
-			continue
-		}
-		device, mountpoint, options := fields[0], fields[1], fields[3]
-		if device == "rootfs" || mountpoint != "/" {
-			continue
-		}
-		for _, opt := range strings.Split(options, ",") {
-			if opt == "ro" {
-				return true, nil
-			}
-			if opt == "rw" {
-				return false, nil
-			}
-		}
-	}
-	return false, nil
+	return stat.Flags&0x1 != 0, nil
 }
