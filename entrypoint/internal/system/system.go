@@ -52,8 +52,8 @@ func lookupUserIn(path, name string) (UserInfo, error) {
 		if len(fields) < 7 || fields[0] != name {
 			continue
 		}
-		uid, _ := strconv.ParseUint(fields[2], 10, 32)
-		gid, _ := strconv.ParseUint(fields[3], 10, 32)
+		uid, _ := strconv.ParseUint(fields[2], 10, 32) //nolint:errcheck
+		gid, _ := strconv.ParseUint(fields[3], 10, 32) //nolint:errcheck
 		return UserInfo{
 			Name:     fields[0],
 			Password: fields[1],
@@ -85,7 +85,7 @@ func lookupGroupByGIDIn(path string, gid uint32) (GroupInfo, error) {
 		if len(fields) < 4 {
 			continue
 		}
-		g, _ := strconv.ParseUint(fields[2], 10, 32)
+		g, _ := strconv.ParseUint(fields[2], 10, 32) //nolint:errcheck
 		if uint32(g) == gid {
 			return GroupInfo{
 				Name:     fields[0],

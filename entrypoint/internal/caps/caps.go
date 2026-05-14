@@ -55,7 +55,7 @@ func IsEnabled(bit int) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return caps&(1<<uint(bit)) != 0, nil
+	return caps&(1<<uint(bit)) != 0, nil //nolint:gosec
 }
 
 // PrintCapabilities writes a 4-line capability status table to w matching

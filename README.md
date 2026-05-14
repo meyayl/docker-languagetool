@@ -7,7 +7,7 @@ The Docker Hub repository can be found on [Docker Hub](https://hub.docker.com/r/
 
 ## Features
 
-- Built directly from [LanguageTool repository tags](https://github.com/languagetool-org/languagetool/tags) since official release zips were [discontinued after v6.6](https://github.com/languagetool-org/languagetool/blob/master/languagetool-standalone/CHANGES.md#66-2025-03-27)
+- Built directly from [LanguageTool repository tags](https://github.com/languagetool-org/languagetool/tags) since official release ZIPs were [discontinued after v6.6](https://github.com/languagetool-org/languagetool/blob/master/languagetool-standalone/CHANGES.md#66-2025-03-27)
 - Built on latest Alpine 3.23 base image
 - Custom Eclipse Temurin 21 JRE (optimized with required modules only)
 - Uses `tini` to handle container signals properly
@@ -23,27 +23,27 @@ The Docker Hub repository can be found on [Docker Hub](https://hub.docker.com/r/
 - optional: downloads fasttext module (if it doesn't already exist)
 - optional: allows to set log level
 
->⚠️ BREAKING CHANGE in version 6.6-0 ⚠️
+> ⚠️ BREAKING CHANGE in version 6.6-0 ⚠️
 >
->The default listen port inside the container has changed:
+> The default listen port inside the container has changed:
 >
->- Previous versions: port 8010
->- New version (6.6-0): port 8081
+> - Previous versions: port 8010
+> - New version (6.6-0): port 8081
 >
->Either update your port mapping configuration to use the new port, or set the environment
->variable `LISTEN_PORT` to `8010` to retain old behavior.
+> Either update your port mapping configuration to use the new port, or set the environment
+> variable `LISTEN_PORT` to `8010` to retain old behavior.
 
 <!-- -->
 
->~~⚠️ WARNING for version 6.7 ⚠️~~
+> ~~⚠️ WARNING for version 6.7 ⚠️~~
 >
->~~There might be a potential memory leak that results in unlimited memory growth.~~
->~~Please remain on the image from the 6.6 tag for day to day use, and try the 6.7 tag only for testing purposes.~~
+> ~~There might be a potential memory leak that results in unlimited memory growth.~~
+> ~~Please remain on the image from the 6.6 tag for day to day use, and try the 6.7 tag only for testing purposes.~~
 
 ## Setup
 
-The following subsections show usage examples.<br/>
-An example compose file can be downloaded from [here](https://raw.githubusercontent.com/meyayl/docker-languagetool/main/docker-compose.yml).
+The following subsections show usage examples.
+An example compose file can be downloaded from [docker-compose.yml](https://raw.githubusercontent.com/meyayl/docker-languagetool/main/docker-compose.yml).
 
 ### Start container as root user with read-only filesystem, start LanguageTool as MAP_UID:MAP_GID
 
@@ -113,7 +113,7 @@ You need to make sure the directories bound as volume do exist, and are owned by
 
 This is the recommended way to run the container.
 
-#### Docker CLI Usage
+#### Docker CLI
 
 ```sh
 docker run -d \
@@ -131,7 +131,7 @@ docker run -d \
   meyay/languagetool:latest
 ```
 
-#### Docker Compose Usage
+#### Docker Compose
 
 ```yaml
 ---
@@ -159,13 +159,13 @@ services:
 
 ## Usage
 
-You need to install and use one of the add-ons from https://languagetool.org/services and configure it to use the self-hosted LanguageTool server `http://{ip-of-your-docker-host}:{published host port}/v2`. The self-hosted LanguageTool server does not come with its own UI or supports user authentication!
+You need to install and use one of the [add-ons](https://languagetool.org/services) and configure it to use the self-hosted LanguageTool server `http://{ip-of-your-docker-host}:{published host port}/v2`. The self-hosted LanguageTool server does not come with its own UI or supports user authentication!
 
 NOTE: Some add-ons require https connections, which is not (and will not be) supported by this image. You will need to put a reverse proxy in front of it to take care of the TLS termination.
 
 ## Capabilities
 
-If the container is started as unprivileged user, the capabilities `CAP_CHOWN` `CAP_DAC_OVERRIDE`, `CAP_SETUID` and `CAP_SETGID`,  are not required, and can be omitted.
+If the container is started as unprivileged user, the capabilities `CAP_CHOWN` `CAP_DAC_OVERRIDE`, `CAP_SETUID` and `CAP_SETGID`, are not required, and can be omitted.
 If the container is started as privileged user (default), and the environment variable `DISABLE_FILE_OWNER_FIX` is set to `true`, the capabilities `CAP_CHOWN` and `CAP_DAC_OVERRIDE` are not required and can be omitted.
 
 ## Ports
@@ -177,12 +177,13 @@ It can be changed using the environment variable `LISTEN_PORT`.
 ## Volumes
 
 | Required | Container Path | DESCRIPTION                                                                                                                                                                     |
-|----------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | no       | /ngrams        | Location to store the ngram language models. If container is started as unprivileged user, make sure the host path is owned by the user and/or group that starts the container. |
 | no       | /fasttext      | Location to store the fasttext model. If container is started as unprivileged user, make sure the host path is owned by the user and/or group that starts the container.        |
 | yes      | /tmp           | Location to store the created logback.xml and config.property. Preferably a tmpfs mount with exec permissions.                                                                  |
 
 Restrictions if only required volumes are used:
+
 - privileged container: ngram language models and fasttext model will be written into the container filesystem.
 - read-only filesystem: neither ngram language models, nor fasttext model can be used.
 - unprivileged container: neither ngram language models, nor fasttext model can be used.
@@ -192,32 +193,32 @@ Restrictions if only required volumes are used:
 The environment parameters are split into two halves, separated by an equal or colon, the left-hand side represents the variable name (use it as is), the right-hand side the value (change if necessary).
 
 | ENV                       | DEFAULT                 | DESCRIPTION                                                                                                                                                                                                                      |
-|---------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | download_ngrams_for_langs | none                    | Optional: Comma separated list of languages to download ngrams for. Skips download if the ngrams for that language already exist. Valid languages: `en`, `de`, `es`, `fr` and `nl`. Example value: `en,de`                       |
 | langtool_languageModel    | /ngrams                 | Optional: The base path to the ngrams models.                                                                                                                                                                                    |
 | langtool_fasttextBinary   | /usr/local/bin/fasttext | Optional: Path to the fasttext binary. Change only if you want to test your own compiled binary. Don't forget to map it into the container as volume.                                                                            |
 | langtool_fasttextModel    | /fasttext/lid.176.bin   | Optional: The container path to the fasttext model binary. If the variable is set, the fasttext model will be downloaded if doesn't exist yet.                                                                                   |
-| langtool_*                |                         | Optional: An arbitrary LanguageTool configuration, consisting of the prefix `langtool_` and the key name as written in the config file. Execute `docker run -ti --rm meyay/languagetool help` to see the list of config options. |
+| langtool\_\*              |                         | Optional: An arbitrary LanguageTool configuration, consisting of the prefix `langtool_` and the key name as written in the config file. Execute `docker run -ti --rm meyay/languagetool help` to see the list of config options. |
 | JAVA_XMS                  | 256m                    | Optional: Minimum size of the Java heap space. Valid suffixes are `m` for megabytes and `g` for gigabytes.                                                                                                                       |
 | JAVA_XMX                  | 1536m                   | Optional: Maximum size of the Java heap space. Valid suffixes are `m` for megabytes and `g` for gigabytes. Set a higher value if you experience OOM kills.                                                                       |
 | JAVA_GC                   | ShenandoahGC            | Optional: Configure the garbage collector the JVM will use. Valid options are: `SerialGC`, `ParallelGC`, `ParNewGC`, `G1GC`, `ZGC`, `ShenandoahGC`                                                                               |
-| JAVA_OPTS                 |                         | Optional: Set you own custom Java options for the JVM. This will render the other JAVA_* options useless.                                                                                                                        |
-| LISTEN_PORT               | 8081                    | Optional: Set listen port of the self-hosted LanguageTool server inside the container.                                                                                                                                           |                                                                                                                                                                                                                       
+| JAVA_OPTS                 |                         | Optional: Set you own custom Java options for the JVM. This will render the other JAVA\_\* options useless.                                                                                                                      |
+| LISTEN_PORT               | 8081                    | Optional: Set listen port of the self-hosted LanguageTool server inside the container.                                                                                                                                           |
 | MAP_UID                   | 783                     | Optional: UID of the user inside the container that runs LanguageTool. If you encounter permission problems with your volumes, make sure to set the parameter to the UID of the host folder owner.                               |
 | MAP_GID                   | 783                     | Optional: GID of the user inside the container that runs LanguageTool. If you encounter permission problems with your volumes, make sure to set the parameter to the GID of the host folder owner.                               |
 | LOG_LEVEL                 | INFO                    | Optional: Set log level for LanguageTool. Valid options are: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`.                                                                                                                          |
 | DISABLE_FILE_OWNER_FIX    | false                   | Optional: Disables file ownership fix, if set to `true`. Will be used implicitly, if the container is started with an upriviliged user. The Valid options are: `true`, anything else is treated as `false`.                      |
-| DISABLE_FASTTEXT          | false                   | Optional: Disables fasttext, if set to `true`, neither the model is downloaded, nor fasttext enabled in LanguageTool.  The Valid options are: `true`, anything else is treated as `false`.                                       |
+| DISABLE_FASTTEXT          | false                   | Optional: Disables fasttext, if set to `true`, neither the model is downloaded, nor fasttext enabled in LanguageTool. The Valid options are: `true`, anything else is treated as `false`.                                        |
 | DEBUG_ENTRYPOINT          |                         | Optional: Enables debug logs, if set to `true`. The Valid options are: `true`, anything else is treated as `false`.                                                                                                              |
-| CONTAINER_MODE            | default                 | Optional: Configure the containers behavior. Docker users use `default`. Kubernetes users can use `download-only` with initContainers, and start the main container with `default`.                                              | 
+| CONTAINER_MODE            | default                 | Optional: Configure the containers behavior. Docker users use `default`. Kubernetes users can use `download-only` with initContainers, and start the main container with `default`.                                              |
 
 ## Fasttext support
 
-Now that fasttext is available since Alpine 3.19, the image switched to using the Alpine package, instead of compiling the binaries from the sources. This hopefully fixes the compatibility issue users with older cpus experienced with my previous images, that were build on a amd64v3 architecture cpu, which compiled the `fasttext` binary with cpu optimizations older cpus do not support.
+Now that fasttext is available since Alpine 3.19, the image switched to using the Alpine package, instead of compiling the binaries from the sources. This hopefully fixes the compatibility issue users with older CPUs experienced with my previous images, that were build on a amd64v3 architecture CPU, which compiled the `fasttext` binary with CPU optimizations older CPUs do not support.
 
-If the Alpine `fasttext` package does not work for you, you can build a custom image to compile the `fasttext` binary using cpu optimizations your cpu (as long as it's x86_64 based) actually understands:
+If the Alpine `fasttext` package does not work for you, you can build a custom image to compile the `fasttext` binary using CPU optimizations your CPU (as long as it's x86_64 based) actually understands:
 
-```
+```shell
 git clone  https://github.com/meyayl/docker-languagetool.git
 cd docker-languagetool
 sudo docker build -t meyay/languagetool:latest -f Dockerfile.fasttext .
@@ -227,27 +228,29 @@ As alternative method, `sudo make docker_build` can be used to build your custom
 
 Once the image is build, you can `docker compose up -d` like you would do with the images hosted on Docker Hub.
 
->NOTE1: From now on the fastText sources are patched to work with gcc13.
+> NOTE1: From now on the fastText sources are patched to work with gcc13.
 
->NOTE2: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
+<!-- -->
+
+> NOTE2: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
 
 ## Changelog
 
 | Date                          | Tag       | Change                                                                                                                                                                                                                                                                                       |
-|-------------------------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 2026-05-09                    | 6.8-0     | - Upgrade to LanguageTool 6.8<br/> - Upgrade Java to jdk-21.0.11+10<br/> - Upgrade Maven to 3.9.15<br/> - Upgrade netty.io dependencis to 4.2.13.Final                                                                                                                                       |
+| ----------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-09                    | 6.8-0     | - Upgrade to LanguageTool 6.8<br/> - Upgrade Java to jdk-21.0.11+10<br/> - Upgrade Maven to 3.9.15<br/> - Upgrade netty.io dependencies to 4.2.13.Final                                                                                                                                      |
 | 2026-04-18                    | 6.7-8     | - Upgrade to Alpine 3.23.4                                                                                                                                                                                                                                                                   |
-| 2026-02-28                    | 6.7-7     | - Fix GHSA-72hv-8253-57qq (High) by upgrading depencies from group com.fasterxml.jackson.core from 2.18.0 to 2.18.6<br/> - Upgrade netty.io dependencis to from 4.1.127.Final to 4.1.131.Final                                                                                               |
+| 2026-02-28                    | 6.7-7     | - Fix GHSA-72hv-8253-57qq (High) by upgrading dependencies from group com.fasterxml.jackson.core from 2.18.0 to 2.18.6<br/> - Upgrade netty.io dependencies to from 4.1.127.Final to 4.1.131.Final                                                                                           |
 | 2026-02-18                    | 6.7-6     | - Replace package `unzip` with `7zip` to get rid of CVE-2008-0888                                                                                                                                                                                                                            |
 | 2026-02-15                    | 6.7-5     | - Apply the memory leak fix for real this time :)                                                                                                                                                                                                                                            |
 | 2026-02-15                    | ~~6.7-4~~ | - Patch Languagetool 6.7 Memory Leak<br/> - Upgrade Alpine to 3.23.3<br/> - Upgrade Java to jdk-21.0.10+7<br/> - Fix CVE-2026-1225 (Low) by updating ch.qos.logback.version to 1.5.25.                                                                                                       |
-| 2025-11-25                    | 6.7-3     | - Refactor mechanism for CVE upgrades on Java dependencies: patch pom.xml for direct dependencies, override  libraries for transitive dependencies where the dependant artifact can't be upgraded using the pom.xml.                                                                         |
-| 2025-10-25                    | 6.7-2     | - Fix extraction issue for downloads caused by `unzip` in-box version from Alpine 3.22.2 (using edge package instead)<br/> - Upgrade Java to 21.0.9+10<br/>  - Fix CVE-2025-11226 (Medium)                                                                                                   |
+| 2025-11-25                    | 6.7-3     | - Refactor mechanism for CVE upgrades on Java dependencies: patch pom.xml for direct dependencies, override libraries for transitive dependencies where the dependent artifact can't be upgraded using the pom.xml.                                                                          |
+| 2025-10-25                    | 6.7-2     | - Fix extraction issue for downloads caused by `unzip` in-box version from Alpine 3.22.2 (using edge package instead)<br/> - Upgrade Java to 21.0.9+10<br/> - Fix CVE-2025-11226 (Medium)                                                                                                    |
 | 2025-10-10                    | 6.7-1     | - Upgrade Alpine to 3.22.2                                                                                                                                                                                                                                                                   |
 | 2025-10-09                    | 6.7-0     | - Upgrade to LaguageTool 6.7<br/> - Fix CVE-2025-49796 (Critical), CVE-2025-49794 (Critical), CVE-2025-49795 (High), CVE-2025-6021 (High), CVE-2025-6170 (Low)                                                                                                                               |
 | 2025-10-02                    | 6.6-7     | - Correct fix for CVE-2025-58057 (Medium)                                                                                                                                                                                                                                                    |
 | 2025-10-02                    | 6.6-6     | - Fix usage of local variables in entrypoint script function download_and_extract_ngram_language_model (thanks @walery!)<br/>- Switch image HEALTHCHECK to /v2/healthcheck<br/>- Fix CVEs: CVE-2025-9230 (High), CVE-2025-9231 (Medium), CVE-2025-9232 (Medium)~~, CVE-2025-58057 (Medium)~~ |
-| 2025-08-29                    | 6.6-5     | - Build from tags instead of using release zip<br/>  - Fix CVE-2008-0888 by using edge release of `unzip` package.                                                                                                                                                                           |
+| 2025-08-29                    | 6.6-5     | - Build from tags instead of using release ZIP<br/> - Fix CVE-2008-0888 by using edge release of `unzip` package.                                                                                                                                                                            |
 | 2025-07-18                    | 6.6-4     | - Upgrade base image to Alpine 3.22.1<br/> - Upgrade Java to 21.0.8+9<br/> - Fix CVE-2025-48924 by replacing org.apache.commons:commons-lang3:3.17.0 with version 3.18.0                                                                                                                     |
 | 2025-05-23                    | 6.6-3     | - Add CONTAINER_MODE variable for k8s users, that might want to manage the model downloads in initContainers.                                                                                                                                                                                |
 | 2025-05-18                    | 6.6-2     | - Fix: jna error (`Error loading shared library /tmp/jna*.tmp: Operation not permitted`)<br/> - Fix CVE-2025-32414 and CVE-2025-32415 in Alpine 3.21.3                                                                                                                                       |
@@ -256,12 +259,12 @@ Once the image is build, you can `docker compose up -d` like you would do with t
 | 2025-02-16                    | 6.5-2     | - Upgrade base image to Alpine 3.21.3<br/> - Upgrade Java to 21.0.6+7                                                                                                                                                                                                                        |
 | 2024-10-30                    | 6.5-1     | - Massive refactoring of Entrypoint script<br/> - Upgrade Java to 21.0.5+11                                                                                                                                                                                                                  |
 | 2024-09-29                    | 6.5-0     | - Upgrade to LaguageTool 6.5                                                                                                                                                                                                                                                                 |
-| 2024-09-14                    | 6.4-4     | - Upgrade base image to Alpine 3.20.3                                                                                                                                                                                                                                                        | 
+| 2024-09-14                    | 6.4-4     | - Upgrade base image to Alpine 3.20.3                                                                                                                                                                                                                                                        |
 | 2024-07-31                    | 6.4-3     | - Upgrade base image to Alpine 3.20.2<br/> - Upgrade Java to 21.0.4+7                                                                                                                                                                                                                        |
 | 2024-07-05                    | 6.4-2     | - Upgrade base image to Alpine 3.20.1<br/> - Upgrade Java to 21.0.3+9                                                                                                                                                                                                                        |
 | 2024-05-27                    | 6.4-1     | - Upgrade base image to Alpine 3.20.0                                                                                                                                                                                                                                                        |
-| 2024-04-02                    | 6.4-0     | - Upgrade to LanguageTool 6.4<br/> - Modified entrypoint script, to require 7x5 permissions instead of 7x7 for ngrams and fasttext volumes anymore.                                                                                                                                          | 
-| 2024-03-26                    | 6.3a-5    | - Upgrade Java to 21.0.2+13<br/> - Add capability CAP_CHOWN to README.md and compose file.                                                                                                                                                                                                   | 
+| 2024-04-02                    | 6.4-0     | - Upgrade to LanguageTool 6.4<br/> - Modified entrypoint script, to require 7x5 permissions instead of 7x7 for ngrams and fasttext volumes anymore.                                                                                                                                          |
+| 2024-03-26                    | 6.3a-5    | - Upgrade Java to 21.0.2+13<br/> - Add capability CAP_CHOWN to README.md and compose file.                                                                                                                                                                                                   |
 | 2024-02-26                    | 6.3a-4    | - Fix entrypoint script bug that affected new users when downloading the ngram models.                                                                                                                                                                                                       |
 | 2024-02-17                    | 6.3a-3    | - Upgrade base image to Alpine 3.19.1<br/> - Migrate from compiling fasttext to using the Alpine fasttext package.                                                                                                                                                                           |
 | 2024-02-17                    | 6.3a-2    | - Modify Dockerfile to create the LanguageTool user without home directory<br/> - Modify entrypoint script to modify uid:gid of languagetool user and group if actually changed.                                                                                                             |
@@ -275,7 +278,7 @@ Once the image is build, you can `docker compose up -d` like you would do with t
 | 2023-05-19                    | 6.1-3     | - Upgrade base image to Alpine 3.18.0<br/> - Upgrade Java to 17.0.7+7                                                                                                                                                                                                                        |
 | 2023-04-01                    | 6.1-2     | - Upgrade base image to Alpine 3.17.3.                                                                                                                                                                                                                                                       |
 | 2023-03-28                    | 6.1-1     | - Add logic to set log level                                                                                                                                                                                                                                                                 |
-| 2023-03-28                    | 6.1-0     | - Upgrade to LanguageTool 6.1                                                                                                                                                                                                                                                                |  
+| 2023-03-28                    | 6.1-0     | - Upgrade to LanguageTool 6.1                                                                                                                                                                                                                                                                |
 | 2023-02-23                    | 6.0-5     | - Upgrade base image to Alpine 3.17.2.                                                                                                                                                                                                                                                       |
 | 2023-01-23                    | 6.0-4     | - Upgrade Java to Eclipse Temurin 17.0.6+10.                                                                                                                                                                                                                                                 |
 | 2023-01-15                    | 6.0-3     | - Upgrade base image to Alpine 3.17.1.                                                                                                                                                                                                                                                       |

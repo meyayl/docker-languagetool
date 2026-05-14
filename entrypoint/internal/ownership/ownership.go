@@ -38,7 +38,7 @@ func FixDirOwnership(path string, uid, gid uint32) error {
 			return nil
 		}
 		if stat.Uid != uid || stat.Gid != gid {
-			if err := os.Lchown(p, int(uid), int(gid)); err != nil {
+			if err := os.Lchown(p, int(uid), int(gid)); err != nil { //nolint:gosec
 				ilog.Warn("chown %q: %v", p, err)
 			}
 		}

@@ -111,11 +111,16 @@ func TestModifyFilePreservesNewline(t *testing.T) {
 	dir := t.TempDir()
 	p := writeTemp(t, dir, "passwd", testPasswd)
 
-	_ = modifyFile(p, func(lines []string) ([]string, error) {
+	if err := modifyFile(p, func(lines []string) ([]string, error) {
 		return lines, nil
-	})
+	}); err != nil {
+		t.Fatal(err)
+	}
 
-	data, _ := os.ReadFile(p)
+	data, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(data) == 0 || data[len(data)-1] != '\n' {
 		t.Error("file should end with newline")
 	}

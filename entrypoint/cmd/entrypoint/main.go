@@ -50,9 +50,12 @@ type Config struct {
 	DebugEntrypoint bool
 }
 
+const boolTrue = "true"
+
 func main() {
 	if len(os.Args) >= 2 && os.Args[1] == "healthcheck" {
 		runHealthcheck()
+		return
 	}
 
 	// Internal sub-command: re-invoked as a subprocess with a different uid/gid
@@ -83,7 +86,7 @@ func main() {
 	}
 }
 
-func run() error {
+func run() error { //nolint:gocyclo
 	cfg := parseConfig()
 
 	// help must be checked before anything else
@@ -101,8 +104,8 @@ func run() error {
 	if isRoot {
 		effectiveUID, effectiveGID = cfg.MapUID, cfg.MapGID
 	} else {
-		effectiveUID = uint32(os.Getuid())
-		effectiveGID = uint32(os.Getgid())
+		effectiveUID = uint32(os.Getuid()) //nolint:gosec
+		effectiveGID = uint32(os.Getgid()) //nolint:gosec
 	}
 
 	useNSSWrapper := false
@@ -148,8 +151,14 @@ func run() error {
 			ilog.Info("Container started with DISABLE_FILE_OWNER_FIX=%v. This disables the ownership fix of directories.", cfg.DisableFileOwnerFix)
 		}
 
-		capChown, _ := caps.IsEnabled(caps.CapChown)
-		capDAC, _ := caps.IsEnabled(caps.CapDACOverride)
+		capChown, capChownErr := caps.IsEnabled(caps.CapChown)
+		if capChownErr != nil {
+			ilog.Warn("could not read CAP_CHOWN: %v", capChownErr)
+		}
+		capDAC, capDACErr := caps.IsEnabled(caps.CapDACOverride)
+		if capDACErr != nil {
+			ilog.Warn("could not read CAP_DAC_OVERRIDE: %v", capDACErr)
+		}
 
 		if ownerFix && capChown && capDAC {
 			if err := ownership.FixOwnership(cfg.LangtoolLanguageModel, cfg.LangtoolFasttextModel,
@@ -228,14 +237,16 @@ func run() error {
 		return fmt.Errorf("write config: %w", err)
 	}
 
-	if err := printVersionInfo(); err != nil {
-		ilog.Warn("version info: %v", err)
+	var versionErr error
+	if versionErr = printVersionInfo(); versionErr != nil {
+		ilog.Warn("version info: %v", versionErr)
 	}
 
 	if written {
 		ilog.Info("Using following LanguageTool configuration:")
-		if err := config.PrintConfig(configFile); err != nil {
-			ilog.Warn("print config: %v", err)
+		var printErr error
+		if printErr = config.PrintConfig(configFile); printErr != nil {
+			ilog.Warn("print config: %v", printErr)
 		}
 	}
 
@@ -252,7 +263,7 @@ func run() error {
 	// Handle custom command (any args other than "help")
 	if len(os.Args) > 1 {
 		customArgs := os.Args[1:]
-		customPath, err := exec.LookPath(customArgs[0])
+		customPath, err := exec.LookPath(customArgs[0]) //nolint:gosec
 		if err != nil {
 			return fmt.Errorf("look up %q: %w", customArgs[0], err)
 		}
@@ -300,7 +311,7 @@ func run() error {
 func runHelp() error {
 	cmd := exec.Command("java", "-cp", "languagetool-server.jar",
 		"org.languagetool.server.HTTPServer", "--help")
-	out, _ := cmd.CombinedOutput() // java --help exits non-zero; that's expected
+	out, _ := cmd.CombinedOutput() //nolint:errcheck // java --help exits non-zero; that's expected
 
 	printing := false
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
@@ -326,7 +337,7 @@ func runHealthcheck() {
 	if port == "" {
 		port = "8081"
 	}
-	resp, err := http.Get("http://localhost:" + port + "/v2/healthcheck") //nolint:noctx
+	resp, err := http.Get("http://localhost:" + port + "/v2/healthcheck") //nolint:noctx,gosec
 	if err != nil {
 		os.Exit(1)
 	}
@@ -344,7 +355,7 @@ func runDownloadsAsUser(uid, gid uint32, subCmd string) error {
 	if err != nil {
 		return fmt.Errorf("resolve self: %w", err)
 	}
-	cmd := exec.Command(self, "--_internal-run", subCmd)
+	cmd := exec.Command(self, "--_internal-run", subCmd) //nolint:gosec
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = os.Environ()
@@ -426,7 +437,7 @@ func printVersionInfo() error {
 	fmt.Printf("  Alpine Linux v%s\n", alpineVersion)
 
 	javaCmd := exec.Command("java", "--version")
-	javaOut, _ := javaCmd.CombinedOutput()
+	javaOut, _ := javaCmd.CombinedOutput() //nolint:errcheck
 	for _, line := range strings.Split(strings.TrimRight(string(javaOut), "\n"), "\n") {
 		fmt.Printf("  %s\n", line)
 	}
@@ -440,8 +451,8 @@ func parseConfig() Config {
 		LangtoolLanguageModel:  os.Getenv("langtool_languageModel"),
 		LangtoolFasttextModel:  os.Getenv("langtool_fasttextModel"),
 		LangtoolFasttextBinary: os.Getenv("langtool_fasttextBinary"),
-		DisableFasttext:        os.Getenv("DISABLE_FASTTEXT") == "true",
-		DisableFileOwnerFix:    os.Getenv("DISABLE_FILE_OWNER_FIX") == "true",
+		DisableFasttext:        os.Getenv("DISABLE_FASTTEXT") == boolTrue,
+		DisableFileOwnerFix:    os.Getenv("DISABLE_FILE_OWNER_FIX") == boolTrue,
 		ContainerMode:          os.Getenv("CONTAINER_MODE"),
 		JavaOpts:               os.Getenv("JAVA_OPTS"),
 		JavaGC:                 os.Getenv("JAVA_GC"),
@@ -450,7 +461,7 @@ func parseConfig() Config {
 		LogLevel:               os.Getenv("LOG_LEVEL"),
 		LogbackConfig:          os.Getenv("LOGBACK_CONFIG"),
 		ListenPort:             os.Getenv("LISTEN_PORT"),
-		DebugEntrypoint:        os.Getenv("DEBUG_ENTRYPOINT") == "true",
+		DebugEntrypoint:        os.Getenv("DEBUG_ENTRYPOINT") == boolTrue,
 	}
 
 	if uid, set, err := parseUint32Env("MAP_UID"); err == nil {

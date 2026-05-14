@@ -74,6 +74,7 @@ RUN set -eux; \
         --no-same-owner; \
     rm /tmp/openjdk.tar.gz;
 
+# hadolint ignore=DL4006 - pipefail already set via SHELL ["/bin/sh", "-o", "pipefail", "-c"] above
 RUN set -eux; \
     URL="https://archive.apache.org/dist/maven/maven-${MAVEN_VERSION%%.*}/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"; \
     CHKSUM=$(wget --quiet -O - "${URL}.sha512"); \
@@ -90,8 +91,7 @@ RUN set -eux; \
 
 COPY patches/ /patches/
 
-# hadolint ignore=SC2086 - we need file globbing when deleting apk packages, and moving the LanguageTool-${LT_VERSION}
-# hadolint ignore=DL3003 - we need to change into directories withing the RUN instruction, bjt don't want extra layers
+# hadolint ignore=SC2086,DL3003 - file globbing needed for apk/mv; cd needed within RUN to avoid extra layers
 RUN set -eux; \
     apk add --upgrade --no-cache git xmlstarlet; \
     rm -rf /var/cache/apk/*; \
@@ -217,6 +217,10 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s \
 
 EXPOSE ${LISTEN_PORT}
 
+# The entrypoint binary performs the privilege drop at runtime via syscall.Setuid/Setgid.
+# A static USER instruction would break the privileged startup mode needed for ownership fixes.
+# trivy:ignore:AVD-DS-0002
+#checkov:skip=CKV_DOCKER_3:privilege drop is handled by the entrypoint binary at runtime
 ENTRYPOINT ["/sbin/tini", "-g", "-e", "143", "--", "/entrypoint"]
 
 ARG IMAGE_VERSION

@@ -5,18 +5,18 @@ on:
   workflow_dispatch:
   push:
     paths-ignore:
-      - 'README.md'
-      - 'docker-compose.yml'
-      - '.gitignore'
-      - '.github/linters*'
-      - '.github/tests*'
-      - '.github/workflows/reusable-super-linter.yaml'
-      - 'renovate.json'
+      - "README.md"
+      - "docker-compose.yml"
+      - ".gitignore"
+      - ".github/linters*"
+      - ".github/tests*"
+      - ".github/workflows/reusable-super-linter.yaml"
+      - "renovate.json"
     branches:
-      - 'main'
-      - 'feature/*'
+      - "main"
+      - "feature/*"
     tags:
-      - '[0-9]+.[0-9]+-[0-9]+'
+      - "[0-9]+.[0-9]+-[0-9]+"
   pull_request:
 #    types:
 #      - opened
@@ -126,7 +126,6 @@ jobs:
       packages: write
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -138,8 +137,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }} # zizmor: ignore[secrets-outside-env]
+          password: ${{ secrets.DOCKERHUB_TOKEN }} # zizmor: ignore[secrets-outside-env]
 
       - name: Login to GHCR
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
@@ -164,7 +163,7 @@ jobs:
 
   integration-test-image:
     name: Integration test Image
-    needs: [ build-test-image ]
+    needs: [build-test-image]
     runs-on: ubuntu-latest
     strategy:
       # max-parallel: 1
@@ -226,7 +225,7 @@ jobs:
 
   scan-image:
     name: Scan Image with Grype
-    needs: [ build-test-image ]
+    needs: [build-test-image]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/')
     outputs:
@@ -241,7 +240,6 @@ jobs:
       packages: read
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -265,7 +263,7 @@ jobs:
 
   update-pr:
     name: Update PullRequest
-    needs: [ build-test-image, integration-test-image, scan-image ]
+    needs: [build-test-image, integration-test-image, scan-image]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
@@ -273,12 +271,12 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Find comment for image tags
+      - name: Find comment for image tags # zizmor: ignore[superfluous-actions]
         uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4
         id: fc
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
+          comment-author: "github-actions[bot]"
           body-includes: Docker image tag(s) pushed
 
         # If PR, put image tags in the PR comments
@@ -305,7 +303,6 @@ jobs:
       needs.detect-changes.result == 'success' &&
       needs.detect-changes.outputs.relevant == 'true'
     environment: release
-
     permissions:
       contents: write
 
@@ -325,7 +322,7 @@ jobs:
   cve-check-image-and-report:
     name: Scan Image with Ancore for CVEs and report
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [ build-test-image ]
+    needs: [build-test-image]
     runs-on: ubuntu-latest
 
     concurrency:
@@ -338,7 +335,6 @@ jobs:
       security-events: write
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -368,7 +364,13 @@ jobs:
 
   retag-and-push-final-image:
     name: Retag and push final image
-    needs: [compute-version, build-test-image, integration-test-image, cve-check-image-and-report]
+    needs:
+      [
+        compute-version,
+        build-test-image,
+        integration-test-image,
+        cve-check-image-and-report,
+      ]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
 
@@ -376,12 +378,11 @@ jobs:
       packages: read
 
     steps:
-
       - name: Login to Docker Hub
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }} # zizmor: ignore[secrets-outside-env]
+          password: ${{ secrets.DOCKERHUB_TOKEN }} # zizmor: ignore[secrets-outside-env]
 
       - name: Login to GHCR
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
@@ -409,6 +410,6 @@ jobs:
       - name: Update repo description
         uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }} # zizmor: ignore[secrets-outside-env]
+          password: ${{ secrets.DOCKERHUB_TOKEN }} # zizmor: ignore[secrets-outside-env]
           repository: meyay/languagetool

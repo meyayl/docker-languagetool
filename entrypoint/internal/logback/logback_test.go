@@ -61,10 +61,17 @@ func TestPatchLogLevelPreservesOtherContent(t *testing.T) {
 	src := filepath.Join(dir, "logback.xml")
 	dst := filepath.Join(dir, "logback_out.xml")
 
-	os.WriteFile(src, []byte(sampleLogback), 0644)
-	PatchLogLevel(src, dst, "WARN")
+	if err := os.WriteFile(src, []byte(sampleLogback), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := PatchLogLevel(src, dst, "WARN"); err != nil {
+		t.Fatal(err)
+	}
 
-	data, _ := os.ReadFile(dst)
+	data, err := os.ReadFile(dst)
+	if err != nil {
+		t.Fatalf("read output: %v", err)
+	}
 	if !strings.Contains(string(data), "STDOUT") {
 		t.Error("appender content should be preserved")
 	}
@@ -76,7 +83,9 @@ func TestPatchLogLevelMissingLogger(t *testing.T) {
 	dst := filepath.Join(dir, "logback_out.xml")
 
 	noLogger := `<?xml version="1.0"?><configuration></configuration>`
-	os.WriteFile(src, []byte(noLogger), 0644)
+	if err := os.WriteFile(src, []byte(noLogger), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	err := PatchLogLevel(src, dst, "DEBUG")
 	if err == nil {
