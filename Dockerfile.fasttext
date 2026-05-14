@@ -231,7 +231,7 @@ ENV PATH=${JAVA_HOME}/bin:${PATH}
 WORKDIR /languagetool
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s \
-  CMD wget --quiet --output-document - http://localhost:${LISTEN_PORT}/v2/healthcheck > /dev/null 2>&1  || exit 1
+  CMD ["/entrypoint", "healthcheck"]
 
 EXPOSE ${LISTEN_PORT}
 
