@@ -45,6 +45,10 @@
       "matchDatasources": ["github-tags"],
       "matchPackageNames": ["languagetool-org/languagetool"],
       "allowedVersions": "/^6\\./"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "minimumReleaseAge": "2 days"
     }
   ]
 }
