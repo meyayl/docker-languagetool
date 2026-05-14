@@ -2,6 +2,7 @@ package download
 
 import (
 	"archive/zip"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
@@ -11,25 +12,31 @@ import (
 	"strings"
 	"syscall"
 
+	"gopkg.in/yaml.v3"
+
 	ilog "github.com/meyayl/docker-languagetool/internal/log"
 )
 
-const (
-	ngramBaseURL    = "https://languagetool.org/download/ngram-data"
-	fasttextModelURL = "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
-)
+//go:embed downloads.yaml
+var downloadsConfigData []byte
 
-// NgramFilenames maps language codes to their canonical zip filenames.
-var NgramFilenames = map[string]string{
-	"en": "ngrams-en-20150817.zip",
-	"de": "ngrams-de-20150819.zip",
-	"es": "ngrams-es-20150915.zip",
-	"fr": "ngrams-fr-20150913.zip",
-	"nl": "ngrams-nl-20181229.zip",
+type downloadsConfig struct {
+	Ngrams struct {
+		BaseURL   string            `yaml:"base_url"`
+		Languages map[string]string `yaml:"languages"`
+	} `yaml:"ngrams"`
+	Fasttext struct {
+		ModelURL string `yaml:"model_url"`
+	} `yaml:"fasttext"`
 }
 
-// ValidNgramLangs lists the supported language codes.
-var ValidNgramLangs = []string{"en", "de", "es", "fr", "nl"}
+var cfg downloadsConfig
+
+func init() {
+	if err := yaml.Unmarshal(downloadsConfigData, &cfg); err != nil {
+		panic(fmt.Sprintf("parse downloads.yaml: %v", err))
+	}
+}
 
 // HandleNgramLanguageModels handles downloading and extracting ngram models.
 // It should be called with the process running as the intended owner of
@@ -59,7 +66,7 @@ func HandleNgramLanguageModels(languageModelDir, downloadLangs string) error {
 		if lang == "none" {
 			continue
 		}
-		if _, ok := NgramFilenames[lang]; !ok {
+		if _, ok := cfg.Ngrams.Languages[lang]; !ok {
 			ilog.Error("Unknown ngrams language. Supported languages are \"en\", \"de\", \"es\", \"fr\" and \"nl\".")
 			return fmt.Errorf("unknown ngrams language: %q", lang)
 		}
@@ -95,7 +102,7 @@ func DownloadFasttextModel(fasttextModelPath string, disableFasttext bool) error
 	}
 
 	ilog.Info("Downloading fasttext model.")
-	return downloadFile(fasttextModelURL, fasttextModelPath)
+	return downloadFile(cfg.Fasttext.ModelURL, fasttextModelPath)
 }
 
 func downloadAndExtractNgramModel(modelDir, lang string) error {
@@ -108,7 +115,7 @@ func downloadAndExtractNgramModel(modelDir, lang string) error {
 	zipPath := filepath.Join(modelDir, "ngrams-"+lang+".zip")
 	if _, err := os.Stat(zipPath); err != nil || !isValidZip(zipPath) {
 		ilog.Info("Downloading %q ngrams.", lang)
-		url := ngramBaseURL + "/" + NgramFilenames[lang]
+		url := cfg.Ngrams.BaseURL + "/" + cfg.Ngrams.Languages[lang]
 		if err := downloadFile(url, zipPath); err != nil {
 			return fmt.Errorf("download ngrams %s: %w", lang, err)
 		}
