@@ -22,7 +22,6 @@ var downloadsConfigData []byte
 
 type downloadsConfig struct {
 	Ngrams struct {
-		BaseURL   string            `yaml:"base_url"`
 		Languages map[string]string `yaml:"languages"`
 	} `yaml:"ngrams"`
 	Fasttext struct {
@@ -115,8 +114,7 @@ func downloadAndExtractNgramModel(modelDir, lang string) error {
 	zipPath := filepath.Join(modelDir, "ngrams-"+lang+".zip")
 	if _, err := os.Stat(zipPath); err != nil || !isValidZip(zipPath) {
 		ilog.Info("Downloading %q ngrams.", lang)
-		url := cfg.Ngrams.BaseURL + "/" + cfg.Ngrams.Languages[lang]
-		if err := downloadFile(url, zipPath); err != nil {
+		if err := downloadFile(cfg.Ngrams.Languages[lang], zipPath); err != nil {
 			return fmt.Errorf("download ngrams %s: %w", lang, err)
 		}
 	}
