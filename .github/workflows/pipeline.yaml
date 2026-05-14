@@ -53,7 +53,7 @@ jobs:
         id: version
         # language="Shell Script"
         run: |
-          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2)
+          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2 | tr -d '"')
           echo "LT_VERSION=${LT_VERSION}" >> $GITHUB_OUTPUT
           echo "IMAGE_CREATED=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
 
