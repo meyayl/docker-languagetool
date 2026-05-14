@@ -135,12 +135,21 @@ func run() error {
 		capDAC, _ := caps.IsEnabled(caps.CAP_DAC_OVERRIDE)
 
 		if ownerFix && capChown && capDAC {
-			ltUser, err := system.LookupUser("languagetool")
-			if err != nil {
-				return fmt.Errorf("lookup languagetool after mapping: %w", err)
+			// When using nss_wrapper the filesystem is read-only so /etc/passwd
+			// was never modified — use the mapped IDs directly. Otherwise re-read
+			// from /etc/passwd to get the values actually written there.
+			var fixUID, fixGID uint32
+			if useNSSWrapper {
+				fixUID, fixGID = cfg.MapUID, cfg.MapGID
+			} else {
+				ltUser, err := system.LookupUser("languagetool")
+				if err != nil {
+					return fmt.Errorf("lookup languagetool after mapping: %w", err)
+				}
+				fixUID, fixGID = ltUser.UID, ltUser.GID
 			}
 			if err := ownership.FixOwnership(cfg.LangtoolLanguageModel, cfg.LangtoolFasttextModel,
-				ltUser.UID, ltUser.GID, os.Stdout); err != nil {
+				fixUID, fixGID, os.Stdout); err != nil {
 				ilog.Warn("ownership fix error: %v", err)
 			}
 		} else {
