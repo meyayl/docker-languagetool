@@ -38,7 +38,7 @@ Both `Dockerfile` and `Dockerfile.fasttext` use the same multi-stage pattern:
 
 ### Dependency version management
 
-Every pinned version in the Dockerfiles has a `# renovate:` comment above it. Renovate bot uses regex matching to track and auto-update these versions. When bumping any package or tool version, always update the corresponding `ARG` line and its renovate comment.
+Every pinned version in the Dockerfiles has a `# renovate:` comment above it. Renovate bot uses regular expression matching to track and auto-update these versions. When bumping any package or tool version, always update the corresponding `ARG` line and its renovate comment.
 
 Direct CVE fixes are applied two ways:
 

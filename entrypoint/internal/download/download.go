@@ -83,7 +83,7 @@ func HandleNgramLanguageModels(languageModelDir, downloadLangs string) error {
 
 // DownloadFasttextModel downloads the fasttext model if absent.
 // It should be called with the process running as the intended owner.
-func DownloadFasttextModel(fasttextModelPath string, disableFasttext bool) error {
+func DownloadFasttextModel(fasttextModelPath string, disableFasttext bool) error { //nolint:revive
 	if fasttextModelPath == "" || disableFasttext {
 		ilog.Info("\"langtool_fasttextModel\" not specified or \"DISABLE_FASTTEXT\" is set to \"true\". Skipping download of fasttext model.")
 		return nil
@@ -145,18 +145,19 @@ func validateDir(dir string) error {
 		return fmt.Errorf("unexpected stat type for %q", dir)
 	}
 
-	uid := uint32(os.Getuid())
-	gid := uint32(os.Getgid())
+	uid := uint32(os.Getuid()) //nolint:gosec
+	gid := uint32(os.Getgid()) //nolint:gosec
 
 	mode := uint32(info.Mode())
 	var perm uint32
-	if uid == 0 {
+	switch {
+	case uid == 0:
 		perm = 7
-	} else if stat.Uid == uid {
+	case stat.Uid == uid:
 		perm = (mode >> 6) & 7
-	} else if stat.Gid == gid {
+	case stat.Gid == gid:
 		perm = (mode >> 3) & 7
-	} else {
+	default:
 		perm = mode & 7
 	}
 
@@ -286,6 +287,6 @@ func extractZipFile(f *zip.File, target string) error {
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, rc)
+	_, err = io.Copy(out, rc) //nolint:gosec // ngram zip files are from trusted URLs embedded in downloads.yaml
 	return err
 }

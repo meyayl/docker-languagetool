@@ -75,7 +75,9 @@ func TestWriteConfigPropertiesTruncates(t *testing.T) {
 	path := filepath.Join(dir, "config.properties")
 
 	// Write initial content
-	os.WriteFile(path, []byte("old=content\n"), 0644)
+	if err := os.WriteFile(path, []byte("old=content\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	t.Setenv("langtool_port", "8081")
 	for _, env := range os.Environ() {
@@ -92,7 +94,10 @@ func TestWriteConfigPropertiesTruncates(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	data, _ := os.ReadFile(path)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read config after truncate: %v", err)
+	}
 	if strings.Contains(string(data), "old=content") {
 		t.Error("file should have been truncated")
 	}

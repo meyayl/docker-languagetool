@@ -39,7 +39,9 @@ func TestIsValidZip(t *testing.T) {
 
 	// Truncated / corrupt zip
 	invalidPath := filepath.Join(dir, "invalid.zip")
-	os.WriteFile(invalidPath, []byte("not a zip"), 0644)
+	if err := os.WriteFile(invalidPath, []byte("not a zip"), 0644); err != nil {
+		t.Fatal(err)
+	}
 	if isValidZip(invalidPath) {
 		t.Error("expected corrupt zip to return false")
 	}
@@ -54,7 +56,9 @@ func TestExtractZip(t *testing.T) {
 	dir := t.TempDir()
 	zipPath := filepath.Join(dir, "test.zip")
 	destDir := filepath.Join(dir, "out")
-	os.MkdirAll(destDir, 0755)
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	// Build a zip with a file and a directory entry
 	w, err := os.Create(zipPath)
@@ -64,15 +68,17 @@ func TestExtractZip(t *testing.T) {
 	zw := zip.NewWriter(w)
 	dh := &zip.FileHeader{Name: "subdir/"}
 	dh.SetMode(0755 | os.ModeDir)
-	if _, err := zw.CreateHeader(dh); err != nil {
-		t.Fatalf("zip create dir header: %v", err)
+	var headerErr error
+	if _, headerErr = zw.CreateHeader(dh); headerErr != nil {
+		t.Fatalf("zip create dir header: %v", headerErr)
 	}
 	f, err := zw.Create("subdir/hello.txt")
 	if err != nil {
 		t.Fatalf("zip create entry: %v", err)
 	}
-	if _, err := f.Write([]byte("hello world")); err != nil {
-		t.Fatalf("zip write: %v", err)
+	var writeErr error
+	if _, writeErr = f.Write([]byte("hello world")); writeErr != nil {
+		t.Fatalf("zip write: %v", writeErr)
 	}
 	if err := zw.Close(); err != nil {
 		t.Fatalf("zip close: %v", err)
@@ -98,7 +104,9 @@ func TestExtractZipPathTraversal(t *testing.T) {
 	dir := t.TempDir()
 	zipPath := filepath.Join(dir, "evil.zip")
 	destDir := filepath.Join(dir, "out")
-	os.MkdirAll(destDir, 0755)
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 
 	// Build a zip with a path-traversal entry
 	w, err := os.Create(zipPath)
@@ -110,8 +118,9 @@ func TestExtractZipPathTraversal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("zip create entry: %v", err)
 	}
-	if _, err := f.Write([]byte("pwned")); err != nil {
-		t.Fatalf("zip write: %v", err)
+	var writeErr error
+	if _, writeErr = f.Write([]byte("pwned")); writeErr != nil {
+		t.Fatalf("zip write: %v", writeErr)
 	}
 	if err := zw.Close(); err != nil {
 		t.Fatalf("zip close: %v", err)
@@ -127,8 +136,10 @@ func TestExtractZipPathTraversal(t *testing.T) {
 
 func TestDownloadFile(t *testing.T) {
 	body := []byte("test content")
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write(body)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if _, err := w.Write(body); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}))
 	defer srv.Close()
 
@@ -139,14 +150,17 @@ func TestDownloadFile(t *testing.T) {
 		t.Fatalf("downloadFile: %v", err)
 	}
 
-	got, _ := os.ReadFile(dest)
+	got, err := os.ReadFile(dest)
+	if err != nil {
+		t.Fatalf("read downloaded file: %v", err)
+	}
 	if string(got) != string(body) {
 		t.Errorf("got %q, want %q", got, body)
 	}
 }
 
 func TestDownloadFileHTTPError(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
 	}))
 	defer srv.Close()
