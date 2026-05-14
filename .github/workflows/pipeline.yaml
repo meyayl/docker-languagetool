@@ -157,7 +157,7 @@ jobs:
           echo "☕ Checking Java version..."
           docker compose exec languagetool /opt/java/customjre/bin/java --version
           echo "📖 Checking LanguageTool help..."
-          docker compose exec languagetool /entrypoint.sh help
+          docker compose exec languagetool /entrypoint help
           echo "🧪 Testing LanguageTool API..."
           curl --data "language=en-US&text=a simple test" \
             http://127.0.0.1:8081/v2/check | tee /dev/stderr | grep -q detectedLanguage
