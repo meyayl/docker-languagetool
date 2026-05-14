@@ -9,6 +9,7 @@ The Docker Hub repository can be found [here](https://hub.docker.com/r/meyay/lan
 
 - Built directly from [LanguageTool repository tags](https://github.com/languagetool-org/languagetool/tags) since official release zips were [discontinued after v6.6](https://github.com/languagetool-org/languagetool/blob/master/languagetool-standalone/CHANGES.md#66-2025-03-27)
 - Built on latest Alpine 3.23 base image
+- Multi-architecture image support for `linux/amd64` and `linux/arm64`
 - Custom Eclipse Temurin 21 JRE (optimized with required modules only)
 - Uses `tini` to handle container signals properly
 - includes `fasttext`
@@ -41,6 +42,25 @@ The Docker Hub repository can be found [here](https://hub.docker.com/r/meyay/lan
 
 The following subsections show usage examples.<br/>
 An example compose file can be downloaded from [here](https://raw.githubusercontent.com/meyayl/docker-languagetool/main/docker-compose.yml).
+
+### Building for ARM64
+
+The published image is built for `linux/amd64` and `linux/arm64`.
+
+For local builds on an ARM64 host, plain `docker build` works for both Dockerfiles.
+If you are building from a non-ARM64 host, use Docker Buildx and set `--platform linux/arm64`.
+
+#### Default image
+
+```sh
+docker buildx build --platform linux/arm64 --load -t meyay/languagetool:arm64 .
+```
+
+#### fasttext-from-source image
+
+```sh
+docker buildx build --platform linux/arm64 --load -t meyay/languagetool:arm64-fasttext -f Dockerfile.fasttext .
+```
 
 ### Start container as root user with read-only filesystem, start LanguageTool as MAP_UID:MAP_GID
 
@@ -212,7 +232,7 @@ The environment parameters are split into two halves, separated by an equal or c
 
 Now that fasttext is available since Alpine 3.19, the image switched to using the Alpine package, instead of compiling the binaries from the sources. This hopefully fixes the compatibility issue users with older cpus experienced with my previous images, that were build on a amd64v3 architecture cpu, which compiled the `fasttext` binary with cpu optimizations older cpus do not support.
 
-If the Alpine `fasttext` package does not work for you, you can build a custom image to compile the `fasttext` binary using cpu optimizations your cpu (as long as it's x86_64 based) actually understands:
+If the Alpine `fasttext` package does not work for you, you can build a custom image that compiles the `fasttext` binary from source:
 
 ```
 git clone  https://github.com/meyayl/docker-languagetool.git
@@ -220,7 +240,13 @@ cd docker-languagetool
 sudo docker build -t meyay/languagetool:latest -f Dockerfile.fasttext .
 ```
 
-As alternative method, `sudo make docker_build` can be used to build your custom image.
+To build that variant for ARM64 from a non-ARM64 machine, use Buildx instead:
+
+```sh
+docker buildx build --platform linux/arm64 --load -t meyay/languagetool:arm64-fasttext -f Dockerfile.fasttext .
+```
+
+As alternative methods, `sudo make docker_build` and `sudo make docker_build_fasttext_arm64` can be used for the source-built image.
 
 Once the image is build, you can `docker compose up -d` like you would do with the images hosted on Docker Hub.
 

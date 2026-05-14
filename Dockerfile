@@ -45,6 +45,7 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 ARG LT_VERSION
 ARG JAVA_VERSION
 ARG MAVEN_VERSION
+ARG TARGETARCH
 
 ENV JAVA_HOME=/opt/java/openjdk \
     JAVA_VERSION=${JAVA_VERSION}
@@ -56,11 +57,17 @@ RUN set -eux; \
 # hadolint ignore=SC3060
 # hadolint ignore=DL4006
 RUN set -eux; \
+        TARGET_ARCH_RAW="${TARGETARCH:-$(apk --print-arch)}"; \
+        case "${TARGET_ARCH_RAW}" in \
+            amd64|x86_64) JAVA_ARCH=x64 ;; \
+            arm64|aarch64) JAVA_ARCH=aarch64 ;; \
+            *) echo "Unsupported Java architecture: ${TARGET_ARCH_RAW}" >&2; exit 1 ;; \
+        esac; \
     RELEASE_PATH="${JAVA_VERSION/+/%2B}"; \
     RELEASE_TYPE="${JAVA_VERSION%-*}"; \
     RELEASE_NUMBER="${JAVA_VERSION#*-}"; \
     RELEASE_NUMBER="${RELEASE_NUMBER/+/_}"; \
-    URL="https://github.com/adoptium/temurin21-binaries/releases/download/${RELEASE_PATH}/OpenJDK21U-${RELEASE_TYPE}_x64_alpine-linux_hotspot_${RELEASE_NUMBER}.tar.gz"; \
+        URL="https://github.com/adoptium/temurin21-binaries/releases/download/${RELEASE_PATH}/OpenJDK21U-${RELEASE_TYPE}_${JAVA_ARCH}_alpine-linux_hotspot_${RELEASE_NUMBER}.tar.gz"; \
     CHKSUM=$(wget --quiet -O -  "${URL}.sha256.txt" | cut -d' ' -f1); \
     wget -O /tmp/openjdk.tar.gz ${URL}; \
     echo "${CHKSUM} */tmp/openjdk.tar.gz" | sha256sum -c -; \

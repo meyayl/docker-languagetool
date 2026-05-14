@@ -53,6 +53,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
 
@@ -73,7 +76,7 @@ jobs:
         id: gather_build_args
         # language="Shell Script"
         run: |
-          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2)
+          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2 | tr -d '"')
           TAGS=$(gh api repos/${{ github.repository }}/tags --jq '.[].name' || echo "")
           MAX_VERSION=-1
           for tag in $TAGS; do
@@ -97,7 +100,7 @@ jobs:
           pull: true
           push: true
           tags: ghcr.io/meyayl/languagetool:${{ github.run_id }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
@@ -163,6 +166,61 @@ jobs:
             http://127.0.0.1:8081/v2/check | tee /dev/stderr | grep -q detectedLanguage
           echo "🛑 Stopping container..."
           docker compose down
+
+  integration-test-image-arm64-smoke:
+    name: Integration test Image ARM64 smoke
+    needs: [ build-test-image ]
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.job }}-arm64-smoke-${{ github.ref }}
+      cancel-in-progress: true
+
+    permissions:
+      packages: read
+
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run ARM64 smoke test
+        # language="Shell Script"
+        run: |
+          set -euxo pipefail
+          cleanup() {
+            docker rm -f languagetool-arm64 >/dev/null 2>&1 || true
+          }
+          dump_logs() {
+            docker logs languagetool-arm64 || true
+          }
+          trap cleanup EXIT
+          trap dump_logs ERR
+          docker run --detach \
+            --name languagetool-arm64 \
+            --platform linux/arm64 \
+            --publish 8081:8081 \
+            --tmpfs /tmp:exec \
+            --env DISABLE_FILE_OWNER_FIX=true \
+            ghcr.io/meyayl/languagetool:${{ github.run_id }}
+          for _ in $(seq 1 90); do
+            if curl --fail --silent --show-error http://127.0.0.1:8081/v2/healthcheck > /dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl --fail --silent --show-error http://127.0.0.1:8081/v2/healthcheck > /dev/null
+          docker exec languagetool-arm64 /opt/java/customjre/bin/java --version
+          docker exec languagetool-arm64 test -s /fasttext/lid.176.bin
+          curl --data "language=en-US&text=a simple test" \
+            http://127.0.0.1:8081/v2/check | tee /dev/stderr | grep -q detectedLanguage
+
   scan-image:
     name: Scan Image with Grype
     needs: [ build-test-image ]
@@ -202,7 +260,7 @@ jobs:
 
   update-pr:
     name: Update PullRequest
-    needs: [ build-test-image, integration-test-image, scan-image ]
+    needs: [ build-test-image, integration-test-image, integration-test-image-arm64-smoke, scan-image ]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 
@@ -279,7 +337,7 @@ jobs:
 
   retag-and-push-final-image:
     name: Retag and push final image
-    needs: [ build-test-image, integration-test-image, cve-check-image-and-report ]
+    needs: [ build-test-image, integration-test-image, integration-test-image-arm64-smoke, cve-check-image-and-report ]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
 
@@ -287,6 +345,9 @@ jobs:
       packages: read
 
     steps:
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
@@ -305,22 +366,19 @@ jobs:
         id: image_tags
         # language="Shell Script"
         run: |
-          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2)
           IMAGE_VERSION=${GITHUB_REF#refs/tags/}
-          echo "IMAGE_VERSION=${LT_VERSION}-${IMAGE_VERSION}" >> $GITHUB_OUTPUT
+          LT_VERSION=${IMAGE_VERSION%-*}
+          echo "IMAGE_VERSION=${IMAGE_VERSION}" >> $GITHUB_OUTPUT
           echo "LT_VERSION=${LT_VERSION}" >> $GITHUB_OUTPUT
-          GH_TOKEN: ${{ github.token }}
 
-      - name: Pull and retag image
+      - name: Publish multi-arch tags to Docker Hub
         # language="Shell Script"
-        run:
-          docker pull ghcr.io/meyayl/languagetool:${{ github.run_id }}
-          docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:${{ steps.image_tags.outputs.IMAGE_VERSION }}
-          docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:${{ steps.image_tags.outputs.LT_VERSION }}
-          docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:latest
-          docker push meyay/languagetool:${{ steps.image_tags.outputs.IMAGE_VERSION }}
-          docker push meyay/languagetool:${{ steps.image_tags.outputs.LT_VERSION }}
-          docker push meyay/languagetool:latest
+        run: |
+          docker buildx imagetools create \
+            --tag meyay/languagetool:${{ steps.image_tags.outputs.IMAGE_VERSION }} \
+            --tag meyay/languagetool:${{ steps.image_tags.outputs.LT_VERSION }} \
+            --tag meyay/languagetool:latest \
+            ghcr.io/meyayl/languagetool:${{ github.run_id }}
 
       - name: Update repo description
         uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
