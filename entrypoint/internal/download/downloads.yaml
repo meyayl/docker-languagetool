@@ -1,0 +1,10 @@
+ngrams:
+  base_url: "https://languagetool.org/download/ngram-data"
+  languages:
+    en: "ngrams-en-20150817.zip"
+    de: "ngrams-de-20150819.zip"
+    es: "ngrams-es-20150915.zip"
+    fr: "ngrams-fr-20150913.zip"
+    nl: "ngrams-nl-20181229.zip"
+fasttext:
+  model_url: "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin"
