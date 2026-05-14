@@ -55,8 +55,8 @@ jobs:
         # language="Shell Script"
         run: |
           # shellcheck disable=2086
-          echo "DEFAULT_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
-          echo "this is a PR branch. Let's only lint the files that are changed against the target branch '${{ github.base_ref }}'"
+          echo "DEFAULT_BRANCH=${GITHUB_BASE_REF}" >> $GITHUB_ENV
+          echo "this is a PR branch. Let's only lint the files that are changed against the target branch '${GITHUB_BASE_REF}'"
 
       - name: Set DEFAULT_BRANCH to current branch
         # if base_ref has no value, this is just a commit on a branch
@@ -67,7 +67,7 @@ jobs:
         # language="Shell Script"
         run: |
           # shellcheck disable=2086
-          echo "DEFAULT_BRANCH=$(echo '${{ github.ref }}' | sed 's/refs\/heads\///')" >> $GITHUB_ENV
+          echo "DEFAULT_BRANCH=$(echo "${GITHUB_REF}" | sed 's/refs\/heads\///')" >> $GITHUB_ENV
           echo "this is just a branch push, not a PR."
 
       # used as a debug step to ensure we're only linting all files on release branches
@@ -138,6 +138,10 @@ jobs:
           # editorconfig-linter is rather generic and file-specific linters are better
           # turn off editorconfig-checker, which flags too many false positives
           VALIDATE_EDITORCONFIG: false
+          # GO linter passes individual files from workspace root to golangci-lint;
+          # the Go module lives in entrypoint/ so it fails with "named files must all be in one directory".
+          # GO_MODULES navigates to go.mod correctly and is sufficient.
+          VALIDATE_GO: false
           # prevent Kubernetes CRD API's from causing kubeval to fail
           # also change schema location to an up-to-date list
           # https://github.com/yannh/kubernetes-json-schema/#kubeval
