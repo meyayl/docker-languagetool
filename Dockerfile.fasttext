@@ -177,9 +177,9 @@ RUN set -eux; \
 
 FROM golang:${GO_VERSION} AS go_build
 WORKDIR /src
-COPY go.mod ./
-COPY cmd/ cmd/
-COPY internal/ internal/
+COPY entrypoint/go.mod ./
+COPY entrypoint/cmd/ cmd/
+COPY entrypoint/internal/ internal/
 RUN go mod tidy && \
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o /entrypoint ./cmd/entrypoint
 
