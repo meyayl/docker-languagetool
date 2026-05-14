@@ -1,0 +1,3 @@
+# Privilege drop is handled by the entrypoint binary at runtime via syscall.Setuid/Setgid.
+# A static USER instruction would break the privileged startup mode needed for ownership fixes.
+AVD-DS-0002

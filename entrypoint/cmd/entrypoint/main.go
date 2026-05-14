@@ -270,7 +270,7 @@ func run() error { //nolint:gocyclo
 		if isRoot {
 			return execWithPrivilegeDrop(effectiveUID, effectiveGID, customPath, customArgs, os.Environ())
 		}
-		return syscall.Exec(customPath, customArgs, os.Environ())
+		return syscall.Exec(customPath, customArgs, os.Environ()) //nolint:gosec
 	}
 
 	// Start LanguageTool server
