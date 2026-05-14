@@ -37,8 +37,72 @@ jobs:
 
     uses: ./.github/workflows/reusable-super-linter.yaml
 
+  compute-version:
+    name: Compute image version
+    runs-on: ubuntu-latest
+    outputs:
+      image_version: ${{ steps.version.outputs.IMAGE_VERSION }}
+      lt_version: ${{ steps.version.outputs.LT_VERSION }}
+      image_created: ${{ steps.version.outputs.IMAGE_CREATED }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Compute version
+        id: version
+        # language="Shell Script"
+        run: |
+          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2)
+          echo "LT_VERSION=${LT_VERSION}" >> $GITHUB_OUTPUT
+          echo "IMAGE_CREATED=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "IMAGE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            TAGS=$(gh api repos/${{ github.repository }}/tags --jq '.[].name' || echo "")
+            MAX=-1
+            for tag in $TAGS; do
+              if [[ ${tag} =~ ^${LT_VERSION}-([0-9]+)$ ]]; then
+                N="${BASH_REMATCH[1]}"
+                (( N > MAX )) && MAX=$N
+              fi
+            done
+            echo "IMAGE_VERSION=${LT_VERSION}-$(( MAX + 1 ))" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  detect-changes:
+    name: Detect Dockerfile/entrypoint changes
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      relevant: ${{ steps.check.outputs.relevant }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Check changed paths
+        id: check
+        # language="Shell Script"
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            BASE=$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          elif [[ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]]; then
+            BASE=$(git rev-list --max-parents=0 HEAD)
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          CHANGES=$(git diff --name-only "$BASE" HEAD | grep -E '^(Dockerfile|Dockerfile\.fasttext|entrypoint/)' || true)
+          echo "relevant=$([ -n "$CHANGES" ] && echo true || echo false)" >> $GITHUB_OUTPUT
+
   build-test-image:
     name: Build Image for Testing
+    needs: [compute-version]
     runs-on: ubuntu-latest
 
     concurrency:
@@ -69,27 +133,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Gather build args
-        id: gather_build_args
-        # language="Shell Script"
-        run: |
-          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2)
-          TAGS=$(gh api repos/${{ github.repository }}/tags --jq '.[].name' || echo "")
-          MAX_VERSION=-1
-          for tag in $TAGS; do
-            if [[ ${tag} =~ ^${LT_VERSION}-([0-9]+)$ ]]; then
-              VERSION="${BASH_REMATCH[1]}"
-              if [ "${VERSION}" -gt "${MAX_VERSION}" ]; then
-                MAX_VERSION="${VERSION}"
-              fi
-            fi
-          done
-          IMAGE_VERSION=$((MAX_VERSION + 1))
-          echo "IMAGE_VERSION=${LT_VERSION}-${IMAGE_VERSION}" >> $GITHUB_OUTPUT
-          echo "IMAGE_CREATED=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ github.token }}
-
       - name: Build and Push to GHCR
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7
         with:
@@ -101,8 +144,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            IMAGE_VERSION=${{ steps.gather_build_args.outputs.IMAGE_VERSION }}
-            IMAGE_CREATED=${{ steps.gather_build_args.outputs.IMAGE_CREATED }}
+            IMAGE_VERSION=${{ needs.compute-version.outputs.image_version }}
+            IMAGE_CREATED=${{ needs.compute-version.outputs.image_created }}
 
   integration-test-image:
     name: Integration test Image
@@ -153,7 +196,7 @@ jobs:
           echo "⏳ Waiting for container to start..."
           sleep 10s
           echo "📋 Container logs:"
-          docker compose logs 
+          docker compose logs
           echo "☕ Checking Java version..."
           docker compose exec languagetool /opt/java/customjre/bin/java --version
           echo "📖 Checking LanguageTool help..."
@@ -163,6 +206,7 @@ jobs:
             http://127.0.0.1:8081/v2/check | tee /dev/stderr | grep -q detectedLanguage
           echo "🛑 Stopping container..."
           docker compose down
+
   scan-image:
     name: Scan Image with Grype
     needs: [ build-test-image ]
@@ -233,6 +277,29 @@ jobs:
             ```
           edit-mode: replace
 
+  create-release-tag:
+    name: Create release tag
+    needs: [compute-version, detect-changes, integration-test-image]
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/main' &&
+      needs.detect-changes.result == 'success' &&
+      needs.detect-changes.outputs.relevant == 'true'
+    environment: release
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create and push tag
+        # language="Shell Script"
+        run: |
+          TAG="${{ needs.compute-version.outputs.image_version }}"
+          gh api repos/${{ github.repository }}/git/refs \
+            -f ref="refs/tags/${TAG}" \
+            -f sha="${{ github.sha }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   cve-check-image-and-report:
     name: Scan Image with Ancore for CVEs and report
@@ -276,10 +343,9 @@ jobs:
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
-
   retag-and-push-final-image:
     name: Retag and push final image
-    needs: [ build-test-image, integration-test-image, cve-check-image-and-report ]
+    needs: [compute-version, build-test-image, integration-test-image, cve-check-image-and-report]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
 
@@ -301,26 +367,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Gather final image tag
-        id: image_tags
-        # language="Shell Script"
-        run: |
-          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2)
-          IMAGE_VERSION=${GITHUB_REF#refs/tags/}
-          echo "IMAGE_VERSION=${LT_VERSION}-${IMAGE_VERSION}" >> $GITHUB_OUTPUT
-          echo "LT_VERSION=${LT_VERSION}" >> $GITHUB_OUTPUT
-          GH_TOKEN: ${{ github.token }}
-
       - name: Pull and retag image
         # language="Shell Script"
-        run:
-          docker pull ghcr.io/meyayl/languagetool:${{ github.run_id }}
-          docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:${{ steps.image_tags.outputs.IMAGE_VERSION }}
-          docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:${{ steps.image_tags.outputs.LT_VERSION }}
-          docker tag ghcr.io/meyayl/languagetool:${{ github.run_id }} meyay/languagetool:latest
-          docker push meyay/languagetool:${{ steps.image_tags.outputs.IMAGE_VERSION }}
-          docker push meyay/languagetool:${{ steps.image_tags.outputs.LT_VERSION }}
-          docker push meyay/languagetool:latest
+        run: |
+          SRC="ghcr.io/meyayl/languagetool:${{ github.run_id }}"
+          docker pull "$SRC"
+          docker tag "$SRC" "meyay/languagetool:${{ needs.compute-version.outputs.image_version }}"
+          docker tag "$SRC" "meyay/languagetool:${{ needs.compute-version.outputs.lt_version }}"
+          docker tag "$SRC" "meyay/languagetool:latest"
+          docker push "meyay/languagetool:${{ needs.compute-version.outputs.image_version }}"
+          docker push "meyay/languagetool:${{ needs.compute-version.outputs.lt_version }}"
+          docker push "meyay/languagetool:latest"
 
       - name: Update repo description
         uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
