@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
@@ -50,6 +51,10 @@ type Config struct {
 }
 
 func main() {
+	if len(os.Args) >= 2 && os.Args[1] == "healthcheck" {
+		runHealthcheck()
+	}
+
 	// Internal sub-command: re-invoked as a subprocess with a different uid/gid
 	// to run downloads as the mapped user.
 	if len(os.Args) >= 3 && os.Args[1] == "--_internal-run" {
@@ -312,6 +317,24 @@ func runHelp() error {
 		}
 	}
 	return nil
+}
+
+// runHealthcheck performs an HTTP GET to /v2/healthcheck on LISTEN_PORT and
+// exits 0 on a 2xx response, 1 otherwise. Designed for use as a Docker HEALTHCHECK.
+func runHealthcheck() {
+	port := os.Getenv("LISTEN_PORT")
+	if port == "" {
+		port = "8081"
+	}
+	resp, err := http.Get("http://localhost:" + port + "/v2/healthcheck") //nolint:noctx
+	if err != nil {
+		os.Exit(1)
+	}
+	resp.Body.Close()
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		os.Exit(0)
+	}
+	os.Exit(1)
 }
 
 // runDownloadsAsUser re-invokes the binary as a subprocess with the given
