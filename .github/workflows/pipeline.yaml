@@ -37,6 +37,7 @@ jobs:
     permissions:
       contents: read
       statuses: write
+      pull-requests: write
 
     uses: ./.github/workflows/reusable-super-linter.yaml
 
