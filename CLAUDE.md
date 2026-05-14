@@ -33,7 +33,8 @@ Both `Dockerfile` and `Dockerfile.fasttext` use the same multi-stage pattern:
 2. **`java_base`** — base + locale/timezone packages
 3. **`prepare`** — downloads Eclipse Temurin JDK + Apache Maven, clones LanguageTool from GitHub at the tag matching `LT_VERSION`, patches `pom.xml` for CVE fixes (logback, Jackson), builds with Maven, then uses `jlink` to produce a minimal custom JRE (`/opt/java/customjre`) with only the modules LanguageTool actually needs
 4. **`fasttext`** (Dockerfile.fasttext only) — compiles fasttext from source with gcc13 patch + UPX compression
-5. **final** — copies `/languagetool` and `/opt/java/customjre` from `prepare`, installs runtime Alpine packages, sets up `languagetool` user (UID/GID 783)
+5. **`go_build`** — compiles the `entrypoint` Go binary (see below); `ARG GO_VERSION` must be declared in global scope (before the first `FROM`) so it can be referenced in the `FROM golang:${GO_VERSION}` line
+6. **final** — copies `/languagetool` and `/opt/java/customjre` from `prepare`, installs runtime Alpine packages, sets up `languagetool` user (UID/GID 783)
 
 ### Dependency version management
 
@@ -43,16 +44,19 @@ Direct CVE fixes are applied two ways:
 - `pom.xml` patches via `xmlstarlet` (logback, Jackson) during the Maven build
 - Direct JAR replacements via `wget` into `/languagetool/libs/` after extraction (netty, opennlp)
 
-### entrypoint.sh
+### Go entrypoint binary (`entrypoint/`)
 
-The entrypoint handles everything at container start:
+The container entry point is a statically-linked Go binary (`CGO_ENABLED=0 GOOS=linux GOARCH=amd64`) that replaces the former `entrypoint.sh`. It requires no shell, `su-exec`, `shadow`, or `xmlstarlet` in the runtime image. See `entrypoint/README.md` for the full startup sequence and environment variable reference.
 
-- **Root mode** (default): maps UID/GID via `usermod`/`groupmod` (or `nss_wrapper` on read-only filesystems), optionally fixes volume ownership via `chown`
-- **Unprivileged mode**: skips user mapping, expects volumes pre-owned correctly
-- Downloads ngram models (en/de/es/fr/nl) and fasttext model if not already present
-- Generates `/tmp/config.properties` by iterating all `langtool_*` environment variables — any env var prefixed with `langtool_` is automatically written as a config key
-- Sets log level by patching `/tmp/logback.xml` via `xmlstarlet`
-- Launches LanguageTool via `su-exec` (root mode) or `exec` (unprivileged)
+Key implementation rules:
+
+- **No hardcoded UID/GID numbers.** Effective UID/GID is derived once at startup: `MAP_UID`/`MAP_GID` env vars when root, `os.Getuid()`/`os.Getgid()` when unprivileged. Every downstream operation (ownership fix, download subprocess, privilege drop) uses this single computed value.
+- **Download URLs/filenames live in `entrypoint/internal/download/downloads.yaml`** (embedded via `//go:embed`). Edit the YAML to update URLs; no Go recompile is needed.
+- **Read-only filesystem detection** uses `syscall.Statfs("/", &stat)` checking `stat.Flags & 0x1` (ST_RDONLY). Do not parse `/proc/mounts`.
+- **Privilege drop** uses `runtime.LockOSThread()` + `syscall.Setgid` + `syscall.Setuid` + `syscall.Exec`. Do not use `su-exec` or similar wrappers.
+- **Download isolation**: when root, downloads are run by re-invoking the binary via `--_internal-run` with `exec.Cmd.SysProcAttr.Credential{Uid, Gid}` so downloaded files are owned by the target user.
+- **`go mod tidy` runs inside the Docker `go_build` stage** — there is no local Go install requirement. The `go.sum` file is committed and kept up to date.
+- **`go.sum` must be committed.** Run `go mod tidy` in `entrypoint/` after any dependency change.
 
 ### Image versioning
 
@@ -67,6 +71,8 @@ Tags follow the pattern `{LT_VERSION}-{sequential_number}` (e.g., `6.8-0`). The 
 5. **cve-check-image-and-report** — blocking CVE scan, runs only on tags
 6. **retag-and-push-final-image** — retags GHCR image and pushes to Docker Hub with versioned + `latest` tags; runs only on tags
 
+**Branch naming:** the pipeline triggers on `feature/*` branches (not `feat/*`). Always use `feature/` as the branch prefix for development branches.
+
 ### Integration test compose files
 
 Files in `.github/tests/` each define a specific runtime scenario. They all require the `IMAGE` environment variable to be set. The `privileged-*.yml` variants run as root with Linux capabilities; `unprivileged-*.yml` variants use `user: "1001:1001"`.
@@ -77,3 +83,8 @@ Files in `.github/tests/` each define a specific runtime scenario. They all requ
 - The `patches/` directory contains version-specific patches: `gcc13.patch` (fasttext), `no-march-native.patch` (fasttext), `lt6_7_memory_leak_fix.patch` (applied conditionally in the Dockerfile only when `LT_VERSION == 6.7`)
 - `/tmp` must be mounted as `tmpfs` with `exec` permissions — JNA extracts native libs there
 - Default listen port is `8081` (changed from `8010` in version 6.6-0)
+
+## Git conventions
+
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): description` (e.g. `feat(download): …`, `fix(entrypoint): …`, `chore(deps): …`, `refactor(mount): …`, `docs(entrypoint): …`).
+- Feature branches must be named `feature/<name>` — the CI pipeline only triggers on `feature/*`, not `feat/*`.
