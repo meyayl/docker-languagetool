@@ -30,6 +30,7 @@ on:
 permissions:
   contents: read            # git permissions to repo pull/push
   statuses: write           # read/write to repo custom statuses and checks
+  pull-requests: write      # post linter summary as PR comment
 
 jobs:
   super-lint:
