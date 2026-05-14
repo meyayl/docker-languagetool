@@ -80,10 +80,12 @@ jobs:
       - name: FILTER_REGEX_EXCLUDE
         if: ${{ inputs.filter-regex-exclude }}
         # language="Shell Script"
+        env:
+          FILTER_REGEX_EXCLUDE_INPUT: ${{ inputs.filter-regex-exclude }}
         run: |
           # shellcheck disable=2086
           {
-            echo "FILTER_REGEX_EXCLUDE=${{ inputs.filter-regex-exclude }}" >> $GITHUB_ENV
+            echo "FILTER_REGEX_EXCLUDE=${FILTER_REGEX_EXCLUDE_INPUT}" >> $GITHUB_ENV
           }
 
       # disable non-DevOps focused linters that might run on sample code or 3rd party code
@@ -138,10 +140,12 @@ jobs:
           # editorconfig-linter is rather generic and file-specific linters are better
           # turn off editorconfig-checker, which flags too many false positives
           VALIDATE_EDITORCONFIG: false
-          # GO linter passes individual files from workspace root to golangci-lint;
-          # the Go module lives in entrypoint/ so it fails with "named files must all be in one directory".
-          # GO_MODULES navigates to go.mod correctly and is sufficient.
+          # GO passes individual files from workspace root to golangci-lint;
+          # GO_MODULES also fails because it invokes golangci-lint at workspace root for the
+          # entrypoint/ module, which has no Go files at root level.
+          # Both linters are disabled; Go correctness is enforced by the Docker build stage.
           VALIDATE_GO: false
+          VALIDATE_GO_MODULES: false
           # prevent Kubernetes CRD API's from causing kubeval to fail
           # also change schema location to an up-to-date list
           # https://github.com/yannh/kubernetes-json-schema/#kubeval

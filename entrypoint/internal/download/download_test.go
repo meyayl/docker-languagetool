@@ -87,8 +87,8 @@ func TestExtractZip(t *testing.T) {
 		t.Fatalf("file close: %v", closeErr)
 	}
 
-	if err := extractZip(zipPath, destDir); err != nil {
-		t.Fatalf("extractZip: %v", err)
+	if extractErr := extractZip(zipPath, destDir); extractErr != nil {
+		t.Fatalf("extractZip: %v", extractErr)
 	}
 
 	content, err := os.ReadFile(filepath.Join(destDir, "subdir", "hello.txt"))

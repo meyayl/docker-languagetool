@@ -376,7 +376,7 @@ func execWithPrivilegeDrop(uid, gid uint32, path string, args []string, env []st
 	if err := syscall.Setuid(int(uid)); err != nil {
 		return fmt.Errorf("setuid %d: %w", uid, err)
 	}
-	return syscall.Exec(path, args, env)
+	return syscall.Exec(path, args, env) //nolint:gosec
 }
 
 // buildJavaOpts constructs the JAVA_OPTS string from config.
