@@ -87,6 +87,19 @@ func run() error {
 	}
 
 	isRoot := os.Getuid() == 0
+
+	// effectiveUID/GID is the identity used for ownership fixes, download
+	// subprocesses, and the final privilege drop before exec. When root, this
+	// comes from MAP_UID/MAP_GID (env vars, defaulting to the languagetool
+	// image defaults). When unprivileged, it is the actual OS process identity.
+	var effectiveUID, effectiveGID uint32
+	if isRoot {
+		effectiveUID, effectiveGID = cfg.MapUID, cfg.MapGID
+	} else {
+		effectiveUID = uint32(os.Getuid())
+		effectiveGID = uint32(os.Getgid())
+	}
+
 	useNSSWrapper := false
 
 	if isRoot {
@@ -106,20 +119,20 @@ func run() error {
 			ilog.Info("Container started with readonly filesystem.")
 			ltUser, err := system.LookupUser("languagetool")
 			if err == nil {
-				if (cfg.MapUIDSet && cfg.MapUID != ltUser.UID) || (cfg.MapGIDSet && cfg.MapGID != ltUser.GID) {
+				if (cfg.MapUIDSet && effectiveUID != ltUser.UID) || (cfg.MapGIDSet && effectiveGID != ltUser.GID) {
 					useNSSWrapper = true
 				}
 			}
 			if useNSSWrapper {
-				if err := nss.SetupNSSWrapper(cfg.MapUID, cfg.MapGID); err != nil {
+				if err := nss.SetupNSSWrapper(effectiveUID, effectiveGID); err != nil {
 					return fmt.Errorf("nss_wrapper setup: %w", err)
 				}
-				ilog.Info("using nss_wrapper to set uid for user \"languagetool\" to %d and gid for group \"languagetool\" to %d.", cfg.MapUID, cfg.MapGID)
+				ilog.Info("using nss_wrapper to set uid for user \"languagetool\" to %d and gid for group \"languagetool\" to %d.", effectiveUID, effectiveGID)
 			}
 		}
 
 		if !useNSSWrapper {
-			if err := system.UpdateUserMapping(cfg.MapUID, cfg.MapUIDSet, cfg.MapGID, cfg.MapGIDSet); err != nil {
+			if err := system.UpdateUserMapping(effectiveUID, cfg.MapUIDSet, effectiveGID, cfg.MapGIDSet); err != nil {
 				return fmt.Errorf("user mapping: %w", err)
 			}
 		}
@@ -130,44 +143,29 @@ func run() error {
 			ilog.Info("Container started with DISABLE_FILE_OWNER_FIX=%v. This disables the ownership fix of directories.", cfg.DisableFileOwnerFix)
 		}
 
-		expectedIDs := fmt.Sprintf("%d:%d", cfg.MapUID, cfg.MapGID)
 		capChown, _ := caps.IsEnabled(caps.CAP_CHOWN)
 		capDAC, _ := caps.IsEnabled(caps.CAP_DAC_OVERRIDE)
 
 		if ownerFix && capChown && capDAC {
-			// When using nss_wrapper the filesystem is read-only so /etc/passwd
-			// was never modified — use the mapped IDs directly. Otherwise re-read
-			// from /etc/passwd to get the values actually written there.
-			var fixUID, fixGID uint32
-			if useNSSWrapper {
-				fixUID, fixGID = cfg.MapUID, cfg.MapGID
-			} else {
-				ltUser, err := system.LookupUser("languagetool")
-				if err != nil {
-					return fmt.Errorf("lookup languagetool after mapping: %w", err)
-				}
-				fixUID, fixGID = ltUser.UID, ltUser.GID
-			}
 			if err := ownership.FixOwnership(cfg.LangtoolLanguageModel, cfg.LangtoolFasttextModel,
-				fixUID, fixGID, os.Stdout); err != nil {
+				effectiveUID, effectiveGID, os.Stdout); err != nil {
 				ilog.Warn("ownership fix error: %v", err)
 			}
 		} else {
 			ilog.Warn("Container started without sufficient capabilities to fix ownership of directories.")
-			ilog.Line("  Make sure the volumes have have the correct permissions and are owned by %s.", expectedIDs)
+			ilog.Line("  Make sure the volumes have have the correct permissions and are owned by %d:%d.", effectiveUID, effectiveGID)
 		}
 	} else {
-		expectedIDs := fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid())
-		ilog.Info("Container started as unprivileged UID:GID %s. Skipping User mapping.", expectedIDs)
-		ilog.Line("      Make sure the volumes have have the correct permissions and are owned by %s.", expectedIDs)
+		ilog.Info("Container started as unprivileged UID:GID %d:%d. Skipping User mapping.", effectiveUID, effectiveGID)
+		ilog.Line("      Make sure the volumes have have the correct permissions and are owned by %d:%d.", effectiveUID, effectiveGID)
 	}
 
 	// Run downloads as the mapped user when running as root
 	if isRoot {
-		if err := runDownloadsAsUser(cfg.MapUID, cfg.MapGID, "download-ngrams"); err != nil {
+		if err := runDownloadsAsUser(effectiveUID, effectiveGID, "download-ngrams"); err != nil {
 			return fmt.Errorf("download ngrams: %w", err)
 		}
-		if err := runDownloadsAsUser(cfg.MapUID, cfg.MapGID, "download-fasttext"); err != nil {
+		if err := runDownloadsAsUser(effectiveUID, effectiveGID, "download-fasttext"); err != nil {
 			return fmt.Errorf("download fasttext: %w", err)
 		}
 	} else {
@@ -254,7 +252,7 @@ func run() error {
 			return fmt.Errorf("look up %q: %w", customArgs[0], err)
 		}
 		if isRoot {
-			return execWithPrivilegeDrop(cfg.MapUID, cfg.MapGID, customPath, customArgs, os.Environ())
+			return execWithPrivilegeDrop(effectiveUID, effectiveGID, customPath, customArgs, os.Environ())
 		}
 		return syscall.Exec(customPath, customArgs, os.Environ())
 	}
@@ -287,7 +285,7 @@ func run() error {
 	)
 
 	if isRoot {
-		return execWithPrivilegeDrop(cfg.MapUID, cfg.MapGID, javaPath, javaArgs, os.Environ())
+		return execWithPrivilegeDrop(effectiveUID, effectiveGID, javaPath, javaArgs, os.Environ())
 	}
 	return syscall.Exec(javaPath, javaArgs, os.Environ())
 }
