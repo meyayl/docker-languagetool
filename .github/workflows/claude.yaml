@@ -9,6 +9,12 @@ on:
     types: [opened, assigned]
   pull_request_review:
     types: [submitted]
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "Dockerfile"
+      - "Dockerfile.fasttext"
+      - "entrypoint/**"
 
 permissions: {}
 
@@ -60,3 +66,103 @@ jobs:
           #       "NODE_ENV": "test"
           #     }
           #   }
+
+  update-changelog:
+    name: Update changelog
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: ${{ github.workflow }}-update-changelog-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Skip if last commit is our own changelog update
+        id: skip
+        # language="Shell Script"
+        run: |
+          LAST_MSG=$(git log -1 --format='%s')
+          if [[ "$LAST_MSG" == "docs(readme): update changelog for"* ]]; then
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute next image version
+        if: steps.skip.outputs.should_skip != 'true'
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # language="Shell Script"
+        run: |
+          LT_VERSION=$(grep '^ARG LT_VERSION=' Dockerfile | cut -d'=' -f2 | tr -d '"')
+          TAGS=$(gh api "repos/${{ github.repository }}/tags" --jq '.[].name' 2>/dev/null || echo "")
+          MAX=-1
+          for tag in $TAGS; do
+            if [[ ${tag} =~ ^${LT_VERSION}-([0-9]+)$ ]]; then
+              N="${BASH_REMATCH[1]}"
+              (( N > MAX )) && MAX=$N
+            fi
+          done
+          echo "image_version=${LT_VERSION}-$(( MAX + 1 ))" >> "$GITHUB_OUTPUT"
+          echo "today=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare PR diff
+        if: steps.skip.outputs.should_skip != 'true'
+        # language="Shell Script"
+        run: |
+          git diff "origin/${{ github.base_ref }}...HEAD" \
+            -- Dockerfile Dockerfile.fasttext entrypoint/ > changes.diff
+
+      - name: Generate changelog entry with Claude
+        if: steps.skip.outputs.should_skip != 'true'
+        uses: anthropics/claude-code-action@86eb26bf0139bdd75acd15ea5f00f45ee0a284c2 # v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
+          prompt: |
+            Update the changelog table in README.md based on changes in changes.diff.
+
+            Context:
+            - Next release tag: ${{ steps.version.outputs.image_version }}
+            - Today's date (UTC): ${{ steps.version.outputs.today }}
+
+            Instructions:
+            1. Read changes.diff. If it is empty or contains no changes to Dockerfile,
+               Dockerfile.fasttext, or entrypoint/, stop immediately — do not modify anything.
+            2. Read README.md and locate the "## Changelog" table.
+            3. Check if a row for tag "${{ steps.version.outputs.image_version }}" already exists:
+               - If it exists: replace only its Change column content.
+               - If not: insert a new row immediately after the header separator line
+                 (the line starting with `| ---`).
+            4. Row format — study and match the column widths of the surrounding rows:
+               - Date column: ${{ steps.version.outputs.today }} (padded with spaces to match width)
+               - Tag column: ${{ steps.version.outputs.image_version }} (padded with spaces to match width)
+               - Change column: bullet points, each starting with "- ", joined by "<br/> "
+                 (note the space after the slash). Each bullet must be short (≤ 8 words),
+                 specific, and concrete. Only describe Dockerfile and entrypoint changes.
+                 Ignore CI, test, documentation, and workflow changes entirely.
+            5. Write the updated README.md using the Edit tool.
+          claude_args: |
+            --allowedTools Bash(cat:*),Read,Edit
+            --max-turns 5
+
+      - name: Commit and push changelog update
+        if: steps.skip.outputs.should_skip != 'true'
+        # language="Shell Script"
+        run: |
+          git diff --quiet README.md && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs(readme): update changelog for ${{ steps.version.outputs.image_version }}"
+          git push
