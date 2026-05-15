@@ -102,7 +102,7 @@ After modifying any `.yaml` file under `.github/workflows/`, run:
 prettier --write ".github/workflows/*.yaml"
 ```
 
-Prettier is the authoritative formatter for YAML in this repo (enforced by `YAML_PRETTIER` in super-linter). Always run it before committing workflow changes to avoid CI failures.
+Prettier is the authoritative formatter for YAML in this repository (enforced by `YAML_PRETTIER` in super-linter). Always run it before committing workflow changes to avoid CI failures.
 
 ## Git conventions
 
