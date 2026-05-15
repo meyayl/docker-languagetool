@@ -55,13 +55,19 @@ RUN set -eux; \
     apk add --no-cache binutils 7zip="${SEVEN_ZIP_VERSION}"; \
     rm -rf /var/cache/apk/*
 
+ARG TARGETARCH
 # hadolint ignore=SC3060,DL4006,SC2086
 RUN set -eux; \
     RELEASE_PATH="${JAVA_VERSION/+/%2B}"; \
     RELEASE_TYPE="${JAVA_VERSION%-*}"; \
     RELEASE_NUMBER="${JAVA_VERSION#*-}"; \
     RELEASE_NUMBER="${RELEASE_NUMBER/+/_}"; \
-    URL="https://github.com/adoptium/temurin21-binaries/releases/download/${RELEASE_PATH}/OpenJDK21U-${RELEASE_TYPE}_x64_alpine-linux_hotspot_${RELEASE_NUMBER}.tar.gz"; \
+    case "${TARGETARCH}" in \
+        amd64) JAVA_ARCH="x64" ;; \
+        arm64) JAVA_ARCH="aarch64" ;; \
+        *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
+    esac; \
+    URL="https://github.com/adoptium/temurin21-binaries/releases/download/${RELEASE_PATH}/OpenJDK21U-${RELEASE_TYPE}_${JAVA_ARCH}_alpine-linux_hotspot_${RELEASE_NUMBER}.tar.gz"; \
     CHKSUM=$(wget --quiet -O -  "${URL}.sha256.txt" | cut -d' ' -f1); \
     wget -O /tmp/openjdk.tar.gz ${URL}; \
     echo "${CHKSUM} */tmp/openjdk.tar.gz" | sha256sum -c -; \
@@ -154,13 +160,14 @@ RUN set -eux; \
         --no-header-files \
         --output /opt/java/customjre
 
-FROM golang:${GO_VERSION} AS go_build
+FROM --platform=$BUILDPLATFORM golang:${GO_VERSION} AS go_build
+ARG TARGETARCH
 WORKDIR /src
 COPY entrypoint/go.mod ./
 COPY entrypoint/cmd/ cmd/
 COPY entrypoint/internal/ internal/
 RUN go mod tidy && \
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o /entrypoint ./cmd/entrypoint
+    CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -ldflags="-s -w" -o /entrypoint ./cmd/entrypoint
 
 FROM java_base
 

@@ -146,7 +146,7 @@ jobs:
           pull: true
           push: true
           tags: ghcr.io/meyayl/languagetool:${{ github.run_id }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
@@ -156,7 +156,7 @@ jobs:
   integration-test-image:
     name: Integration test Image
     needs: [build-test-image]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       # max-parallel: 1
       matrix:
@@ -167,9 +167,12 @@ jobs:
           - unprivileged-rw.yml
           - unprivileged-ro.yml
           - unprivileged-no-volumes.yml
+        runner:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
 
     concurrency:
-      group: ${{ github.workflow }}-${{ github.job }}-${{ matrix.compose-file }}-${{ github.ref }}
+      group: ${{ github.workflow }}-${{ github.job }}-${{ matrix.compose-file }}-${{ matrix.runner }}-${{ github.ref }}
       cancel-in-progress: true
 
     permissions:
@@ -390,8 +393,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull and retag image
-        # language="Shell Script"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
+
+      - name: Push multi-arch manifest to Docker Hub
         env:
           RUN_ID: ${{ github.run_id }}
           IMAGE_VERSION: ${{ needs.compute-version.outputs.image_version }}
@@ -399,13 +404,11 @@ jobs:
         # language="Shell Script"
         run: |
           SRC="ghcr.io/meyayl/languagetool:${RUN_ID}"
-          docker pull "$SRC"
-          docker tag "$SRC" "meyay/languagetool:${IMAGE_VERSION}"
-          docker tag "$SRC" "meyay/languagetool:${LT_VERSION}"
-          docker tag "$SRC" "meyay/languagetool:latest"
-          docker push "meyay/languagetool:${IMAGE_VERSION}"
-          docker push "meyay/languagetool:${LT_VERSION}"
-          docker push "meyay/languagetool:latest"
+          docker buildx imagetools create \
+            --tag "meyay/languagetool:${IMAGE_VERSION}" \
+            --tag "meyay/languagetool:${LT_VERSION}" \
+            --tag "meyay/languagetool:latest" \
+            "${SRC}"
 
       - name: Update repo description
         uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
