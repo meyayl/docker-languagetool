@@ -90,7 +90,7 @@ Files in `.github/tests/` each define a specific runtime scenario. They all requ
 When working on any `.go` file in this repository:
 
 - **Use LSP instead of grep** for all code navigation and symbol lookup (finding definitions, references, implementations). Prefer `mcp__ide__getDiagnostics` and LSP-based tools over `grep`/`ripgrep` for Go source.
-- **Follow Effective Go** conventions: https://go.dev/doc/effective_go — idiomatic naming, error handling, interfaces, and concurrency patterns.
+- **Follow Effective Go** conventions: <https://go.dev/doc/effective_go> — idiomatic naming, error handling, interfaces, and concurrency patterns.
 - **Lint after every edit.** After modifying any Go file, run `golangci-lint run ./...` from `entrypoint/` before considering the task done. Fix all reported issues.
 - **Format on save.** Run `gofmt -w` (or `goimports -w`) on every modified `.go` file.
 

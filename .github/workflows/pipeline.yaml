@@ -14,7 +14,7 @@ on:
 #      - synchronize
 #      - reopened
 
-permissions: {}
+permissions: { }
 
 jobs:
   super-linter:
@@ -351,7 +351,7 @@ jobs:
           fail-build: true
 
       - name: upload Anchore scan SARIF report
-        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4
+        uses: github/codeql-action/upload-sarif@9e0d7b8d25671d64c341c19c0152d693099fb5ba # v4
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
@@ -435,9 +435,9 @@ jobs:
           git diff "${BASE}...${CURRENT_TAG}" -- Dockerfile Dockerfile.fasttext entrypoint/ > changes.diff
 
       - name: Generate release notes with Claude
-        uses: anthropics/claude-code-action@12310e4417c3473095c957cb311b3cf59a38d659 # v1.0.99
+        uses: anthropics/claude-code-action@51ea8ea73a139f2a74ff649e3092c25a904aed7e # v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
           prompt: |
             Read the file changes.diff in the current directory. It contains the git diff for
             LanguageTool Docker image release ${{ github.ref_name }}
