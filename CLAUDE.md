@@ -85,6 +85,15 @@ Files in `.github/tests/` each define a specific runtime scenario. They all requ
 - `/tmp` must be mounted as `tmpfs` with `exec` permissions — JNA extracts native libs there
 - Default listen port is `8081` (changed from `8010` in version 6.6-0)
 
+## Go development guidelines
+
+When working on any `.go` file in this repository:
+
+- **Use LSP instead of grep** for all code navigation and symbol lookup (finding definitions, references, implementations). Prefer `mcp__ide__getDiagnostics` and LSP-based tools over `grep`/`ripgrep` for Go source.
+- **Follow Effective Go** conventions: https://go.dev/doc/effective_go — idiomatic naming, error handling, interfaces, and concurrency patterns.
+- **Lint after every edit.** After modifying any Go file, run `golangci-lint run ./...` from `entrypoint/` before considering the task done. Fix all reported issues.
+- **Format on save.** Run `gofmt -w` (or `goimports -w`) on every modified `.go` file.
+
 ## Git conventions
 
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): description` (e.g. `feat(download): …`, `fix(entrypoint): …`, `chore(deps): …`, `refactor(mount): …`, `docs(entrypoint): …`).
