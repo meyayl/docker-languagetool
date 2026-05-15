@@ -371,6 +371,12 @@ jobs:
       packages: read
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: Login to Docker Hub
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
         with:
@@ -460,7 +466,7 @@ jobs:
             Output nothing else — no commentary, no explanation, just write the file and stop.
           claude_args: |
             --allowedTools Bash,Write,Read
-            --max-turns 5
+            --max-turns 10
 
       - name: Ensure release notes file exists
         # language="Shell Script"
