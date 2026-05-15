@@ -94,6 +94,16 @@ When working on any `.go` file in this repository:
 - **Lint after every edit.** After modifying any Go file, run `golangci-lint run ./...` from `entrypoint/` before considering the task done. Fix all reported issues.
 - **Format on save.** Run `gofmt -w` (or `goimports -w`) on every modified `.go` file.
 
+## YAML formatting
+
+After modifying any `.yaml` file under `.github/workflows/`, run:
+
+```bash
+prettier --write ".github/workflows/*.yaml"
+```
+
+Prettier is the authoritative formatter for YAML in this repo (enforced by `YAML_PRETTIER` in super-linter). Always run it before committing workflow changes to avoid CI failures.
+
 ## Git conventions
 
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): description` (e.g. `feat(download): …`, `fix(entrypoint): …`, `chore(deps): …`, `refactor(mount): …`, `docs(entrypoint): …`).
