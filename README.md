@@ -9,11 +9,11 @@ The Docker Hub repository can be found on [Docker Hub](https://hub.docker.com/r/
 
 - Built directly from [LanguageTool repository tags](https://github.com/languagetool-org/languagetool/tags) since official release ZIPs were [discontinued after v6.6](https://github.com/languagetool-org/languagetool/blob/master/languagetool-standalone/CHANGES.md#66-2025-03-27)
 - Built on latest Alpine 3.23 base image
+- Multi-arch: supports `linux/amd64` and `linux/arm64`
 - Custom Eclipse Temurin 21 JRE (optimized with required modules only)
 - Uses `tini` to handle container signals properly
 - includes `fasttext`
-- includes `su-exec`
-- container starts as privileged user (=root) and executes LanguageTool as unprivileged user using `exec su-exec` (default)
+- container starts as privileged user (=root) and executes LanguageTool as unprivileged user (default)
   - optional: container fixes folder ownership for ngrams and fasttext folders (default)
   - optional: support user mapping (make sure to check MAP_UID and MAP_GID below)
   - optional: works with read-only filesystem (uses nss_wrapper for user mapping)
@@ -216,7 +216,7 @@ The environment parameters are split into two halves, separated by an equal or c
 
 Now that fasttext is available since Alpine 3.19, the image switched to using the Alpine package, instead of compiling the binaries from the sources. This hopefully fixes the compatibility issue users with older CPUs experienced with my previous images, that were build on a amd64v3 architecture CPU, which compiled the `fasttext` binary with CPU optimizations older CPUs do not support.
 
-If the Alpine `fasttext` package does not work for you, you can build a custom image to compile the `fasttext` binary using CPU optimizations your CPU (as long as it's x86_64 based) actually understands:
+If the Alpine `fasttext` package does not work for you, you can build a custom image to compile the `fasttext` binary using CPU optimizations your CPU actually understands (supports both `amd64` and `arm64`):
 
 ```shell
 git clone  https://github.com/meyayl/docker-languagetool.git
