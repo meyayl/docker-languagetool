@@ -131,6 +131,7 @@ jobs:
         uses: anthropics/claude-code-action@51ea8ea73a139f2a74ff649e3092c25a904aed7e # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
+          allowed_bots: "renovate[bot]"
           prompt: |
             Update the changelog table in README.md based on changes in changes.diff.
 
@@ -156,7 +157,7 @@ jobs:
             5. Write the updated README.md using the Edit tool.
           claude_args: |
             --allowedTools Bash(cat:*),Read,Edit
-            --max-turns 5
+            --max-turns 10
 
       - name: Commit and push changelog update
         if: steps.skip.outputs.should_skip != 'true'
