@@ -468,6 +468,7 @@ jobs:
             Write the final Markdown to a file named release-notes.md.
             Output nothing else — no commentary, no explanation, just write the file and stop.
           claude_args: |
+            --model claude-sonnet-4-6
             --allowedTools Bash,Write,Read
             --max-turns 10
 

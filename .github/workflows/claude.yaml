@@ -44,19 +44,14 @@ jobs:
         uses: anthropics/claude-code-action@51ea8ea73a139f2a74ff649e3092c25a904aed7e # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
+          claude_args: |
+            --model claude-sonnet-4-6
 
           # Optional: Customize the trigger phrase (default: @claude)
           # trigger_phrase: "/claude"
 
           # Optional: Trigger when specific user is assigned to an issue
           # assignee_trigger: "claude-bot"
-
-          # Optional: Configure Claude's behavior with CLI arguments
-          # claude_args: |
-          #   --model claude-opus-4-1-20250805
-          #   --max-turns 10
-          #   --allowedTools "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
-          #   --system-prompt "Follow our coding standards. Ensure all new code has tests. Use TypeScript for new files."
 
           # Optional: Advanced settings configuration
           # settings: |
@@ -155,7 +150,9 @@ jobs:
                  specific, and concrete. Only describe Dockerfile and entrypoint changes.
                  Ignore CI, test, documentation, and workflow changes entirely.
             5. Write the updated README.md using the Edit tool.
+            6. Update the IMAGE_VERSION and IMAGE_CREATED in Dockerfile and Dockerfile.fasttext using the Edit tool if necessary.
           claude_args: |
+            --model claude-sonnet-4-6
             --allowedTools Bash(cat:*),Read,Edit
             --max-turns 10
 
