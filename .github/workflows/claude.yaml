@@ -123,6 +123,47 @@ jobs:
 
       - name: Generate changelog entry with Claude
         if: steps.skip.outputs.should_skip != 'true'
+        id: claude-changelog
+        continue-on-error: true
+        uses: anthropics/claude-code-action@51ea8ea73a139f2a74ff649e3092c25a904aed7e # v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
+          allowed_bots: "renovate[bot]"
+          prompt: |
+            Update the changelog table in README.md based on changes in changes.diff.
+
+            Context:
+            - Next release tag: ${{ steps.version.outputs.image_version }}
+            - Today's date (UTC): ${{ steps.version.outputs.today }}
+
+            Instructions:
+            1. Read changes.diff. If it is empty or contains no changes to Dockerfile,
+               Dockerfile.fasttext, or entrypoint/, stop immediately — do not modify anything.
+            2. Read README.md and locate the "## Changelog" table.
+            3. Check if a row for tag "${{ steps.version.outputs.image_version }}" already exists:
+               - If it exists: replace only its Change column content.
+               - If not: insert a new row immediately after the header separator line
+                 (the line starting with `| ---`).
+            4. Row format — study and match the column widths of the surrounding rows:
+               - Date column: ${{ steps.version.outputs.today }} (padded with spaces to match width)
+               - Tag column: ${{ steps.version.outputs.image_version }} (padded with spaces to match width)
+               - Change column: bullet points, each starting with "- ", joined by "<br/> "
+                 (note the space after the slash). Each bullet must be short (≤ 8 words),
+                 specific, and concrete. Only describe Dockerfile and entrypoint changes.
+                 Ignore CI, test, documentation, and workflow changes entirely.
+            5. Write the updated README.md using the Edit tool.
+            6. Update the IMAGE_VERSION and IMAGE_CREATED in Dockerfile and Dockerfile.fasttext using the Edit tool if necessary.
+          claude_args: |
+            --model claude-sonnet-4-6
+            --allowedTools Bash(cat:*),Read,Edit
+            --max-turns 10
+
+      - name: Wait before retry
+        if: steps.skip.outputs.should_skip != 'true' && steps.claude-changelog.outcome == 'failure'
+        run: sleep 65
+
+      - name: Generate changelog entry with Claude (retry)
+        if: steps.skip.outputs.should_skip != 'true' && steps.claude-changelog.outcome == 'failure'
         uses: anthropics/claude-code-action@51ea8ea73a139f2a74ff649e3092c25a904aed7e # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
