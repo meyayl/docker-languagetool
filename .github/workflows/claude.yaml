@@ -87,7 +87,7 @@ jobs:
         # language="Shell Script"
         run: |
           LAST_MSG=$(git log -1 --format='%s')
-          if [[ "$LAST_MSG" == "docs(readme): update changelog for"* ]]; then
+          if [[ "$LAST_MSG" == "docs(changelog): update changelog for"* ]]; then
             echo "should_skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_skip=false" >> "$GITHUB_OUTPUT"
@@ -130,7 +130,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
           allowed_bots: "renovate[bot]"
           prompt: |
-            Update the changelog table in README.md based on changes in changes.diff.
+            Update the changelog table in CHANGELOG.md based on changes in changes.diff.
 
             Context:
             - Next release tag: ${{ steps.version.outputs.image_version }}
@@ -139,7 +139,7 @@ jobs:
             Instructions:
             1. Read changes.diff. If it is empty or contains no changes to Dockerfile,
                Dockerfile.fasttext, or entrypoint/, stop immediately — do not modify anything.
-            2. Read README.md and locate the "## Changelog" table.
+            2. Read CHANGELOG.md and locate the changelog table (below the `# Changelog` heading).
             3. Check if a row for tag "${{ steps.version.outputs.image_version }}" already exists:
                - If it exists: replace only its Change column content.
                - If not: insert a new row immediately after the header separator line
@@ -151,7 +151,7 @@ jobs:
                  (note the space after the slash). Each bullet must be short (≤ 8 words),
                  specific, and concrete. Only describe Dockerfile and entrypoint changes.
                  Ignore CI, test, documentation, and workflow changes entirely.
-            5. Write the updated README.md using the Edit tool.
+            5. Write the updated CHANGELOG.md using the Edit tool.
             6. Update the IMAGE_VERSION and IMAGE_CREATED in Dockerfile and Dockerfile.fasttext using the Edit tool if necessary.
           claude_args: |
             --model claude-sonnet-4-6
@@ -169,7 +169,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
           allowed_bots: "renovate[bot]"
           prompt: |
-            Update the changelog table in README.md based on changes in changes.diff.
+            Update the changelog table in CHANGELOG.md based on changes in changes.diff.
 
             Context:
             - Next release tag: ${{ steps.version.outputs.image_version }}
@@ -178,7 +178,7 @@ jobs:
             Instructions:
             1. Read changes.diff. If it is empty or contains no changes to Dockerfile,
                Dockerfile.fasttext, or entrypoint/, stop immediately — do not modify anything.
-            2. Read README.md and locate the "## Changelog" table.
+            2. Read CHANGELOG.md and locate the changelog table (below the `# Changelog` heading).
             3. Check if a row for tag "${{ steps.version.outputs.image_version }}" already exists:
                - If it exists: replace only its Change column content.
                - If not: insert a new row immediately after the header separator line
@@ -190,7 +190,7 @@ jobs:
                  (note the space after the slash). Each bullet must be short (≤ 8 words),
                  specific, and concrete. Only describe Dockerfile and entrypoint changes.
                  Ignore CI, test, documentation, and workflow changes entirely.
-            5. Write the updated README.md using the Edit tool.
+            5. Write the updated CHANGELOG.md using the Edit tool.
             6. Update the IMAGE_VERSION and IMAGE_CREATED in Dockerfile and Dockerfile.fasttext using the Edit tool if necessary.
           claude_args: |
             --model claude-sonnet-4-6
@@ -203,9 +203,9 @@ jobs:
           IMAGE_VERSION: ${{ steps.version.outputs.image_version }}
         # language="Shell Script"
         run: |
-          git diff --quiet README.md && exit 0
+          git diff --quiet CHANGELOG.md && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          git commit -m "docs(readme): update changelog for ${IMAGE_VERSION}"
+          git add CHANGELOG.md
+          git commit -m "docs(changelog): update changelog for ${IMAGE_VERSION}"
           git push
