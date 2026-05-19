@@ -47,7 +47,7 @@ Direct CVE fixes are applied two ways:
 
 ### Go entrypoint binary (`entrypoint/`)
 
-The container entry point is a statically-linked Go binary (`CGO_ENABLED=0 GOOS=linux GOARCH=amd64`) that replaces the former `entrypoint.sh`. It requires no shell, `su-exec`, `shadow`, or `xmlstarlet` in the runtime image. See `entrypoint/README.md` for the full startup sequence and environment variable reference.
+The container entry point is a statically-linked Go binary (`CGO_ENABLED=0 GOOS=linux`, cross-compiled per target architecture — `amd64` and `arm64`) that replaces the former `entrypoint.sh`. It requires no shell, `su-exec`, `shadow`, or `xmlstarlet` in the runtime image. See `entrypoint/README.md` for the full startup sequence and environment variable reference.
 
 Key implementation rules:
 
@@ -67,7 +67,7 @@ Tags follow the pattern `{LT_VERSION}-{sequential_number}` (e.g., `6.8-0`). The 
 
 1. **super-linter** — runs on PRs and feature branches only
 2. **build-test-image** — builds and pushes to GHCR with the run ID as tag
-3. **integration-test-image** — runs 6 matrix scenarios from `.github/tests/` (privileged/unprivileged × rw/ro/no-volumes)
+3. **integration-test-image** — runs 6 scenarios × 2 platforms (ubuntu-latest, ubuntu-24.04-arm) from `.github/tests/` (privileged/unprivileged × rw/ro/no-volumes)
 4. **scan-image** — Grype CVE scan (non-blocking on PRs/branches)
 5. **cve-check-image-and-report** — blocking CVE scan, runs only on tags
 6. **retag-and-push-final-image** — retags GHCR image and pushes to Docker Hub with versioned + `latest` tags; runs only on tags
@@ -115,6 +115,14 @@ After modifying any `.json` file:
 ```bash
 prettier --write "*.json"
 ```
+
+## Changelog
+
+`CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. Each release is a `## [tag] - date` section with `### Added`, `### Changed`, `### Fixed`, and `### Security` subsections (omit any that have no entries).
+
+The `update-changelog` job in `.github/workflows/claude.yaml` auto-updates `CHANGELOG.md` on every PR that touches `Dockerfile`, `Dockerfile.fasttext`, or `entrypoint/`. When editing manually, follow the same structure.
+
+`.markdownlint.json` sets `MD024: siblings_only: true` to allow the repeated category headings across version sections — do not remove this rule.
 
 ## Git conventions
 
