@@ -139,20 +139,39 @@ jobs:
             Instructions:
             1. Read changes.diff. If it is empty or contains no changes to Dockerfile,
                Dockerfile.fasttext, or entrypoint/, stop immediately — do not modify anything.
-            2. Read CHANGELOG.md and locate the changelog table (below the `# Changelog` heading).
-            3. Check if a row for tag "${{ steps.version.outputs.image_version }}" already exists:
-               - If it exists: replace only its Change column content.
-               - If not: insert a new row immediately after the header separator line
-                 (the line starting with `| ---`).
-            4. Row format — study and match the column widths of the surrounding rows:
-               - Date column: ${{ steps.version.outputs.today }} (padded with spaces to match width)
-               - Tag column: ${{ steps.version.outputs.image_version }} (padded with spaces to match width)
-               - Change column: bullet points, each starting with "- ", joined by "<br/> "
-                 (note the space after the slash). Each bullet must be short (≤ 8 words),
-                 specific, and concrete. Only describe Dockerfile and entrypoint changes.
-                 Ignore CI, test, documentation, and workflow changes entirely.
-            5. Write the updated CHANGELOG.md using the Edit tool.
-            6. Update the IMAGE_VERSION and IMAGE_CREATED in Dockerfile and Dockerfile.fasttext using the Edit tool if necessary.
+               Summarize the relevant changes as short bullet points (≤ 8 words each),
+               each starting with "- ", joined by "<br/> " (note the space after the slash).
+               Only describe Dockerfile and entrypoint changes. Ignore CI, test, documentation,
+               and workflow changes entirely.
+            2. Read the first 10 lines of CHANGELOG.md using the Read tool with limit=10.
+               The newest entries always appear at the top of the table, immediately after the
+               separator line (the line starting with `| ---`).
+            3. Check whether a row for "${{ steps.version.outputs.image_version }}" appears in
+               those first 10 lines:
+               a) Row ALREADY EXISTS — append the new bullet points to its Change column:
+                  - Take the exact line text from the Read output as old_string.
+                  - Construct new_string by appending "<br/> " + new bullets to the existing
+                    Change column content (before the trailing " |").
+                  - Use the Edit tool with that old_string and new_string.
+                    Do NOT read the full file — the exact line from the 10-line read is
+                    sufficient for Edit to locate and update the line in place.
+               b) Row does NOT exist — insert a new row after the separator line:
+                  - Use the exact separator line text from the Read output as old_string.
+                  - Construct new_string as: separator line + newline + new row.
+                  - Match the column widths of surrounding rows exactly:
+                    - Date column: ${{ steps.version.outputs.today }} (padded with spaces)
+                    - Tag column: ${{ steps.version.outputs.image_version }} (padded with spaces)
+                    - Change column: bullet points as described above
+                  - Use the Edit tool with old_string = separator line and
+                    new_string = separator line + "\n" + new row.
+            4. Update ARG IMAGE_VERSION and ARG IMAGE_CREATED in Dockerfile and Dockerfile.fasttext:
+               - For each file, read only the first 2 lines using the Read tool with limit=2.
+                 Line 1 is `ARG IMAGE_VERSION="..."`, line 2 is `ARG IMAGE_CREATED="..."`.
+               - If `ARG IMAGE_VERSION` does not already equal "${{ steps.version.outputs.image_version }}",
+                 use the Edit tool: old_string = the exact line 1 text, new_string = `ARG IMAGE_VERSION="${{ steps.version.outputs.image_version }}"`.
+               - If `ARG IMAGE_CREATED` does not already equal "${{ steps.version.outputs.today }}",
+                 use the Edit tool: old_string = the exact line 2 text, new_string = `ARG IMAGE_CREATED="${{ steps.version.outputs.today }}"`.
+               - Apply the same two edits to both Dockerfile and Dockerfile.fasttext.
           claude_args: |
             --model claude-sonnet-4-6
             --allowedTools Bash(cat:*),Read,Edit
@@ -178,20 +197,39 @@ jobs:
             Instructions:
             1. Read changes.diff. If it is empty or contains no changes to Dockerfile,
                Dockerfile.fasttext, or entrypoint/, stop immediately — do not modify anything.
-            2. Read CHANGELOG.md and locate the changelog table (below the `# Changelog` heading).
-            3. Check if a row for tag "${{ steps.version.outputs.image_version }}" already exists:
-               - If it exists: replace only its Change column content.
-               - If not: insert a new row immediately after the header separator line
-                 (the line starting with `| ---`).
-            4. Row format — study and match the column widths of the surrounding rows:
-               - Date column: ${{ steps.version.outputs.today }} (padded with spaces to match width)
-               - Tag column: ${{ steps.version.outputs.image_version }} (padded with spaces to match width)
-               - Change column: bullet points, each starting with "- ", joined by "<br/> "
-                 (note the space after the slash). Each bullet must be short (≤ 8 words),
-                 specific, and concrete. Only describe Dockerfile and entrypoint changes.
-                 Ignore CI, test, documentation, and workflow changes entirely.
-            5. Write the updated CHANGELOG.md using the Edit tool.
-            6. Update the IMAGE_VERSION and IMAGE_CREATED in Dockerfile and Dockerfile.fasttext using the Edit tool if necessary.
+               Summarize the relevant changes as short bullet points (≤ 8 words each),
+               each starting with "- ", joined by "<br/> " (note the space after the slash).
+               Only describe Dockerfile and entrypoint changes. Ignore CI, test, documentation,
+               and workflow changes entirely.
+            2. Read the first 10 lines of CHANGELOG.md using the Read tool with limit=10.
+               The newest entries always appear at the top of the table, immediately after the
+               separator line (the line starting with `| ---`).
+            3. Check whether a row for "${{ steps.version.outputs.image_version }}" appears in
+               those first 10 lines:
+               a) Row ALREADY EXISTS — append the new bullet points to its Change column:
+                  - Take the exact line text from the Read output as old_string.
+                  - Construct new_string by appending "<br/> " + new bullets to the existing
+                    Change column content (before the trailing " |").
+                  - Use the Edit tool with that old_string and new_string.
+                    Do NOT read the full file — the exact line from the 10-line read is
+                    sufficient for Edit to locate and update the line in place.
+               b) Row does NOT exist — insert a new row after the separator line:
+                  - Use the exact separator line text from the Read output as old_string.
+                  - Construct new_string as: separator line + newline + new row.
+                  - Match the column widths of surrounding rows exactly:
+                    - Date column: ${{ steps.version.outputs.today }} (padded with spaces)
+                    - Tag column: ${{ steps.version.outputs.image_version }} (padded with spaces)
+                    - Change column: bullet points as described above
+                  - Use the Edit tool with old_string = separator line and
+                    new_string = separator line + "\n" + new row.
+            4. Update ARG IMAGE_VERSION and ARG IMAGE_CREATED in Dockerfile and Dockerfile.fasttext:
+               - For each file, read only the first 2 lines using the Read tool with limit=2.
+                 Line 1 is `ARG IMAGE_VERSION="..."`, line 2 is `ARG IMAGE_CREATED="..."`.
+               - If `ARG IMAGE_VERSION` does not already equal "${{ steps.version.outputs.image_version }}",
+                 use the Edit tool: old_string = the exact line 1 text, new_string = `ARG IMAGE_VERSION="${{ steps.version.outputs.image_version }}"`.
+               - If `ARG IMAGE_CREATED` does not already equal "${{ steps.version.outputs.today }}",
+                 use the Edit tool: old_string = the exact line 2 text, new_string = `ARG IMAGE_CREATED="${{ steps.version.outputs.today }}"`.
+               - Apply the same two edits to both Dockerfile and Dockerfile.fasttext.
           claude_args: |
             --model claude-sonnet-4-6
             --allowedTools Bash(cat:*),Read,Edit
