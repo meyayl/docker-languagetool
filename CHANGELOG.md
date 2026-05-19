@@ -249,7 +249,7 @@ Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g.
 ### Changed
 
 - Upgrade Java to `21.0.2+13`
-- Document `CAP_CHOWN` capability requirement in README and compose file
+- Document `CAP_CHOWN` capability requirement in `README.md` and compose file
 
 ## [6.3a-4] - 2024-02-26
 
