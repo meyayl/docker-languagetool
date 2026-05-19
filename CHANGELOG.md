@@ -1,62 +1,443 @@
 # Changelog
 
-| Date                          | Tag       | Change                                                                                                                                                                                                                                                                                       |
-| ----------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-05-18                    | 6.8-3     | - Upgrade Maven to 3.9.16                                                                                                                                                                                                                                                                    |
-| 2026-05-16                    | 6.8-2     | - Add linux/arm64 build support<br/> - Select Java JDK per target architecture<br/> - Cross-compile Go entrypoint per target arch<br/> - Apply no-march-native patch to fasttext build                                                                                                       |
-| 2026-05-15                    | 6.8-1     | - Replace entrypoint script with a go binary, to reduce number of attack surface through package dependencies.                                                                                                                                                                               |
-| 2026-05-09                    | 6.8-0     | - Upgrade to LanguageTool 6.8<br/> - Upgrade Java to jdk-21.0.11+10<br/> - Upgrade Maven to 3.9.15<br/> - Upgrade netty.io dependencies to 4.2.13.Final                                                                                                                                      |
-| 2026-04-18                    | 6.7-8     | - Upgrade to Alpine 3.23.4                                                                                                                                                                                                                                                                   |
-| 2026-02-28                    | 6.7-7     | - Fix GHSA-72hv-8253-57qq (High) by upgrading dependencies from group com.fasterxml.jackson.core from 2.18.0 to 2.18.6<br/> - Upgrade netty.io dependencies to from 4.1.127.Final to 4.1.131.Final                                                                                           |
-| 2026-02-18                    | 6.7-6     | - Replace package `unzip` with `7zip` to get rid of CVE-2008-0888                                                                                                                                                                                                                            |
-| 2026-02-15                    | 6.7-5     | - Apply the memory leak fix for real this time :)                                                                                                                                                                                                                                            |
-| 2026-02-15                    | ~~6.7-4~~ | - Patch Languagetool 6.7 Memory Leak<br/> - Upgrade Alpine to 3.23.3<br/> - Upgrade Java to jdk-21.0.10+7<br/> - Fix CVE-2026-1225 (Low) by updating ch.qos.logback.version to 1.5.25.                                                                                                       |
-| 2025-11-25                    | 6.7-3     | - Refactor mechanism for CVE upgrades on Java dependencies: patch pom.xml for direct dependencies, override libraries for transitive dependencies where the dependent artifact can't be upgraded using the pom.xml.                                                                          |
-| 2025-10-25                    | 6.7-2     | - Fix extraction issue for downloads caused by `unzip` in-box version from Alpine 3.22.2 (using edge package instead)<br/> - Upgrade Java to 21.0.9+10<br/> - Fix CVE-2025-11226 (Medium)                                                                                                    |
-| 2025-10-10                    | 6.7-1     | - Upgrade Alpine to 3.22.2                                                                                                                                                                                                                                                                   |
-| 2025-10-09                    | 6.7-0     | - Upgrade to LaguageTool 6.7<br/> - Fix CVE-2025-49796 (Critical), CVE-2025-49794 (Critical), CVE-2025-49795 (High), CVE-2025-6021 (High), CVE-2025-6170 (Low)                                                                                                                               |
-| 2025-10-02                    | 6.6-7     | - Correct fix for CVE-2025-58057 (Medium)                                                                                                                                                                                                                                                    |
-| 2025-10-02                    | 6.6-6     | - Fix usage of local variables in entrypoint script function download_and_extract_ngram_language_model (thanks @walery!)<br/>- Switch image HEALTHCHECK to /v2/healthcheck<br/>- Fix CVEs: CVE-2025-9230 (High), CVE-2025-9231 (Medium), CVE-2025-9232 (Medium)~~, CVE-2025-58057 (Medium)~~ |
-| 2025-08-29                    | 6.6-5     | - Build from tags instead of using release ZIP<br/> - Fix CVE-2008-0888 by using edge release of `unzip` package.                                                                                                                                                                            |
-| 2025-07-18                    | 6.6-4     | - Upgrade base image to Alpine 3.22.1<br/> - Upgrade Java to 21.0.8+9<br/> - Fix CVE-2025-48924 by replacing org.apache.commons:commons-lang3:3.17.0 with version 3.18.0                                                                                                                     |
-| 2025-05-23                    | 6.6-3     | - Add CONTAINER_MODE variable for k8s users, that might want to manage the model downloads in initContainers.                                                                                                                                                                                |
-| 2025-05-18                    | 6.6-2     | - Fix: jna error (`Error loading shared library /tmp/jna*.tmp: Operation not permitted`)<br/> - Fix CVE-2025-32414 and CVE-2025-32415 in Alpine 3.21.3                                                                                                                                       |
-| 2025-04-20                    | 6.6-1     | - Fix: read-only mode for Synology DSM6.2 with aufs<br/> - Replace cve affected logback-core and logback-classic with package version 1.5.18                                                                                                                                                 |
-| 2025-04-19                    | 6.6-0     | - Upgrade to LaguageTool 6.6<br/> - Breaking: Changed LISTEN_PORT from 8010 to 8081<br/> - Extended sanity checks and log output in entrypoint script<br/> - Upgrade Java to 21.0.7+6                                                                                                        |
-| 2025-02-16                    | 6.5-2     | - Upgrade base image to Alpine 3.21.3<br/> - Upgrade Java to 21.0.6+7                                                                                                                                                                                                                        |
-| 2024-10-30                    | 6.5-1     | - Massive refactoring of Entrypoint script<br/> - Upgrade Java to 21.0.5+11                                                                                                                                                                                                                  |
-| 2024-09-29                    | 6.5-0     | - Upgrade to LaguageTool 6.5                                                                                                                                                                                                                                                                 |
-| 2024-09-14                    | 6.4-4     | - Upgrade base image to Alpine 3.20.3                                                                                                                                                                                                                                                        |
-| 2024-07-31                    | 6.4-3     | - Upgrade base image to Alpine 3.20.2<br/> - Upgrade Java to 21.0.4+7                                                                                                                                                                                                                        |
-| 2024-07-05                    | 6.4-2     | - Upgrade base image to Alpine 3.20.1<br/> - Upgrade Java to 21.0.3+9                                                                                                                                                                                                                        |
-| 2024-05-27                    | 6.4-1     | - Upgrade base image to Alpine 3.20.0                                                                                                                                                                                                                                                        |
-| 2024-04-02                    | 6.4-0     | - Upgrade to LanguageTool 6.4<br/> - Modified entrypoint script, to require 7x5 permissions instead of 7x7 for ngrams and fasttext volumes anymore.                                                                                                                                          |
-| 2024-03-26                    | 6.3a-5    | - Upgrade Java to 21.0.2+13<br/> - Add capability CAP_CHOWN to README.md and compose file.                                                                                                                                                                                                   |
-| 2024-02-26                    | 6.3a-4    | - Fix entrypoint script bug that affected new users when downloading the ngram models.                                                                                                                                                                                                       |
-| 2024-02-17                    | 6.3a-3    | - Upgrade base image to Alpine 3.19.1<br/> - Migrate from compiling fasttext to using the Alpine fasttext package.                                                                                                                                                                           |
-| 2024-02-17                    | 6.3a-2    | - Modify Dockerfile to create the LanguageTool user without home directory<br/> - Modify entrypoint script to modify uid:gid of languagetool user and group if actually changed.                                                                                                             |
-| 2024-02-12                    | 6.3a-1    | - Upgrade base image to Alpine 3.18.6<br/> - Upgrade Java to 17.0.10+7                                                                                                                                                                                                                       |
-| 2023-12-20                    | 6.3a-0    | - Upgrade to LanguageTool 6.3a                                                                                                                                                                                                                                                               |
-| 2023-12-03                    | 6.3-1     | - Upgrade base image to Alpine 3.18.5<br/> - Upgrade Java to 17.0.9+9                                                                                                                                                                                                                        |
-| 2023-10-10                    | 6.3-0     | - Upgrade to LanguageTool 6.3<br/> - Upgrade base image to Alpine 3.18.4<br/> - Upgrade Java to 17.0.8.1+1                                                                                                                                                                                   |
-| 2023-08-10                    | 6.2-1     | - Upgrade base image to Alpine 3.18.3<br/> - Upgrade Java to 17.0.8+7                                                                                                                                                                                                                        |
-| 2023-07-09                    | 6.2-0     | - Upgrade to LanguageTool 6.2                                                                                                                                                                                                                                                                |
-| 2023-06-30                    | 6.1-4     | - Upgrade base image to Alpine 3.18.2                                                                                                                                                                                                                                                        |
-| 2023-05-19                    | 6.1-3     | - Upgrade base image to Alpine 3.18.0<br/> - Upgrade Java to 17.0.7+7                                                                                                                                                                                                                        |
-| 2023-04-01                    | 6.1-2     | - Upgrade base image to Alpine 3.17.3.                                                                                                                                                                                                                                                       |
-| 2023-03-28                    | 6.1-1     | - Add logic to set log level                                                                                                                                                                                                                                                                 |
-| 2023-03-28                    | 6.1-0     | - Upgrade to LanguageTool 6.1                                                                                                                                                                                                                                                                |
-| 2023-02-23                    | 6.0-5     | - Upgrade base image to Alpine 3.17.2.                                                                                                                                                                                                                                                       |
-| 2023-01-23                    | 6.0-4     | - Upgrade Java to Eclipse Temurin 17.0.6+10.                                                                                                                                                                                                                                                 |
-| 2023-01-15                    | 6.0-3     | - Upgrade base image to Alpine 3.17.1.                                                                                                                                                                                                                                                       |
-| 2023-01-01                    | 6.0-2     | - Add alpine package `gcompat` to satisfy `ld-linux-x86-64.so.2` dependency.<br/>(this fixes the issue of the 6.0-1 image)                                                                                                                                                                   |
-| ~~2022-12-29~~<br/>2023-01-01 | ~~6.0-1~~ | ~~- Upgrade to languagetool 6.0~~<br/> - Removed tag due to ClassPath exception.                                                                                                                                                                                                             |
-| 2022-12-07                    | 5.9-7     | - Fix health check command                                                                                                                                                                                                                                                                   |
-| 2022-12-04                    | 5.9-6     | - Add `help` command to display LanguageTool configuration items to be used with `languagetool_*`                                                                                                                                                                                            |
-| 2022-12-04                    | 5.9-5     | - Switch to stripped down Eclipse Temurin 17 JRE <br/> - Remove JVM argument `-XX:+UseStringDeduplication` except for G1GC <br/> - Add `tini` to suppress exit code 143 <br/> - Removed `curl` and switch to `wget` <br/> - Print version info about Alpine and Eclipse Temurin during start |
-| 2022-11-29                    | 5.9-4     | - Upgrade base image to Alpine 3.17.0                                                                                                                                                                                                                                                        |
-| 2022-11-24                    | 5.9-3     | - Add support to configure garbage collector <br/> - Add JVM argument `-XX:+UseStringDeduplication` <br/> - Add support to pass custom JAVA_OPTS <br/> - Change Java_Xm? variables to JAVA_XM?                                                                                               |
-| 2022-11-12                    | 5.9-2     | - Upgrade base image to Alpine 3.16.3                                                                                                                                                                                                                                                        |
-| 2022-09-28                    | 5.9-1     | - Upgrade LanguageTool to 5.9                                                                                                                                                                                                                                                                |
-| 2022-09-10                    | 5.8-2     | - Add user mapping support                                                                                                                                                                                                                                                                   |
-| 2022-09-10                    | 5.8-1     | - Initial release with Alpine 3.16.2, LanguageTool 5.8                                                                                                                                                                                                                                       |
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
+
+## [6.8-3] - 2026-05-18
+
+### Changed
+
+- Upgrade Maven to 3.9.16
+
+## [6.8-2] - 2026-05-16
+
+### Added
+
+- Add `linux/arm64` build support
+- Select Java JDK per target architecture
+- Cross-compile Go entrypoint per target architecture
+
+### Fixed
+
+- Apply `no-march-native` patch to fasttext build for improved CPU compatibility
+
+## [6.8-1] - 2026-05-15
+
+### Changed
+
+- Replace entrypoint shell script with a statically-linked Go binary to reduce the attack surface through package dependencies
+
+## [6.8-0] - 2026-05-09
+
+### Changed
+
+- Upgrade to LanguageTool 6.8
+- Upgrade Java to `jdk-21.0.11+10`
+- Upgrade Maven to 3.9.15
+
+### Security
+
+- Upgrade `netty.io` dependencies to 4.2.13.Final
+
+## [6.7-8] - 2026-04-18
+
+### Changed
+
+- Upgrade base image to Alpine 3.23.4
+
+## [6.7-7] - 2026-02-28
+
+### Security
+
+- Fix GHSA-72hv-8253-57qq (High) by upgrading `com.fasterxml.jackson.core` from 2.18.0 to 2.18.6
+- Upgrade `netty.io` dependencies from 4.1.127.Final to 4.1.131.Final
+
+## [6.7-6] - 2026-02-18
+
+### Security
+
+- Replace `unzip` with `7zip` to remediate CVE-2008-0888
+
+## [6.7-5] - 2026-02-15
+
+### Fixed
+
+- Correctly apply the LanguageTool 6.7 memory leak fix (supersedes 6.7-4)
+
+## [6.7-4] - 2026-02-15 [YANKED]
+
+### Fixed
+
+- Patch LanguageTool 6.7 memory leak
+
+### Changed
+
+- Upgrade base image to Alpine 3.23.3
+- Upgrade Java to `jdk-21.0.10+7`
+
+### Security
+
+- Fix CVE-2026-1225 (Low) by updating `ch.qos.logback` to 1.5.25
+
+## [6.7-3] - 2025-11-25
+
+### Changed
+
+- Refactor CVE upgrade mechanism for Java dependencies: patch `pom.xml` for direct dependencies; replace transitive dependency JARs directly in `/languagetool/libs/` where the parent artifact cannot be upgraded via `pom.xml`
+
+## [6.7-2] - 2025-10-25
+
+### Fixed
+
+- Fix download extraction failure caused by `unzip` in Alpine 3.22.2 (use edge package instead)
+
+### Changed
+
+- Upgrade Java to `21.0.9+10`
+
+### Security
+
+- Fix CVE-2025-11226 (Medium)
+
+## [6.7-1] - 2025-10-10
+
+### Changed
+
+- Upgrade base image to Alpine 3.22.2
+
+## [6.7-0] - 2025-10-09
+
+### Changed
+
+- Upgrade to LanguageTool 6.7
+
+### Security
+
+- Fix CVE-2025-49796 (Critical), CVE-2025-49794 (Critical), CVE-2025-49795 (High), CVE-2025-6021 (High), CVE-2025-6170 (Low)
+
+## [6.6-7] - 2025-10-02
+
+### Security
+
+- Correctly fix CVE-2025-58057 (Medium), superseding the incomplete fix in 6.6-6
+
+## [6.6-6] - 2025-10-02
+
+### Fixed
+
+- Fix use of local variables in entrypoint function `download_and_extract_ngram_language_model` (thanks @walery!)
+- Switch image `HEALTHCHECK` to `/v2/healthcheck`
+
+### Security
+
+- Fix CVE-2025-9230 (High), CVE-2025-9231 (Medium), CVE-2025-9232 (Medium)
+- Partial fix for CVE-2025-58057 (Medium) — fully remediated in 6.6-7
+
+## [6.6-5] - 2025-08-29
+
+### Changed
+
+- Build LanguageTool from GitHub tags instead of release ZIP files
+
+### Security
+
+- Fix CVE-2008-0888 by using the Alpine edge release of the `unzip` package
+
+## [6.6-4] - 2025-07-18
+
+### Changed
+
+- Upgrade base image to Alpine 3.22.1
+- Upgrade Java to `21.0.8+9`
+
+### Security
+
+- Fix CVE-2025-48924 by replacing `org.apache.commons:commons-lang3:3.17.0` with `3.18.0`
+
+## [6.6-3] - 2025-05-23
+
+### Added
+
+- Add `CONTAINER_MODE` environment variable for Kubernetes users who manage ngram model downloads in `initContainers`
+
+## [6.6-2] - 2025-05-18
+
+### Fixed
+
+- Fix JNA error (`Error loading shared library /tmp/jna*.tmp: Operation not permitted`)
+
+### Security
+
+- Fix CVE-2025-32414 and CVE-2025-32415 in Alpine 3.21.3
+
+## [6.6-1] - 2025-04-20
+
+### Fixed
+
+- Fix read-only filesystem compatibility for Synology DSM 6.2 with aufs
+
+### Security
+
+- Replace CVE-affected `logback-core` and `logback-classic` with version 1.5.18
+
+## [6.6-0] - 2025-04-19
+
+### Changed
+
+- Upgrade to LanguageTool 6.6
+- **Breaking:** Change default `LISTEN_PORT` from `8010` to `8081`
+- Extend sanity checks and log output in entrypoint script
+- Upgrade Java to `21.0.7+6`
+
+## [6.5-2] - 2025-02-16
+
+### Changed
+
+- Upgrade base image to Alpine 3.21.3
+- Upgrade Java to `21.0.6+7`
+
+## [6.5-1] - 2024-10-30
+
+### Changed
+
+- Refactor entrypoint script
+- Upgrade Java to `21.0.5+11`
+
+## [6.5-0] - 2024-09-29
+
+### Changed
+
+- Upgrade to LanguageTool 6.5
+
+## [6.4-4] - 2024-09-14
+
+### Changed
+
+- Upgrade base image to Alpine 3.20.3
+
+## [6.4-3] - 2024-07-31
+
+### Changed
+
+- Upgrade base image to Alpine 3.20.2
+- Upgrade Java to `21.0.4+7`
+
+## [6.4-2] - 2024-07-05
+
+### Changed
+
+- Upgrade base image to Alpine 3.20.1
+- Upgrade Java to `21.0.3+9`
+
+## [6.4-1] - 2024-05-27
+
+### Changed
+
+- Upgrade base image to Alpine 3.20.0
+
+## [6.4-0] - 2024-04-02
+
+### Changed
+
+- Upgrade to LanguageTool 6.4
+- Require `755` (not `777`) permissions for ngrams and fasttext volume mounts
+
+## [6.3a-5] - 2024-03-26
+
+### Changed
+
+- Upgrade Java to `21.0.2+13`
+- Document `CAP_CHOWN` capability requirement in README and compose file
+
+## [6.3a-4] - 2024-02-26
+
+### Fixed
+
+- Fix entrypoint bug that prevented new users from downloading ngram models
+
+## [6.3a-3] - 2024-02-17
+
+### Changed
+
+- Upgrade base image to Alpine 3.19.1
+- Replace compiled-from-source fasttext with the Alpine `fasttext` package
+
+## [6.3a-2] - 2024-02-17
+
+### Changed
+
+- Create the `languagetool` user without a home directory
+- Update `uid:gid` of the `languagetool` user and group at startup when they differ from the requested mapping
+
+## [6.3a-1] - 2024-02-12
+
+### Changed
+
+- Upgrade base image to Alpine 3.18.6
+- Upgrade Java to `17.0.10+7`
+
+## [6.3a-0] - 2023-12-20
+
+### Changed
+
+- Upgrade to LanguageTool 6.3a
+
+## [6.3-1] - 2023-12-03
+
+### Changed
+
+- Upgrade base image to Alpine 3.18.5
+- Upgrade Java to `17.0.9+9`
+
+## [6.3-0] - 2023-10-10
+
+### Changed
+
+- Upgrade to LanguageTool 6.3
+- Upgrade base image to Alpine 3.18.4
+- Upgrade Java to `17.0.8.1+1`
+
+## [6.2-1] - 2023-08-10
+
+### Changed
+
+- Upgrade base image to Alpine 3.18.3
+- Upgrade Java to `17.0.8+7`
+
+## [6.2-0] - 2023-07-09
+
+### Changed
+
+- Upgrade to LanguageTool 6.2
+
+## [6.1-4] - 2023-06-30
+
+### Changed
+
+- Upgrade base image to Alpine 3.18.2
+
+## [6.1-3] - 2023-05-19
+
+### Changed
+
+- Upgrade base image to Alpine 3.18.0
+- Upgrade Java to `17.0.7+7`
+
+## [6.1-2] - 2023-04-01
+
+### Changed
+
+- Upgrade base image to Alpine 3.17.3
+
+## [6.1-1] - 2023-03-28
+
+### Added
+
+- Add configurable log level via environment variable
+
+## [6.1-0] - 2023-03-28
+
+### Changed
+
+- Upgrade to LanguageTool 6.1
+
+## [6.0-5] - 2023-02-23
+
+### Changed
+
+- Upgrade base image to Alpine 3.17.2
+
+## [6.0-4] - 2023-01-23
+
+### Changed
+
+- Upgrade Java to Eclipse Temurin `17.0.6+10`
+
+## [6.0-3] - 2023-01-15
+
+### Changed
+
+- Upgrade base image to Alpine 3.17.1
+
+## [6.0-2] - 2023-01-01
+
+### Fixed
+
+- Add Alpine package `gcompat` to satisfy `ld-linux-x86-64.so.2` dependency (resolves crash introduced in 6.0-1)
+
+## [6.0-1] - 2022-12-29 [YANKED]
+
+### Changed
+
+- Upgrade to LanguageTool 6.0
+
+> Removed due to a `ClassPath` exception at startup.
+
+## [5.9-7] - 2022-12-07
+
+### Fixed
+
+- Fix health check command
+
+## [5.9-6] - 2022-12-04
+
+### Added
+
+- Add `help` command to display available LanguageTool configuration keys for use with `languagetool_*` environment variables
+
+## [5.9-5] - 2022-12-04
+
+### Added
+
+- Add `tini` as PID 1 to suppress spurious exit code 143
+- Print Alpine and Eclipse Temurin version info at container startup
+
+### Changed
+
+- Switch to a stripped-down Eclipse Temurin 17 JRE
+- Remove JVM argument `-XX:+UseStringDeduplication` except when using G1GC
+- Replace `curl` with `wget`
+
+## [5.9-4] - 2022-11-29
+
+### Changed
+
+- Upgrade base image to Alpine 3.17.0
+
+## [5.9-3] - 2022-11-24
+
+### Added
+
+- Add support for configuring the JVM garbage collector
+- Add support for passing custom `JAVA_OPTS`
+- Add JVM argument `-XX:+UseStringDeduplication`
+
+### Changed
+
+- Rename `Java_Xm?` environment variables to `JAVA_XM?`
+
+## [5.9-2] - 2022-11-12
+
+### Changed
+
+- Upgrade base image to Alpine 3.16.3
+
+## [5.9-1] - 2022-09-28
+
+### Changed
+
+- Upgrade LanguageTool to 5.9
+
+## [5.8-2] - 2022-09-10
+
+### Added
+
+- Add user mapping support (`MAP_UID`/`MAP_GID`)
+
+## [5.8-1] - 2022-09-10
+
+### Added
+
+- Initial release with Alpine 3.16.2 and LanguageTool 5.8

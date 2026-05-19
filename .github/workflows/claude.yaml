@@ -1,14 +1,6 @@
 name: Claude Code
 
 on:
-  issue_comment:
-    types: [created]
-  pull_request_review_comment:
-    types: [created]
-  issues:
-    types: [opened, assigned]
-  pull_request_review:
-    types: [submitted]
   pull_request:
     types: [opened, synchronize]
     paths:
@@ -19,48 +11,6 @@ on:
 permissions: {}
 
 jobs:
-  claude:
-    if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      issues: write
-      id-token: write
-      actions: read # Required for Claude to read CI results on PRs
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-
-      - name: Run Claude Code
-        id: claude
-        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494 # v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
-          claude_args: |
-            --model claude-sonnet-4-6
-
-          # Optional: Customize the trigger phrase (default: @claude)
-          # trigger_phrase: "/claude"
-
-          # Optional: Trigger when specific user is assigned to an issue
-          # assignee_trigger: "claude-bot"
-
-          # Optional: Advanced settings configuration
-          # settings: |
-          #   {
-          #     "env": {
-          #       "NODE_ENV": "test"
-          #     }
-          #   }
-
   update-changelog:
     name: Update changelog
     if: github.event_name == 'pull_request'
@@ -130,7 +80,9 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
           allowed_bots: "renovate[bot]"
           prompt: |
-            Update the changelog table in CHANGELOG.md based on changes in changes.diff.
+            Update CHANGELOG.md based on changes in changes.diff.
+            CHANGELOG.md follows Keep a Changelog format: each release is a "## [tag] - date"
+            section with "### Category" subsections (Added, Changed, Fixed, Security).
 
             Context:
             - Next release tag: ${{ steps.version.outputs.image_version }}
@@ -139,43 +91,68 @@ jobs:
             Instructions:
             1. Read changes.diff. If it is empty or contains no changes to Dockerfile,
                Dockerfile.fasttext, or entrypoint/, stop immediately — do not modify anything.
-               Summarize the relevant changes as short bullet points (≤ 8 words each),
-               each starting with "- ", joined by "<br/> " (note the space after the slash).
-               Only describe Dockerfile and entrypoint changes. Ignore CI, test, documentation,
-               and workflow changes entirely.
-            2. Read the first 10 lines of CHANGELOG.md using the Read tool with limit=10.
-               The newest entries always appear at the top of the table, immediately after the
-               separator line (the line starting with `| ---`).
-            3. Check whether a row for "${{ steps.version.outputs.image_version }}" appears in
-               those first 10 lines:
-               a) Row ALREADY EXISTS — append the new bullet points to its Change column:
-                  - Take the exact line text from the Read output as old_string.
-                  - Construct new_string by appending "<br/> " + new bullets to the existing
-                    Change column content (before the trailing " |").
-                  - Use the Edit tool with that old_string and new_string.
-                    Do NOT read the full file — the exact line from the 10-line read is
-                    sufficient for Edit to locate and update the line in place.
-               b) Row does NOT exist — insert a new row after the separator line:
-                  - Use the exact separator line text from the Read output as old_string.
-                  - Construct new_string as: separator line + newline + new row.
-                  - Match the column widths of surrounding rows exactly:
-                    - Date column: ${{ steps.version.outputs.today }} (padded with spaces)
-                    - Tag column: ${{ steps.version.outputs.image_version }} (padded with spaces)
-                    - Change column: bullet points as described above
-                  - Use the Edit tool with old_string = separator line and
-                    new_string = separator line + "\n" + new row.
+               Classify each relevant change into one of:
+                 Added    — new features, env vars, commands, platform support
+                 Changed  — upgrades, refactors, behaviour changes
+                 Fixed    — bug fixes
+                 Security — CVE fixes, security-motivated dependency upgrades
+               Write each as a concise bullet (≤ 10 words) starting with "- ".
+               Ignore CI, test, documentation, and workflow changes.
+
+            2. Read the first 20 lines of CHANGELOG.md using the Read tool with limit=20.
+
+            3. Check whether a section heading
+               "## [${{ steps.version.outputs.image_version }}]" already exists:
+
+               a) Section does NOT exist — insert a new version section before the first
+                  "## [" line in the file:
+                  - old_string: take the "Image tags follow..." preamble line + blank line +
+                    the first "## [" line (all three, exactly as they appear in the Read output).
+                  - new_string: same preamble line + blank line + new version section +
+                    blank line + original first "## [" line.
+                  - New section format (omit subsections that have no bullets):
+
+                      ## [${{ steps.version.outputs.image_version }}] - ${{ steps.version.outputs.today }}
+
+                      ### Added
+
+                      - bullet
+
+                      ### Changed
+
+                      - bullet
+
+                      ### Fixed
+
+                      - bullet
+
+                      ### Security
+
+                      - bullet
+
+                  - Use the Edit tool with old_string and new_string.
+
+               b) Section EXISTS — read the first 50 lines with limit=50 to capture it fully.
+                  For each category that has new bullets:
+                  - If the "### Category" subsection already exists within the version section:
+                    append the new bullets after its last existing bullet using the Edit tool.
+                  - If not: insert "### Category\n\n- bullets\n" before the next "## [" heading
+                    that follows the version section, using the Edit tool.
+
             4. Update ARG IMAGE_VERSION and ARG IMAGE_CREATED in Dockerfile and Dockerfile.fasttext:
                - For each file, read only the first 2 lines using the Read tool with limit=2.
                  Line 1 is `ARG IMAGE_VERSION="..."`, line 2 is `ARG IMAGE_CREATED="..."`.
                - If `ARG IMAGE_VERSION` does not already equal "${{ steps.version.outputs.image_version }}",
-                 use the Edit tool: old_string = the exact line 1 text, new_string = `ARG IMAGE_VERSION="${{ steps.version.outputs.image_version }}"`.
+                 use the Edit tool: old_string = the exact line 1 text,
+                 new_string = `ARG IMAGE_VERSION="${{ steps.version.outputs.image_version }}"`.
                - If `ARG IMAGE_CREATED` does not already equal "${{ steps.version.outputs.today }}",
-                 use the Edit tool: old_string = the exact line 2 text, new_string = `ARG IMAGE_CREATED="${{ steps.version.outputs.today }}"`.
+                 use the Edit tool: old_string = the exact line 2 text,
+                 new_string = `ARG IMAGE_CREATED="${{ steps.version.outputs.today }}"`.
                - Apply the same two edits to both Dockerfile and Dockerfile.fasttext.
           claude_args: |
             --model claude-sonnet-4-6
             --allowedTools Bash(cat:*),Read,Edit
-            --max-turns 10
+            --max-turns 15
 
       - name: Wait before retry
         if: steps.skip.outputs.should_skip != 'true' && steps.claude-changelog.outcome == 'failure'
@@ -188,7 +165,9 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
           allowed_bots: "renovate[bot]"
           prompt: |
-            Update the changelog table in CHANGELOG.md based on changes in changes.diff.
+            Update CHANGELOG.md based on changes in changes.diff.
+            CHANGELOG.md follows Keep a Changelog format: each release is a "## [tag] - date"
+            section with "### Category" subsections (Added, Changed, Fixed, Security).
 
             Context:
             - Next release tag: ${{ steps.version.outputs.image_version }}
@@ -197,43 +176,68 @@ jobs:
             Instructions:
             1. Read changes.diff. If it is empty or contains no changes to Dockerfile,
                Dockerfile.fasttext, or entrypoint/, stop immediately — do not modify anything.
-               Summarize the relevant changes as short bullet points (≤ 8 words each),
-               each starting with "- ", joined by "<br/> " (note the space after the slash).
-               Only describe Dockerfile and entrypoint changes. Ignore CI, test, documentation,
-               and workflow changes entirely.
-            2. Read the first 10 lines of CHANGELOG.md using the Read tool with limit=10.
-               The newest entries always appear at the top of the table, immediately after the
-               separator line (the line starting with `| ---`).
-            3. Check whether a row for "${{ steps.version.outputs.image_version }}" appears in
-               those first 10 lines:
-               a) Row ALREADY EXISTS — append the new bullet points to its Change column:
-                  - Take the exact line text from the Read output as old_string.
-                  - Construct new_string by appending "<br/> " + new bullets to the existing
-                    Change column content (before the trailing " |").
-                  - Use the Edit tool with that old_string and new_string.
-                    Do NOT read the full file — the exact line from the 10-line read is
-                    sufficient for Edit to locate and update the line in place.
-               b) Row does NOT exist — insert a new row after the separator line:
-                  - Use the exact separator line text from the Read output as old_string.
-                  - Construct new_string as: separator line + newline + new row.
-                  - Match the column widths of surrounding rows exactly:
-                    - Date column: ${{ steps.version.outputs.today }} (padded with spaces)
-                    - Tag column: ${{ steps.version.outputs.image_version }} (padded with spaces)
-                    - Change column: bullet points as described above
-                  - Use the Edit tool with old_string = separator line and
-                    new_string = separator line + "\n" + new row.
+               Classify each relevant change into one of:
+                 Added    — new features, env vars, commands, platform support
+                 Changed  — upgrades, refactors, behaviour changes
+                 Fixed    — bug fixes
+                 Security — CVE fixes, security-motivated dependency upgrades
+               Write each as a concise bullet (≤ 10 words) starting with "- ".
+               Ignore CI, test, documentation, and workflow changes.
+
+            2. Read the first 20 lines of CHANGELOG.md using the Read tool with limit=20.
+
+            3. Check whether a section heading
+               "## [${{ steps.version.outputs.image_version }}]" already exists:
+
+               a) Section does NOT exist — insert a new version section before the first
+                  "## [" line in the file:
+                  - old_string: take the "Image tags follow..." preamble line + blank line +
+                    the first "## [" line (all three, exactly as they appear in the Read output).
+                  - new_string: same preamble line + blank line + new version section +
+                    blank line + original first "## [" line.
+                  - New section format (omit subsections that have no bullets):
+
+                      ## [${{ steps.version.outputs.image_version }}] - ${{ steps.version.outputs.today }}
+
+                      ### Added
+
+                      - bullet
+
+                      ### Changed
+
+                      - bullet
+
+                      ### Fixed
+
+                      - bullet
+
+                      ### Security
+
+                      - bullet
+
+                  - Use the Edit tool with old_string and new_string.
+
+               b) Section EXISTS — read the first 50 lines with limit=50 to capture it fully.
+                  For each category that has new bullets:
+                  - If the "### Category" subsection already exists within the version section:
+                    append the new bullets after its last existing bullet using the Edit tool.
+                  - If not: insert "### Category\n\n- bullets\n" before the next "## [" heading
+                    that follows the version section, using the Edit tool.
+
             4. Update ARG IMAGE_VERSION and ARG IMAGE_CREATED in Dockerfile and Dockerfile.fasttext:
                - For each file, read only the first 2 lines using the Read tool with limit=2.
                  Line 1 is `ARG IMAGE_VERSION="..."`, line 2 is `ARG IMAGE_CREATED="..."`.
                - If `ARG IMAGE_VERSION` does not already equal "${{ steps.version.outputs.image_version }}",
-                 use the Edit tool: old_string = the exact line 1 text, new_string = `ARG IMAGE_VERSION="${{ steps.version.outputs.image_version }}"`.
+                 use the Edit tool: old_string = the exact line 1 text,
+                 new_string = `ARG IMAGE_VERSION="${{ steps.version.outputs.image_version }}"`.
                - If `ARG IMAGE_CREATED` does not already equal "${{ steps.version.outputs.today }}",
-                 use the Edit tool: old_string = the exact line 2 text, new_string = `ARG IMAGE_CREATED="${{ steps.version.outputs.today }}"`.
+                 use the Edit tool: old_string = the exact line 2 text,
+                 new_string = `ARG IMAGE_CREATED="${{ steps.version.outputs.today }}"`.
                - Apply the same two edits to both Dockerfile and Dockerfile.fasttext.
           claude_args: |
             --model claude-sonnet-4-6
             --allowedTools Bash(cat:*),Read,Edit
-            --max-turns 10
+            --max-turns 15
 
       - name: Commit and push changelog update
         if: steps.skip.outputs.should_skip != 'true'
@@ -241,9 +245,9 @@ jobs:
           IMAGE_VERSION: ${{ steps.version.outputs.image_version }}
         # language="Shell Script"
         run: |
-          git diff --quiet CHANGELOG.md && exit 0
+          git diff --quiet CHANGELOG.md Dockerfile Dockerfile.fasttext && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
+          git add CHANGELOG.md Dockerfile Dockerfile.fasttext
           git commit -m "docs(changelog): update changelog for ${IMAGE_VERSION}"
           git push
