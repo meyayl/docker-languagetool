@@ -112,8 +112,13 @@ RUN set -eux; \
       local _value=${2}; \
       xml edit --inplace --update "${_xpath}" --value "${_value}" /tmp/languagetool/pom.xml; \
     }; \
-    patch_property "//*[name()='ch.qos.logback.version']" "1.5.25"; \
-    patch_property "//*[name()='jackson.version']" "2.18.6"; \
+    if [ "${LT_VERSION}" == "6.8" ]; then \
+        patch_property "//*[name()='ch.qos.logback.version']" "1.5.25"; \
+        patch_property "//*[name()='jackson.version']" "2.18.6"; \
+        patch_property "//*[name()='org.apache.opennlp.opennlp-tools.version']" "2.5.9"; \
+        patch_property "//*[name()='io.opentelemetry.version']" "1.62.0"; \
+        patch_property "//*[name()='io.lettuce.version']" "7.5.2.RELEASE"; \
+    fi ; \
     /opt/maven/bin/mvn  \
       --file /tmp/languagetool/pom.xml \
       --projects languagetool-standalone \
@@ -132,16 +137,15 @@ RUN set -eux; \
       local _FILENAME=${_FILENAME%\-*}.jar; \
       wget "${_URL}" -O /languagetool/libs/${_FILENAME}; \
     }; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-buffer/4.2.13.Final/netty-buffer-4.2.13.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.2.13.Final/netty-codec-dns-4.2.13.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec/4.2.13.Final/netty-codec-4.2.13.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-common/4.2.13.Final/netty-common-4.2.13.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-handler/4.2.13.Final/netty-handler-4.2.13.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.2.13.Final/netty-resolver-dns-4.2.13.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-resolver/4.2.13.Final/netty-resolver-4.2.13.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-transport-native-unix-common/4.2.13.Final/netty-transport-native-unix-common-4.2.13.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-transport/4.2.13.Final/netty-transport-4.2.13.Final.jar; \
-    update_maven_dependency https://repo1.maven.org/maven2/org/apache/opennlp/opennlp-tools/2.5.9/opennlp-tools-2.5.9.jar; \
+    #update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-buffer/4.2.13.Final/netty-buffer-4.2.13.Final.jar; \
+    #update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec-dns/4.2.13.Final/netty-codec-dns-4.2.13.Final.jar; \
+    #update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec/4.2.13.Final/netty-codec-4.2.13.Final.jar; \
+    #update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-common/4.2.13.Final/netty-common-4.2.13.Final.jar; \
+    #update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-handler/4.2.13.Final/netty-handler-4.2.13.Final.jar; \
+    #update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-resolver-dns/4.2.13.Final/netty-resolver-dns-4.2.13.Final.jar; \
+    #update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-resolver/4.2.13.Final/netty-resolver-4.2.13.Final.jar; \
+    #update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-transport-native-unix-common/4.2.13.Final/netty-transport-native-unix-common-4.2.13.Final.jar; \
+    #update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-transport/4.2.13.Final/netty-transport-4.2.13.Final.jar; \
     echo "patches applied"
 
 RUN set -eux; \
