@@ -10,6 +10,7 @@ Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g.
 ### Changed
 
 - Upgrade Maven to 3.9.16
+- Upgrade Go to 1.26.4
 
 ## [6.8-2] - 2026-05-16
 
