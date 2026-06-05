@@ -5,12 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
-## [6.8-3] - 2026-05-18
+## [6.8-3] - 2026-06-05
 
 ### Changed
 
 - Upgrade Maven to 3.9.16
 - Upgrade Go to 1.26.4
+- Gate pom.xml CVE patches to LT_VERSION 6.8 only
+- Remove direct netty JAR replacements from build
+
+### Security
+
+- Patch opennlp-tools 2.5.9, opentelemetry 1.62.0, lettuce 7.5.2 via pom.xml
 
 ## [6.8-2] - 2026-05-16
 
