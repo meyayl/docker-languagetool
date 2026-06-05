@@ -7,7 +7,7 @@ ARG JAVA_VERSION="jdk-21.0.11+10"
 # renovate: datasource=github-releases depName=apache/maven versioning=semver extractVersion=^maven-(?<version>.*)$
 ARG MAVEN_VERSION="3.9.16"
 # renovate: datasource=docker depName=golang versioning=docker
-ARG GO_VERSION="1.26-alpine3.23"
+ARG GO_VERSION="1.26.4-alpine3.23"
 FROM alpine:3.23.4@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11 AS base
 
 FROM base AS java_base
