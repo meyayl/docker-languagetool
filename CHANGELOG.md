@@ -11,6 +11,8 @@ Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g.
 
 - Upgrade base image to Alpine 3.24.0
 - Upgrade 7zip to 26.00
+- Upgrade libstdc++ to 15.2.0-r5
+- Upgrade fasttext to 0.9.2-r3
 
 ### Security
 
