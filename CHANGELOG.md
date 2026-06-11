@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-4] - 2026-06-11
+
+### Changed
+
+- Upgrade base image to Alpine 3.24.0
+- Upgrade 7zip to 26.00
+
+### Security
+
+- Upgrade OpenSSL to 3.5.7s
+- Patch lettuce 7.6.0.RELEASE via pom.xml
+- Upgrade netty.io dependencies to 4.2.15.Final
+
 ## [6.8-3] - 2026-06-05
 
 ### Changed
