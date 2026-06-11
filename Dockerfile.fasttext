@@ -18,7 +18,7 @@ ENV LANG=en_US.UTF-8 \
 
 # renovate: datasource=repology depName=alpine_3_24/libretls versioning=loose
 ARG LIBRETLS_VERSION="3.8.1-r0"
-# renovate: datasource=repology depName=alpine_3_24/musl-localess versioning=loose
+# renovate: datasource=repology depName=alpine_3_24/musl-locales versioning=loose
 ARG MUSL_LOCALES_VERSION="0.1.0-r1"
 # renovate: datasource=repology depName=alpine_3_24/musl-locales-lang versioning=loose
 ARG MUSL_LOCALES_LANG_VERSION="0.1.0-r1"
