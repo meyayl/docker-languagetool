@@ -444,7 +444,7 @@ jobs:
           git diff "${BASE}...${CURRENT_TAG}" -- Dockerfile Dockerfile.fasttext entrypoint/ > changes.diff
 
       - name: Generate release notes with Claude
-        uses: anthropics/claude-code-action@410165836eba8e7e60fc3587e60bebdfd35ca785 # v1
+        uses: anthropics/claude-code-action@558b1d6cab4085c7753fe402c10bef0fbb92ac7a # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
           prompt: |
