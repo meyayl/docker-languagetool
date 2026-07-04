@@ -49,7 +49,7 @@ ENV JAVA_HOME=/opt/java/openjdk \
     JAVA_VERSION=${JAVA_VERSION}
 
 # renovate: datasource=repology depName=alpine_3_24/7zip versioning=loose
-ARG SEVEN_ZIP_VERSION="26.00-r0"
+ARG SEVEN_ZIP_VERSION="26.01-r0"
 
 RUN set -eux; \
     apk add --no-cache binutils 7zip="${SEVEN_ZIP_VERSION}"; \
