@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-5] - 2026-07-04
+
+### Changed
+
+- Upgrade base image to Alpine 3.24.1
+
 ## [6.8-4] - 2026-06-11
 
 ### Changed
