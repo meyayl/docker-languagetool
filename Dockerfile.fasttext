@@ -1,5 +1,5 @@
-ARG IMAGE_VERSION="6.8-4"
-ARG IMAGE_CREATED="2026-06-11"
+ARG IMAGE_VERSION="6.8-5"
+ARG IMAGE_CREATED="2026-07-18"
 # renovate: datasource=github-tags depName=languagetool-org/languagetool versioning=loose
 ARG LT_VERSION="6.8"
 # renovate: datasource=github-releases depName=adoptium/temurin21-binaries versioning=regex:^jdk-(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)\+(?<build>\d+)$
