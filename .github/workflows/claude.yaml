@@ -75,7 +75,7 @@ jobs:
         if: steps.skip.outputs.should_skip != 'true'
         id: claude-changelog
         continue-on-error: true
-        uses: anthropics/claude-code-action@558b1d6cab4085c7753fe402c10bef0fbb92ac7a # v1
+        uses: anthropics/claude-code-action@44423bdec74b97d67543eb16c110546762c110b2 # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
           allowed_bots: "renovate[bot]"
@@ -160,7 +160,7 @@ jobs:
 
       - name: Generate changelog entry with Claude (retry)
         if: steps.skip.outputs.should_skip != 'true' && steps.claude-changelog.outcome == 'failure'
-        uses: anthropics/claude-code-action@558b1d6cab4085c7753fe402c10bef0fbb92ac7a # v1
+        uses: anthropics/claude-code-action@44423bdec74b97d67543eb16c110546762c110b2 # v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
           allowed_bots: "renovate[bot]"
