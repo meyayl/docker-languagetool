@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-5] - 2026-07-24
+
+### Changed
+
+- Upgrade base image to Alpine 3.24.1
+- Upgrade Go to 1.26.5
+- Bump entrypoint dependency `github.com/beevik/etree` to 1.7.0
+
+### Fixed
+
+- Correct `tzdata` pin to 2026c-r0 (2026b-r0 was removed from the alpine_3_24 repo, breaking the build)
+
+### Security
+
+- Upgrade Go to 1.26.5, fixing CVE-2026-39822 (os.Root symlink escape outside the root on Unix) and CVE-2026-42505 (crypto/tls Encrypted Client Hello PSK identity leak in the outer ClientHello, CVSS 5.3 Medium)
+- Patch Jackson to 2.18.8 via pom.xml, fixing GHSA-r7wm-3cxj-wff9 (jackson-core `StreamReadConstraints` bypass in the async parser via chunked digit accumulation, CVSS 5.3)
+- Patch Jackson to 2.18.9 via pom.xml, fixing CVE-2026-54515 (jackson-databind case-insensitivity check reopened `@JsonIgnoreProperties`-excluded fields, CVSS 5.3 Medium)
+- Patch logback to 1.5.35 via pom.xml, fixing CVE-2025-11226 (arbitrary code execution via conditional logback configuration processing, requires Janino + Spring on the classpath, CVSS v4 5.9 Medium) and CVE-2026-10532 (`HardenedObjectInputStream` Proxy-class deserialization whitelist bypass, CVSS v4 2.9 Low)
+
 ## [6.8-4] - 2026-06-11
 
 ### Changed
