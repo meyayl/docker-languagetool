@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
 
     concurrency:
-      group: ${{ github.workflow }}-${{ github.job }}-buil-test-image--${{ github.ref }}
+      group: ${{ github.workflow }}-${{ github.job }}-build-test-image--${{ github.ref }}
       cancel-in-progress: true
 
     permissions:
@@ -263,14 +263,22 @@ jobs:
     if: |
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
 
     steps:
+      # A GitHub App token is used instead of the default GITHUB_TOKEN because
+      # tags/refs created with GITHUB_TOKEN do not trigger new workflow runs,
+      # which would prevent the "push: tags:" pipeline stages below from running.
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
       - name: Create and push tag
-        # language="Shell Script"
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           IMAGE_VERSION: ${{ needs.compute-version.outputs.image_version }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
@@ -308,7 +316,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Ancore scan for all CVEs (non-blocking)
+      - name: Run Anchore scan for all CVEs (non-blocking)
         uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
         id: scan
         with:

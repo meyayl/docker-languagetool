@@ -71,7 +71,7 @@ Tags follow the pattern `{LT_VERSION}-{sequential_number}` (e.g., `6.8-0`). The 
 4. **scan-image** — Grype CVE scan (non-blocking on PRs/branches)
 5. **cve-check-image-and-report** — blocking CVE scan, runs only on tags
 6. **retag-and-push-final-image** — retags GHCR image and pushes to Docker Hub with versioned + `latest` tags; runs only on tags
-7. **create-release-tag** — creates and pushes the next `{LT_VERSION}-{sequential_number}` git tag; only runs on a manual `workflow_dispatch` run on `main`. Pushing that tag re-triggers the pipeline, which then runs the CVE check, retag/push, and release steps above.
+7. **create-release-tag** — creates and pushes the next `{LT_VERSION}-{sequential_number}` git tag; only runs on a manual `workflow_dispatch` run on `main`. Pushing that tag re-triggers the pipeline, which then runs the CVE check, retag/push, and release steps above. The tag is created using a short-lived GitHub App installation token (`actions/create-github-app-token`, app ID/private key in the `RELEASE_APP_ID` / `RELEASE_APP_PRIVATE_KEY` secrets), not the default `GITHUB_TOKEN` — refs created with `GITHUB_TOKEN` do not trigger new workflow runs, which would silently break the re-trigger this step depends on.
 8. **create-github-release** — creates the GitHub release (with auto-generated notes) for the pushed tag; runs only on tags
 
 **Branch naming:** the pipeline triggers on `feature/*` branches (not `feat/*`). Always use `feature/` as the branch prefix for development branches.
