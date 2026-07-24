@@ -23,23 +23,6 @@ The Docker Hub repository can be found on [Docker Hub](https://hub.docker.com/r/
 - optional: downloads fasttext module (if it doesn't already exist)
 - optional: allows to set log level
 
-> ⚠️ BREAKING CHANGE in version 6.6-0 ⚠️
->
-> The default listen port inside the container has changed:
->
-> - Previous versions: port 8010
-> - New version (6.6-0): port 8081
->
-> Either update your port mapping configuration to use the new port, or set the environment
-> variable `LISTEN_PORT` to `8010` to retain old behavior.
-
-<!-- -->
-
-> ~~⚠️ WARNING for version 6.7 ⚠️~~
->
-> ~~There might be a potential memory leak that results in unlimited memory growth.~~
-> ~~Please remain on the image from the 6.6 tag for day to day use, and try the 6.7 tag only for testing purposes.~~
-
 ## Setup
 
 The following subsections show usage examples.
@@ -214,9 +197,7 @@ The environment parameters are split into two halves, separated by an equal or c
 
 ## Fasttext support
 
-Now that fasttext is available since Alpine 3.19, the image switched to using the Alpine package, instead of compiling the binaries from the sources. This hopefully fixes the compatibility issue users with older CPUs experienced with my previous images, that were build on a amd64v3 architecture CPU, which compiled the `fasttext` binary with CPU optimizations older CPUs do not support.
-
-If the Alpine `fasttext` package does not work for you, you can build a custom image to compile the `fasttext` binary using CPU optimizations your CPU actually understands (supports both `amd64` and `arm64`):
+The image comes with the Alpine `fasttext` package. If it does not work for you, you can build a custom image to compile the `fasttext` binary using CPU optimizations your CPU actually understands (supports both `amd64` and `arm64`):
 
 ```shell
 git clone  https://github.com/meyayl/docker-languagetool.git
@@ -228,11 +209,7 @@ As alternative method, `sudo make docker_build` can be used to build your custom
 
 Once the image is build, you can `docker compose up -d` like you would do with the images hosted on Docker Hub.
 
-> NOTE1: From now on the fastText sources are patched to work with gcc13.
-
-<!-- -->
-
-> NOTE2: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
+> NOTE: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
 
 ## Changelog
 
