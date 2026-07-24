@@ -114,7 +114,7 @@ RUN set -eux; \
     }; \
     if [ "${LT_VERSION}" == "6.8" ]; then \
         patch_property "//*[name()='ch.qos.logback.version']" "1.5.25"; \
-        patch_property "//*[name()='jackson.version']" "2.18.6"; \
+        patch_property "//*[name()='jackson.version']" "2.18.8"; \
         patch_property "//*[name()='org.apache.opennlp.opennlp-tools.version']" "2.5.9"; \
         patch_property "//*[name()='io.opentelemetry.version']" "1.62.0"; \
         patch_property "//*[name()='io.lettuce.version']" "7.6.0.RELEASE"; \
