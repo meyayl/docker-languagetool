@@ -71,6 +71,8 @@ Tags follow the pattern `{LT_VERSION}-{sequential_number}` (e.g., `6.8-0`). The 
 4. **scan-image** — Grype CVE scan (non-blocking on PRs/branches)
 5. **cve-check-image-and-report** — blocking CVE scan, runs only on tags
 6. **retag-and-push-final-image** — retags GHCR image and pushes to Docker Hub with versioned + `latest` tags; runs only on tags
+7. **create-release-tag** — creates and pushes the next `{LT_VERSION}-{sequential_number}` git tag; only runs on a manual `workflow_dispatch` run on `main`. Pushing that tag re-triggers the pipeline, which then runs the CVE check, retag/push, and release steps above.
+8. **create-github-release** — creates the GitHub release (with auto-generated notes) for the pushed tag; runs only on tags
 
 **Branch naming:** the pipeline triggers on `feature/*` branches (not `feat/*`). Always use `feature/` as the branch prefix for development branches.
 
@@ -120,7 +122,7 @@ prettier --write "*.json"
 
 `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. Each release is a `## [tag] - date` section with `### Added`, `### Changed`, `### Fixed`, and `### Security` subsections (omit any that have no entries).
 
-The `update-changelog` job in `.github/workflows/claude.yaml` auto-updates `CHANGELOG.md` on every PR that touches `Dockerfile`, `Dockerfile.fasttext`, or `entrypoint/`. When editing manually, follow the same structure.
+`CHANGELOG.md` is updated manually. When editing, follow the same structure.
 
 `.markdownlint.json` sets `MD024: siblings_only: true` to allow the repeated category headings across version sections — do not remove this rule.
 
