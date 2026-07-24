@@ -72,39 +72,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-  detect-changes:
-    name: Detect Dockerfile/entrypoint changes
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
-    outputs:
-      relevant: ${{ steps.check.outputs.relevant }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-
-      - name: Check changed paths
-        id: check
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          BEFORE: ${{ github.event.before }}
-        # language="Shell Script"
-        run: |
-          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            BASE=$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)
-          elif [[ "$BEFORE" == "0000000000000000000000000000000000000000" ]]; then
-            BASE=$(git rev-list --max-parents=0 HEAD)
-          else
-            BASE="$BEFORE"
-          fi
-          CHANGES=$(git diff --name-only "$BASE" HEAD | grep -E '^(Dockerfile|Dockerfile\.fasttext|entrypoint/)' || true)
-          echo "relevant=$([ -n "$CHANGES" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-
   build-test-image:
     name: Build Image for Testing
     needs: [compute-version]
@@ -291,13 +258,11 @@ jobs:
 
   create-release-tag:
     name: Create release tag
-    needs: [compute-version, detect-changes, integration-test-image]
+    needs: [compute-version, integration-test-image]
     runs-on: ubuntu-latest
     if: |
-      github.ref == 'refs/heads/main' &&
-      needs.detect-changes.result == 'success' &&
-      needs.detect-changes.outputs.relevant == 'true'
-    environment: release
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main'
     permissions:
       contents: write
 
@@ -417,89 +382,17 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }} # zizmor: ignore[secrets-outside-env]
           repository: meyay/languagetool
 
-  generate-release-summary:
-    name: Generate release summary
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Prepare change diff
-        id: diff
-        env:
-          CURRENT_TAG: ${{ github.ref_name }}
-        # language="Shell Script"
-        run: |
-          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -1)
-          echo "prev_tag=${PREV_TAG:-initial}" >> "$GITHUB_OUTPUT"
-          BASE="${PREV_TAG:-$(git rev-list --max-parents=0 HEAD)}"
-          git diff "${BASE}...${CURRENT_TAG}" -- Dockerfile Dockerfile.fasttext entrypoint/ > changes.diff
-
-      - name: Generate release notes with Claude
-        uses: anthropics/claude-code-action@558b1d6cab4085c7753fe402c10bef0fbb92ac7a # v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} # zizmor: ignore[secrets-outside-env]
-          prompt: |
-            Read the file changes.diff in the current directory. It contains the git diff for
-            LanguageTool Docker image release ${{ github.ref_name }}
-            (previous release: ${{ steps.diff.outputs.prev_tag }}).
-
-            Generate a concise release description covering ONLY changes to:
-            - Dockerfile and Dockerfile.fasttext
-            - The entrypoint Go binary (entrypoint/ directory)
-
-            Completely ignore any CI, test, documentation, or other changes.
-
-            Format the output as Markdown:
-            - Start with a one-paragraph summary of what changed in this release
-            - Add a "### Dockerfile" section with bullet points (omit entirely if no Dockerfile changes)
-            - Add a "### Entrypoint" section with bullet points (omit entirely if no entrypoint changes)
-            - If changes.diff is empty or contains no relevant changes, write only:
-              "No changes to Dockerfile or entrypoint in this release."
-
-            Write the final Markdown to a file named release-notes.md.
-            Output nothing else — no commentary, no explanation, just write the file and stop.
-          claude_args: |
-            --model claude-sonnet-4-6
-            --allowedTools Bash,Write,Read
-            --max-turns 10
-
-      - name: Ensure release notes file exists
-        # language="Shell Script"
-        run: |
-          [ -f release-notes.md ] || echo "No release notes generated." > release-notes.md
-
-      - name: Upload release notes
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: release-notes
-          path: release-notes.md
-
   create-github-release:
     name: Create GitHub release
     if: startsWith(github.ref, 'refs/tags/')
     needs:
       - compute-version
-      - generate-release-summary
       - retag-and-push-final-image
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Download release notes
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: release-notes
-
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -510,4 +403,4 @@ jobs:
           gh release create "${TAG}" \
             --repo "${{ github.repository }}" \
             --title "LanguageTool ${LT_VERSION} (${TAG})" \
-            --notes-file release-notes.md
+            --generate-notes
