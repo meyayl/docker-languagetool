@@ -15,7 +15,7 @@ Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g.
 
 ### Fixed
 
-- Correct `tzdata` pin to 2026c-r0 (2026b-r0 was removed from the alpine_3_24 repo, breaking the build)
+- Correct `tzdata` pin to 2026c-r0 (2026b-r0 was removed from the alpine_3_24 repository, breaking the build)
 
 ### Security
 
