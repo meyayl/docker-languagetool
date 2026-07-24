@@ -375,13 +375,6 @@ jobs:
             --tag "meyay/languagetool:latest" \
             "${SRC}"
 
-      - name: Update repo description
-        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }} # zizmor: ignore[secrets-outside-env]
-          password: ${{ secrets.DOCKERHUB_TOKEN }} # zizmor: ignore[secrets-outside-env]
-          repository: meyay/languagetool
-
   create-github-release:
     name: Create GitHub release
     if: startsWith(github.ref, 'refs/tags/')
@@ -402,5 +395,5 @@ jobs:
         run: |
           gh release create "${TAG}" \
             --repo "${{ github.repository }}" \
-            --title "LanguageTool ${LT_VERSION} (${TAG})" \
+            --title "${TAG}" \
             --generate-notes
