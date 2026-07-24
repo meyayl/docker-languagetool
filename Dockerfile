@@ -23,7 +23,7 @@ ARG MUSL_LOCALES_VERSION="0.1.0-r1"
 # renovate: datasource=repology depName=alpine_3_24/musl-locales-lang versioning=loose
 ARG MUSL_LOCALES_LANG_VERSION="0.1.0-r1"
 # renovate: datasource=repology depName=alpine_3_24/tzdata versioning=loose
-ARG TZDATA_VERSION="2026b-r0"
+ARG TZDATA_VERSION="2026c-r0"
 # renovate: datasource=repology depName=alpine_3_24/zlib versioning=loose
 ARG ZLIB_VERSION="1.3.2-r0"
 # renovate: datasource=repology depName=alpine_3_24/openssl versioning=loose
