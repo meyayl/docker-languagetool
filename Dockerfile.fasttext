@@ -1,5 +1,5 @@
-ARG IMAGE_VERSION="6.8-4"
-ARG IMAGE_CREATED="2026-06-11"
+ARG IMAGE_VERSION="6.8-5"
+ARG IMAGE_CREATED="2026-07-24"
 # renovate: datasource=github-tags depName=languagetool-org/languagetool versioning=loose
 ARG LT_VERSION="6.8"
 # renovate: datasource=github-releases depName=adoptium/temurin21-binaries versioning=regex:^jdk-(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)\+(?<build>\d+)$
@@ -8,7 +8,7 @@ ARG JAVA_VERSION="jdk-21.0.11+10"
 ARG MAVEN_VERSION="3.9.16"
 # renovate: datasource=docker depName=golang versioning=docker
 ARG GO_VERSION="1.26.4-alpine3.24"
-FROM alpine:3.24.0 AS base
+FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS base
 
 FROM base AS java_base
 
