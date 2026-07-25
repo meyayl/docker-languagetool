@@ -96,6 +96,19 @@ RUN set -eux; \
 
 COPY patches/ /patches/
 
+# renovate: datasource=maven depName=ch.qos.logback:logback-classic versioning=maven
+ARG LOGBACK_VERSION="1.5.35"
+# renovate: datasource=maven depName=com.fasterxml.jackson.core:jackson-databind versioning=maven
+ARG JACKSON_VERSION="2.18.9"
+# renovate: datasource=maven depName=org.apache.opennlp:opennlp-tools versioning=maven
+ARG OPENNLP_VERSION="2.5.9"
+# renovate: datasource=maven depName=io.opentelemetry:opentelemetry-api versioning=maven
+ARG OPENTELEMETRY_VERSION="1.62.0"
+# renovate: datasource=maven depName=io.lettuce:lettuce-core versioning=maven
+ARG LETTUCE_VERSION="7.6.0.RELEASE"
+# renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
+ARG NETTY_VERSION="4.2.15.Final"
+
 # hadolint ignore=SC2086,DL3003
 RUN set -eux; \
     apk add --upgrade --no-cache git xmlstarlet; \
@@ -113,11 +126,11 @@ RUN set -eux; \
       xml edit --inplace --update "${_xpath}" --value "${_value}" /tmp/languagetool/pom.xml; \
     }; \
     if [ "${LT_VERSION}" == "6.8" ]; then \
-        patch_property "//*[name()='ch.qos.logback.version']" "1.5.35"; \
-        patch_property "//*[name()='jackson.version']" "2.18.9"; \
-        patch_property "//*[name()='org.apache.opennlp.opennlp-tools.version']" "2.5.9"; \
-        patch_property "//*[name()='io.opentelemetry.version']" "1.62.0"; \
-        patch_property "//*[name()='io.lettuce.version']" "7.6.0.RELEASE"; \
+        patch_property "//*[name()='ch.qos.logback.version']" "${LOGBACK_VERSION}"; \
+        patch_property "//*[name()='jackson.version']" "${JACKSON_VERSION}"; \
+        patch_property "//*[name()='org.apache.opennlp.opennlp-tools.version']" "${OPENNLP_VERSION}"; \
+        patch_property "//*[name()='io.opentelemetry.version']" "${OPENTELEMETRY_VERSION}"; \
+        patch_property "//*[name()='io.lettuce.version']" "${LETTUCE_VERSION}"; \
     fi ; \
     /opt/maven/bin/mvn  \
       --file /tmp/languagetool/pom.xml \
@@ -137,7 +150,6 @@ RUN set -eux; \
       local _FILENAME=${_FILENAME%\-*}.jar; \
       wget "${_URL}" -O /languagetool/libs/${_FILENAME}; \
     }; \
-    export NETTY_VERSION=4.2.15.Final ; \
     update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-buffer/${NETTY_VERSION}/netty-buffer-${NETTY_VERSION}.jar; \
     update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec-dns/${NETTY_VERSION}/netty-codec-dns-${NETTY_VERSION}.jar; \
     update_maven_dependency https://repo1.maven.org/maven2/io/netty/netty-codec/${NETTY_VERSION}/netty-codec-${NETTY_VERSION}.jar; \

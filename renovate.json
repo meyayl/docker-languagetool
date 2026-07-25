@@ -20,6 +20,11 @@
       "automerge": false
     },
     {
+      "matchDatasources": ["maven"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
       "matchFileNames": ["docker-compose.yml", "**/docker-compose.yml"],
       "pinDigests": false
     },
@@ -45,7 +50,7 @@
     },
     {
       "matchManagers": ["github-actions"],
-      "minimumReleaseAge": "2 days"
+      "minimumReleaseAge": "5 days"
     }
   ]
 }
