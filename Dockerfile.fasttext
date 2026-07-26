@@ -107,7 +107,7 @@ ARG OPENTELEMETRY_VERSION="1.62.0"
 # renovate: datasource=maven depName=io.lettuce:lettuce-core versioning=maven
 ARG LETTUCE_VERSION="7.6.0.RELEASE"
 # renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
-ARG NETTY_VERSION="4.2.15.Final"
+ARG NETTY_VERSION="4.2.16.Final"
 
 # hadolint ignore=SC2086,DL3003
 RUN set -eux; \
