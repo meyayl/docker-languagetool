@@ -3,7 +3,7 @@ ARG IMAGE_CREATED="2026-07-24"
 # renovate: datasource=github-tags depName=languagetool-org/languagetool versioning=loose
 ARG LT_VERSION="6.8"
 # renovate: datasource=github-releases depName=adoptium/temurin21-binaries versioning=regex:^jdk-(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)\+(?<build>\d+)$
-ARG JAVA_VERSION="jdk-21.0.11+10"
+ARG JAVA_VERSION="jdk-21.0.12+8"
 # renovate: datasource=github-releases depName=apache/maven versioning=semver extractVersion=^maven-(?<version>.*)$
 ARG MAVEN_VERSION="3.9.16"
 # renovate: datasource=docker depName=golang versioning=docker
