@@ -8,7 +8,7 @@ The Docker Hub repository can be found on [Docker Hub](https://hub.docker.com/r/
 ## Features
 
 - Built directly from [LanguageTool repository tags](https://github.com/languagetool-org/languagetool/tags) since official release ZIPs were [discontinued after v6.6](https://github.com/languagetool-org/languagetool/blob/master/languagetool-standalone/CHANGES.md#66-2025-03-27)
-- Built on latest Alpine 3.23 base image
+- Built on latest Alpine 3.24 base image
 - Multi-arch: supports `linux/amd64` and `linux/arm64`
 - Custom Eclipse Temurin 21 JRE (optimized with required modules only)
 - Uses `tini` to handle container signals properly
