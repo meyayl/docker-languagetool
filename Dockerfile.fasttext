@@ -105,7 +105,7 @@ ARG OPENNLP_VERSION="2.5.11"
 # renovate: datasource=maven depName=io.opentelemetry:opentelemetry-api versioning=maven
 ARG OPENTELEMETRY_VERSION="1.65.0"
 # renovate: datasource=maven depName=io.lettuce:lettuce-core versioning=maven
-ARG LETTUCE_VERSION="7.6.0.RELEASE"
+ARG LETTUCE_VERSION="7.7.0.RELEASE"
 # renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
 ARG NETTY_VERSION="4.2.17.Final"
 
