@@ -5,41 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
-## [6.8-7] - 2026-08-29
-
-### Changed
-
-- Upgrade Go to 1.27.0
-
-### Security
-
-- Upgrade OpenSSL to 3.5.8-r0, fixing CVE-2026-14457, CVE-2026-63076, CVE-2026-54874, CVE-2026-63072, CVE-2026-14456, CVE-2026-63075, CVE-2026-18798 (CVSS 7.5 High) and CVE-2026-63074 (CVSS 5.9 Medium)
-- Patch jackson-databind to 2.22.2 via pom.xml
-- Patch lettuce-core to 7.7.0.RELEASE via pom.xml
-- Patch mariadb-java-client to 3.5.10 via pom.xml, fixing CVE-2026-55856, CVE-2026-55857, CVE-2026-55858 (cleartext credential/password disclosure to a MITM, CVSS 5.9 Medium)
-- CVE-2026-63073 and CVE-2026-75803 (OpenSSL, both unscored) remain open — no patched Alpine `openssl` package is available yet
-
-## [6.8-6] - 2026-08-16
-
-### Changed
-
-- Upgrade Temurin JDK to jdk-21.0.12+8
-- Upgrade Go to 1.26.6
-- Bump entrypoint dependency `github.com/beevik/etree` to 1.7.1
-
-### Fixed
-
-- Use a GitHub App installation token for release tag creation, so pushed release tags reliably re-trigger the pipeline
-- Simplify the GitHub release title and drop the Docker Hub description sync step
-
-### Security
-
-- Patch logback to 1.6.3 via pom.xml
-- Patch jackson-databind to 2.22.1 via pom.xml
-- Patch `org.apache.opennlp:opennlp-tools` to 2.5.11 via pom.xml
-- Patch `io.opentelemetry:opentelemetry-api` to 1.65.0 via pom.xml
-- Upgrade netty.io dependencies to 4.2.17.Final
-
 ## [6.8-5] - 2026-07-24
 
 ### Changed

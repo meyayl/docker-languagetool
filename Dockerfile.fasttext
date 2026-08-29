@@ -108,8 +108,6 @@ ARG OPENTELEMETRY_VERSION="1.65.0"
 ARG LETTUCE_VERSION="7.7.0.RELEASE"
 # renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
 ARG NETTY_VERSION="4.2.17.Final"
-# renovate: datasource=maven depName=org.mariadb.jdbc:mariadb-java-client versioning=maven
-ARG MARIADB_JDBC_VERSION="3.5.10"
 
 # hadolint ignore=SC2086,DL3003
 RUN set -eux; \
@@ -133,7 +131,6 @@ RUN set -eux; \
         patch_property "//*[name()='org.apache.opennlp.opennlp-tools.version']" "${OPENNLP_VERSION}"; \
         patch_property "//*[name()='io.opentelemetry.version']" "${OPENTELEMETRY_VERSION}"; \
         patch_property "//*[name()='io.lettuce.version']" "${LETTUCE_VERSION}"; \
-        patch_property "//*[name()='org.mariadb.jdbc.version']" "${MARIADB_JDBC_VERSION}"; \
     fi ; \
     /opt/maven/bin/mvn  \
       --file /tmp/languagetool/pom.xml \
