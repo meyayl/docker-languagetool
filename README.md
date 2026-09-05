@@ -211,6 +211,24 @@ Once the image is build, you can `docker compose up -d` like you would do with t
 
 > NOTE: Synology users can find a git package in the [SynoCommunity](https://synocommunity.com) repository.
 
+## Custom spelling files
+
+Each language's word lists live at `/languagetool/org/languagetool/resource/<language-code>/hunspell/` inside the image.
+To add words that should never be flagged as spelling mistakes (e.g. product names, jargon, or names in your organization),
+bind-mount a text file (one word per line) over the `spelling_custom.txt` file for the language(s) you use:
+
+```yaml
+volumes:
+  - ./custom-words-en.txt:/languagetool/org/languagetool/resource/en/hunspell/spelling_custom.txt:ro
+  - ./custom-words-de.txt:/languagetool/org/languagetool/resource/de/hunspell/spelling_custom.txt:ro
+```
+
+The same pattern applies to `prohibit_custom.txt` (words that should always be flagged) under the same `<language-code>/hunspell/` directory. Replace `en`/`de` with the language code(s) you need (e.g. `es`, `fr`, `nl`); see the [LanguageTool source](https://github.com/languagetool-org/languagetool/tree/master/languagetool-language-modules) for the full list of supported languages and their codes.
+
+See LanguageTool's [Hunspell support documentation](https://dev.languagetool.org/hunspell-support) for the word list file format (one word per line) and how `spelling.txt`/`spelling_custom.txt` (ignored words) differ from `prohibit.txt`/`prohibit_custom.txt` (words always flagged as incorrect).
+
+> NOTE: This requires image version `6.8-8` or later. Earlier versions did not reliably load bind-mounted custom spelling files because the working directory was missing from the Java classpath ([#177](https://github.com/meyayl/docker-languagetool/issues/177)).
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for the full release history.

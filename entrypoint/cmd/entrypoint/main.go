@@ -292,7 +292,7 @@ func run() error { //nolint:gocyclo
 	javaArgs = append(javaArgs,
 		"-Djna.tmpdir=/tmp",
 		"-Dlogback.configurationFile=/tmp/logback.xml",
-		"-cp", "languagetool-server.jar",
+		"-cp", ".:languagetool-server.jar",
 		"org.languagetool.server.HTTPServer",
 		"--port", listenPort,
 		"--public",
@@ -309,7 +309,7 @@ func run() error { //nolint:gocyclo
 // runHelp runs java --help and prints the relevant section (from --config FILE
 // up to but not including --port), matching the shell script filter.
 func runHelp() error {
-	cmd := exec.Command("java", "-cp", "languagetool-server.jar",
+	cmd := exec.Command("java", "-cp", ".:languagetool-server.jar",
 		"org.languagetool.server.HTTPServer", "--help")
 	out, _ := cmd.CombinedOutput() //nolint:errcheck // java --help exits non-zero; that's expected
 
