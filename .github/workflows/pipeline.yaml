@@ -260,8 +260,8 @@ jobs:
           check_rule "Testing English prohibit_custom.txt flags 'banana'" \
             en-US "Please eat a banana." MORFOLOGIK_RULE_EN_US true
 
-          check_rule "Testing German prohibit_custom.txt flags 'Fahrrad'" \
-            de-DE "Das ist ein Fahrrad." GERMAN_SPELLER_RULE true
+          check_rule "Testing German prohibit_custom.txt flags 'Baum'" \
+            de-DE "Das ist ein Baum." GERMAN_SPELLER_RULE true
 
           echo "🛑 Stopping container..."
           docker compose down
