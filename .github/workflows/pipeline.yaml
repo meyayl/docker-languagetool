@@ -185,6 +185,80 @@ jobs:
           echo "🛑 Stopping container..."
           docker compose down
 
+  integration-test-custom-spelling:
+    name: Integration test Custom Spelling Files
+    needs: [build-test-image]
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.job }}-${{ matrix.runner }}-${{ github.ref }}
+      cancel-in-progress: true
+
+    permissions:
+      packages: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Login to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run custom spelling file test
+        env:
+          IMAGE: ghcr.io/meyayl/languagetool:${{ github.run_id }}
+        # language="Shell Script"
+        run: |
+          export COMPOSE_FILE=".github/tests/custom-spelling.yml"
+          export COMPOSE_PROJECT_NAME="custom-spelling"
+          echo "🚀 Starting LanguageTool container with custom spelling/prohibit files for English and German..."
+          docker compose up -d
+          echo "⏳ Waiting for container to start..."
+          sleep 10s
+          echo "📋 Container logs:"
+          docker compose logs
+          echo "🧪 Testing English custom spelling word 'xyz' is ignored..."
+          if curl --silent --data "language=en-US&text=This is xyz." http://127.0.0.1:8081/v2/check \
+            | tee /dev/stderr | grep -q "MORFOLOGIK_RULE_EN_US"; then
+            echo "❌ English custom spelling word 'xyz' was flagged as a spelling error"
+            exit 1
+          fi
+          echo "✅ English custom spelling word 'xyz' was correctly ignored"
+          echo "🧪 Testing German custom spelling word 'xyz' is ignored..."
+          if curl --silent --data "language=de-DE&text=Das ist xyz." http://127.0.0.1:8081/v2/check \
+            | tee /dev/stderr | grep -q "GERMAN_SPELLER_RULE"; then
+            echo "❌ German custom spelling word 'xyz' was flagged as a spelling error"
+            exit 1
+          fi
+          echo "✅ German custom spelling word 'xyz' was correctly ignored"
+          echo "🧪 Testing English custom prohibited word 'banana' is flagged..."
+          if ! curl --silent --data "language=en-US&text=This is a banana." http://127.0.0.1:8081/v2/check \
+            | tee /dev/stderr | grep -q "MORFOLOGIK_RULE_EN_US"; then
+            echo "❌ English custom prohibited word 'banana' was not flagged as a spelling error"
+            exit 1
+          fi
+          echo "✅ English custom prohibited word 'banana' was correctly flagged"
+          echo "🧪 Testing German custom prohibited word 'Fahrrad' is flagged..."
+          if ! curl --silent --data "language=de-DE&text=Das ist ein Fahrrad." http://127.0.0.1:8081/v2/check \
+            | tee /dev/stderr | grep -q "GERMAN_SPELLER_RULE"; then
+            echo "❌ German custom prohibited word 'Fahrrad' was not flagged as a spelling error"
+            exit 1
+          fi
+          echo "✅ German custom prohibited word 'Fahrrad' was correctly flagged"
+          echo "🛑 Stopping container..."
+          docker compose down
+
   scan-image:
     name: Scan Image with Grype
     needs: [build-test-image]
@@ -225,7 +299,13 @@ jobs:
 
   update-pr:
     name: Update PullRequest
-    needs: [build-test-image, integration-test-image, scan-image]
+    needs:
+      [
+        build-test-image,
+        integration-test-image,
+        integration-test-custom-spelling,
+        scan-image,
+      ]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
 

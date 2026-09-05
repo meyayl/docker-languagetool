@@ -55,7 +55,7 @@ On every container start the binary runs the following sequence:
 /entrypoint help
 ```
 
-Runs `java -cp languagetool-server.jar org.languagetool.server.HTTPServer --help` and prints the LanguageTool-specific flags (from `--config FILE` up to but not including `--port`).
+Runs `java -cp .:languagetool-server.jar org.languagetool.server.HTTPServer --help` and prints the LanguageTool-specific flags (from `--config FILE` up to but not including `--port`).
 
 ## Package layout
 

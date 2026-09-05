@@ -1,0 +1,26 @@
+---
+services:
+  languagetool:
+    image: ${IMAGE:?IMAGE required}
+    restart: unless-stopped
+    tmpfs:
+      - /tmp:exec
+    cap_drop:
+      - ALL
+    cap_add:
+      - CAP_CHOWN
+      - CAP_DAC_OVERRIDE
+      - CAP_SETUID
+      - CAP_SETGID
+    security_opt:
+      - no-new-privileges
+    ports:
+      - 8081:8081
+    environment:
+      MAP_UID: 1001
+      MAP_GID: 1001
+    volumes:
+      - ./custom-spelling/en-spelling-custom.txt:/languagetool/org/languagetool/resource/en/hunspell/spelling_custom.txt:ro
+      - ./custom-spelling/de-spelling-custom.txt:/languagetool/org/languagetool/resource/de/hunspell/spelling_custom.txt:ro
+      - ./custom-spelling/en-prohibit-custom.txt:/languagetool/org/languagetool/resource/en/hunspell/prohibit_custom.txt:ro
+      - ./custom-spelling/de-prohibit-custom.txt:/languagetool/org/languagetool/resource/de/hunspell/prohibit_custom.txt:ro

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-8] - 2026-09-05
+
+### Changed
+
+- Upgrade Go to 1.27.1
+
+### Fixed
+
+- Add the working directory to the Java classpath (`-cp .:languagetool-server.jar`) so custom spelling/word list files (e.g. `spelling_custom.txt`, `prohibit_custom.txt`) bind-mounted into the unpacked LanguageTool resource tree are reliably found ([#177](https://github.com/meyayl/docker-languagetool/issues/177))
+
 ## [6.8-7] - 2026-08-29
 
 ### Changed
