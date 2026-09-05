@@ -22,11 +22,11 @@ services:
       DISABLE_FASTTEXT: "true"
     volumes:
       - ./custom-spelling/en-spelling-custom.txt:/languagetool/org/languagetool/resource/en/hunspell/spelling_custom.txt:ro
-      - ./custom-spelling/de-spelling-custom.txt:/languagetool/org/languagetool/resource/de/hunspell/spelling_custom.txt:ro
+      - ./custom-spelling/nl-spelling-custom.txt:/languagetool/org/languagetool/resource/nl/hunspell/spelling_custom.txt:ro
       - ./custom-spelling/en-prohibit-custom.txt:/languagetool/org/languagetool/resource/en/hunspell/prohibit_custom.txt:ro
-      - ./custom-spelling/de-prohibit-custom.txt:/languagetool/org/languagetool/resource/de/hunspell/prohibit_custom.txt:ro
+      - ./custom-spelling/nl-prohibit-custom.txt:/languagetool/org/languagetool/resource/nl/hunspell/prohibit_custom.txt:ro
       # LanguageTool's spelling rule only reports matches once its ngram language model loads successfully;
       # this minimal, non-empty Lucene index (no real ngram data) satisfies that requirement without
-      # downloading the real (multi-GB) ngram models. Shared read-only for both en and de.
+      # downloading the real (multi-GB) ngram models. Shared read-only for both en and nl.
       - ./custom-spelling/ngrams-stub:/ngrams/en:ro
-      - ./custom-spelling/ngrams-stub:/ngrams/de:ro
+      - ./custom-spelling/ngrams-stub:/ngrams/nl:ro
