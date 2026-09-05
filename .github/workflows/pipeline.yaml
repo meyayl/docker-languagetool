@@ -228,34 +228,41 @@ jobs:
           sleep 10s
           echo "📋 Container logs:"
           docker compose logs
-          echo "🧪 Testing English custom spelling word 'xyz' is ignored..."
-          if curl --silent --data "language=en-US&text=This is xyz." http://127.0.0.1:8081/v2/check \
-            | tee /dev/stderr | grep -q "MORFOLOGIK_RULE_EN_US"; then
-            echo "❌ English custom spelling word 'xyz' was flagged as a spelling error"
-            exit 1
-          fi
-          echo "✅ English custom spelling word 'xyz' was correctly ignored"
-          echo "🧪 Testing German custom spelling word 'xyz' is ignored..."
-          if curl --silent --data "language=de-DE&text=Das ist xyz." http://127.0.0.1:8081/v2/check \
-            | tee /dev/stderr | grep -q "GERMAN_SPELLER_RULE"; then
-            echo "❌ German custom spelling word 'xyz' was flagged as a spelling error"
-            exit 1
-          fi
-          echo "✅ German custom spelling word 'xyz' was correctly ignored"
-          echo "🧪 Testing English custom prohibited word 'banana' is flagged..."
-          if ! curl --silent --data "language=en-US&text=This is a banana." http://127.0.0.1:8081/v2/check \
-            | tee /dev/stderr | grep -q "MORFOLOGIK_RULE_EN_US"; then
-            echo "❌ English custom prohibited word 'banana' was not flagged as a spelling error"
-            exit 1
-          fi
-          echo "✅ English custom prohibited word 'banana' was correctly flagged"
-          echo "🧪 Testing German custom prohibited word 'Fahrrad' is flagged..."
-          if ! curl --silent --data "language=de-DE&text=Das ist ein Fahrrad." http://127.0.0.1:8081/v2/check \
-            | tee /dev/stderr | grep -q "GERMAN_SPELLER_RULE"; then
-            echo "❌ German custom prohibited word 'Fahrrad' was not flagged as a spelling error"
-            exit 1
-          fi
-          echo "✅ German custom prohibited word 'Fahrrad' was correctly flagged"
+
+          check_rule() {
+            local description="$1" lang="$2" text="$3" rule_id="$4" should_match="$5"
+            echo "🧪 ${description}..."
+            local output
+            output=$(curl --silent --data "language=${lang}&text=${text}" http://127.0.0.1:8081/v2/check)
+            if [ "${should_match}" = "true" ]; then
+              if ! echo "${output}" | grep -q "\"${rule_id}\""; then
+                echo "❌ Expected ${rule_id} to fire, but it did not"
+                echo "${output}"
+                exit 1
+              fi
+              echo "✅ ${rule_id} correctly fired"
+            else
+              if echo "${output}" | grep -q "\"${rule_id}\""; then
+                echo "❌ Expected ${rule_id} not to fire, but it did"
+                echo "${output}"
+                exit 1
+              fi
+              echo "✅ ${rule_id} correctly did not fire"
+            fi
+          }
+
+          check_rule "Testing English spelling_custom.txt ignores 'recieve'" \
+            en-US "Please recieve." MORFOLOGIK_RULE_EN_US false
+
+          check_rule "Testing German spelling_custom.txt ignores 'Empfangne'" \
+            de-DE "Bitte Empfangne." GERMAN_SPELLER_RULE false
+
+          check_rule "Testing English prohibit_custom.txt flags 'banana'" \
+            en-US "Please eat a banana." MORFOLOGIK_RULE_EN_US true
+
+          check_rule "Testing German prohibit_custom.txt flags 'Fahrrad'" \
+            de-DE "Das ist ein Fahrrad." GERMAN_SPELLER_RULE true
+
           echo "🛑 Stopping container..."
           docker compose down
 
