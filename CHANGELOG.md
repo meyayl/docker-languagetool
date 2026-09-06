@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-9] - 2026-09-06
+
+### Fixed
+
+- Install `libhunspell` and symlink it to the unversioned `libhunspell.so` name so the native Hunspell/JNA binding `GermanSpellerRule` depends on can actually be loaded, fixing German spelling suggestions crashing with `NoClassDefFoundError` on `linux/arm64` ([#180](https://github.com/meyayl/docker-languagetool/issues/180))
+
 ## [6.8-8] - 2026-09-06
 
 ### Changed

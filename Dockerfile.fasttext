@@ -1,4 +1,4 @@
-ARG IMAGE_VERSION="6.8-8"
+ARG IMAGE_VERSION="6.8-9"
 ARG IMAGE_CREATED="2026-09-06"
 # renovate: datasource=github-tags depName=languagetool-org/languagetool versioning=loose
 ARG LT_VERSION="6.8"
@@ -224,13 +224,17 @@ ARG TINI_VERSION="0.19.0-r3"
 ARG FASTTEXT_VERSION="0.9.2-r3"
 # renovate: datasource=repology depName=alpine_3_24/nss_wrapper versioning=loose
 ARG NSS_WRAPPER_VERSION="1.1.12-r1"
+# renovate: datasource=repology depName=alpine_3_24/libhunspell versioning=loose
+ARG LIBHUNSPELL_VERSION="1.7.3-r0"
 
 RUN set -eux; \
     apk add --no-cache \
       libstdc++="${LIBSTDCPP_VERSION}" \
       gcompat="${GCOMPAT_VERSION}" \
       tini="${TINI_VERSION}" \
-      nss_wrapper="${NSS_WRAPPER_VERSION}"; \
+      nss_wrapper="${NSS_WRAPPER_VERSION}" \
+      libhunspell="${LIBHUNSPELL_VERSION}"; \
+    ln -sf "$(basename "$(ls /usr/lib/libhunspell-*.so.0)")" /usr/lib/libhunspell.so; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
