@@ -222,7 +222,7 @@ jobs:
         run: |
           export COMPOSE_FILE=".github/tests/custom-spelling.yml"
           export COMPOSE_PROJECT_NAME="custom-spelling"
-          echo "🚀 Starting LanguageTool container with custom spelling/prohibit files for English and Dutch..."
+          echo "🚀 Starting LanguageTool container with custom spelling/prohibit files for English, Dutch, and German..."
           docker compose up -d
           echo "⏳ Waiting for container to start..."
           sleep 10s
@@ -257,11 +257,17 @@ jobs:
           check_rule "Testing Dutch spelling_custom.txt ignores 'ontvagen'" \
             nl "Ik wil graag ontvagen." MORFOLOGIK_RULE_NL_NL false
 
+          check_rule "Testing German spelling_custom.txt ignores 'Empfangne'" \
+            de-DE "Bitte Empfangne." GERMAN_SPELLER_RULE false
+
           check_rule "Testing English prohibit_custom.txt flags 'banana'" \
             en-US "Please eat a banana." MORFOLOGIK_RULE_EN_US true
 
           check_rule "Testing Dutch prohibit_custom.txt flags 'fiets'" \
             nl "Dit is een fiets." MORFOLOGIK_RULE_NL_NL true
+
+          check_rule "Testing German prohibit_custom.txt flags 'Baum'" \
+            de-DE "Das ist ein Baum." GERMAN_SPELLER_RULE true
 
           echo "🛑 Stopping container..."
           docker compose down
