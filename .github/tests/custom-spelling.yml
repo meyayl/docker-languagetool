@@ -20,6 +20,7 @@ services:
       MAP_UID: 1001
       MAP_GID: 1001
       DISABLE_FASTTEXT: "true"
+      LOG_LEVEL: DEBUG
     volumes:
       - ./custom-spelling/en-spelling-custom.txt:/languagetool/org/languagetool/resource/en/hunspell/spelling_custom.txt:ro
       - ./custom-spelling/nl-spelling-custom.txt:/languagetool/org/languagetool/resource/nl/hunspell/spelling_custom.txt:ro
