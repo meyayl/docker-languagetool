@@ -201,6 +201,8 @@ ARG TINI_VERSION="0.19.0-r3"
 ARG FASTTEXT_VERSION="0.9.2-r3"
 # renovate: datasource=repology depName=alpine_3_24/nss_wrapper versioning=loose
 ARG NSS_WRAPPER_VERSION="1.1.12-r1"
+# renovate: datasource=repology depName=alpine_3_24/libhunspell versioning=loose
+ARG LIBHUNSPELL_VERSION="1.7.3-r0"
 
 RUN set -eux; \
     apk add --no-cache \
@@ -208,7 +210,8 @@ RUN set -eux; \
       gcompat="${GCOMPAT_VERSION}" \
       tini="${TINI_VERSION}" \
       fasttext="${FASTTEXT_VERSION}" \
-      nss_wrapper="${NSS_WRAPPER_VERSION}"; \
+      nss_wrapper="${NSS_WRAPPER_VERSION}" \
+      libhunspell="${LIBHUNSPELL_VERSION}"; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
