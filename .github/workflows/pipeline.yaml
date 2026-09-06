@@ -182,6 +182,9 @@ jobs:
           echo "🧪 Testing LanguageTool API..."
           curl --data "language=en-US&text=a simple test" \
             http://127.0.0.1:8081/v2/check | tee /dev/stderr | grep -q detectedLanguage
+          echo "🔤 Testing spelling check works without ngram data (regression test for #179)..."
+          curl --silent --data "language=en-US&text=I would like to recieve this messsage." \
+            http://127.0.0.1:8081/v2/check | tee /dev/stderr | grep -q '"MORFOLOGIK_RULE_EN_US"'
           echo "🛑 Stopping container..."
           docker compose down
 

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-10] - 2026-09-06
+
+### Fixed
+
+- Only write LanguageTool's `languageModel` config key when its target directory actually contains data. Previously it was always set to `/ngrams` even when empty, which causes LanguageTool's HTTP server to silently disable spelling-mistake matches (`MORFOLOGIK_RULE_*`, `GERMAN_SPELLER_RULE`, etc.) for any language without downloaded ngram data, returning `"matches": []` with no error or warning ([#179](https://github.com/meyayl/docker-languagetool/issues/179))
+
 ## [6.8-9] - 2026-09-06
 
 ### Fixed

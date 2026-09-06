@@ -12,7 +12,12 @@ func TestWriteConfigProperties(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.properties")
 
-	t.Setenv("langtool_languageModel", "/ngrams")
+	modelDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(modelDir, "en"), []byte("placeholder"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("langtool_languageModel", modelDir)
 	t.Setenv("langtool_fasttextModel", "/fasttext/lid.176.bin")
 	t.Setenv("OTHER_VAR", "should-not-appear")
 
@@ -39,7 +44,7 @@ func TestWriteConfigProperties(t *testing.T) {
 		}
 	}
 
-	if v, ok := props["languageModel"]; !ok || v != "/ngrams" {
+	if v, ok := props["languageModel"]; !ok || v != modelDir {
 		t.Errorf("languageModel: got %q", v)
 	}
 	if v, ok := props["fasttextModel"]; !ok || v != "/fasttext/lid.176.bin" {
@@ -100,5 +105,59 @@ func TestWriteConfigPropertiesTruncates(t *testing.T) {
 	}
 	if strings.Contains(string(data), "old=content") {
 		t.Error("file should have been truncated")
+	}
+}
+
+func TestWriteConfigPropertiesSkipsLanguageModelWhenDirEmptyOrMissing(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.properties")
+
+	t.Setenv("langtool_fasttextModel", "/fasttext/lid.176.bin")
+
+	emptyDir := t.TempDir()
+	missingDir := filepath.Join(dir, "does-not-exist")
+
+	for _, modelDir := range []string{emptyDir, missingDir, ""} {
+		t.Setenv("langtool_languageModel", modelDir)
+
+		if _, err := WriteConfigProperties(path); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("read config: %v", err)
+		}
+
+		if strings.Contains(string(data), "languageModel=") {
+			t.Errorf("languageModel=%q: languageModel should not be written, got:\n%s", modelDir, data)
+		}
+		if !strings.Contains(string(data), "fasttextModel=/fasttext/lid.176.bin") {
+			t.Errorf("languageModel=%q: fasttextModel should still be written, got:\n%s", modelDir, data)
+		}
+	}
+}
+
+func TestWriteConfigPropertiesKeepsLanguageModelWhenDirHasData(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.properties")
+
+	modelDir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(modelDir, "en"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("langtool_languageModel", modelDir)
+
+	if _, err := WriteConfigProperties(path); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+
+	if !strings.Contains(string(data), "languageModel="+modelDir) {
+		t.Errorf("languageModel should be written when directory has data, got:\n%s", data)
 	}
 }

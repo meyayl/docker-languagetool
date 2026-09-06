@@ -1,4 +1,4 @@
-ARG IMAGE_VERSION="6.8-9"
+ARG IMAGE_VERSION="6.8-10"
 ARG IMAGE_CREATED="2026-09-06"
 # renovate: datasource=github-tags depName=languagetool-org/languagetool versioning=loose
 ARG LT_VERSION="6.8"
