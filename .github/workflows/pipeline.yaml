@@ -272,6 +272,18 @@ jobs:
           echo "🛑 Stopping container..."
           docker compose down
 
+      - name: Dump container logs on failure
+        if: failure()
+        env:
+          IMAGE: ghcr.io/meyayl/languagetool:${{ github.run_id }}
+        # language="Shell Script"
+        run: |
+          export COMPOSE_FILE=".github/tests/custom-spelling.yml"
+          export COMPOSE_PROJECT_NAME="custom-spelling"
+          echo "📋 Container logs at failure time:"
+          docker compose logs
+          docker compose down
+
   scan-image:
     name: Scan Image with Grype
     needs: [build-test-image]
