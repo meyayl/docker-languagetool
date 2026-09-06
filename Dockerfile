@@ -212,6 +212,7 @@ RUN set -eux; \
       fasttext="${FASTTEXT_VERSION}" \
       nss_wrapper="${NSS_WRAPPER_VERSION}" \
       libhunspell="${LIBHUNSPELL_VERSION}"; \
+    ln -sf "$(basename "$(ls /usr/lib/libhunspell-*.so.0)")" /usr/lib/libhunspell.so; \
     rm -f /var/cache/apk/*
 
 RUN set -eux; \
