@@ -107,7 +107,7 @@ ARG OPENTELEMETRY_VERSION="1.65.0"
 # renovate: datasource=maven depName=io.lettuce:lettuce-core versioning=maven
 ARG LETTUCE_VERSION="7.7.0.RELEASE"
 # renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
-ARG NETTY_VERSION="4.2.17.Final"
+ARG NETTY_VERSION="4.2.18.Final"
 # renovate: datasource=maven depName=org.mariadb.jdbc:mariadb-java-client versioning=maven
 ARG MARIADB_JDBC_VERSION="3.5.10"
 
