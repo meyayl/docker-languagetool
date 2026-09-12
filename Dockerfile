@@ -101,7 +101,7 @@ ARG LOGBACK_VERSION="1.6.3"
 # renovate: datasource=maven depName=com.fasterxml.jackson.core:jackson-databind versioning=maven
 ARG JACKSON_VERSION="2.22.2"
 # renovate: datasource=maven depName=org.apache.opennlp:opennlp-tools versioning=maven
-ARG OPENNLP_VERSION="2.5.11"
+ARG OPENNLP_VERSION="2.5.12"
 # renovate: datasource=maven depName=io.opentelemetry:opentelemetry-api versioning=maven
 ARG OPENTELEMETRY_VERSION="1.65.0"
 # renovate: datasource=maven depName=io.lettuce:lettuce-core versioning=maven
