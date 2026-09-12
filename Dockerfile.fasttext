@@ -103,7 +103,7 @@ ARG JACKSON_VERSION="2.22.2"
 # renovate: datasource=maven depName=org.apache.opennlp:opennlp-tools versioning=maven
 ARG OPENNLP_VERSION="2.5.12"
 # renovate: datasource=maven depName=io.opentelemetry:opentelemetry-api versioning=maven
-ARG OPENTELEMETRY_VERSION="1.65.0"
+ARG OPENTELEMETRY_VERSION="1.66.0"
 # renovate: datasource=maven depName=io.lettuce:lettuce-core versioning=maven
 ARG LETTUCE_VERSION="7.7.0.RELEASE"
 # renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
