@@ -73,12 +73,21 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   build-test-image:
-    name: Build Image for Testing
+    name: Build Image for Testing (${{ matrix.arch }})
     needs: [compute-version]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+            platform: linux/amd64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            platform: linux/arm64
 
     concurrency:
-      group: ${{ github.workflow }}-${{ github.job }}-build-test-image--${{ github.ref }}
+      group: ${{ github.workflow }}-${{ github.job }}-build-test-image-${{ matrix.arch }}-${{ github.ref }}
       cancel-in-progress: true
 
     permissions:
@@ -106,23 +115,56 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push to GHCR
+      - name: Build and Push to GHCR (${{ matrix.arch }})
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           sbom: true
           pull: true
           push: true
-          tags: ghcr.io/meyayl/languagetool:${{ github.run_id }}
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ghcr.io/meyayl/languagetool:${{ github.run_id }}-${{ matrix.arch }}
+          platforms: ${{ matrix.platform }}
+          cache-from: type=gha,scope=build-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=build-${{ matrix.arch }}
           build-args: |
             IMAGE_VERSION=${{ needs.compute-version.outputs.image_version }}
             IMAGE_CREATED=${{ needs.compute-version.outputs.image_created }}
 
+  merge-test-image:
+    name: Merge multi-arch test image manifest
+    needs: [build-test-image]
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.job }}-merge-test-image-${{ github.ref }}
+      cancel-in-progress: true
+
+    permissions:
+      packages: write
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Login to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push multi-arch manifest
+        env:
+          RUN_ID: ${{ github.run_id }}
+        # language="Shell Script"
+        run: |
+          docker buildx imagetools create \
+            --tag "ghcr.io/meyayl/languagetool:${RUN_ID}" \
+            "ghcr.io/meyayl/languagetool:${RUN_ID}-amd64" \
+            "ghcr.io/meyayl/languagetool:${RUN_ID}-arm64"
+
   integration-test-image:
     name: Integration test Image
-    needs: [build-test-image]
+    needs: [merge-test-image]
     runs-on: ${{ matrix.runner }}
     strategy:
       # max-parallel: 1
@@ -190,7 +232,7 @@ jobs:
 
   integration-test-custom-spelling:
     name: Integration test Custom Spelling Files
-    needs: [build-test-image]
+    needs: [merge-test-image]
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
@@ -289,11 +331,11 @@ jobs:
 
   scan-image:
     name: Scan Image with Grype
-    needs: [build-test-image]
+    needs: [merge-test-image]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/')
     outputs:
-      cve_report: ${{ steps.scan.outputs.json }}
+      cve_summary: ${{ steps.summary.outputs.cve_summary }}
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.job }}-scan-image-${{ github.ref }}
@@ -323,13 +365,47 @@ jobs:
           image: "ghcr.io/meyayl/languagetool:${{ github.run_id }}"
           severity-cutoff: high
           output-format: json
+          only-fixed: true
           fail-build: false
+
+      - name: Summarize scan results for PR comment
+        id: summary
+        env:
+          REPORT: ${{ steps.scan.outputs.json }}
+        # language="Shell Script"
+        run: |
+          COUNT=$(jq '.matches | length' "${REPORT}")
+
+          {
+            echo "cve_summary<<CVE_SUMMARY_EOF"
+            if [ "${COUNT}" -eq 0 ]; then
+              echo "No fixable vulnerabilities found."
+            else
+              echo "Found **${COUNT}** fixable vulnerabilit$([ "${COUNT}" -eq 1 ] && echo y || echo ies) (showing up to 20, sorted by severity):" # codespell:ignore vulnerabilit
+              echo ""
+              echo "| Severity | Package | Installed | Fix | CVE |"
+              echo "|---|---|---|---|---|"
+              jq -r '
+                def sevrank: {"Critical":0,"High":1,"Medium":2,"Low":3,"Negligible":4,"Unknown":5}[.] // 6;
+                [.matches[]]
+                | sort_by(.vulnerability.severity | sevrank)
+                | .[:20][]
+                | "| " + .vulnerability.severity + " | " + .artifact.name + " | " + .artifact.version + " | "
+                  + (.vulnerability.fix.versions | join(", ")) + " | " + .vulnerability.id + " |"
+              ' "${REPORT}"
+              if [ "${COUNT}" -gt 20 ]; then
+                echo ""
+                echo "_...and $(( COUNT - 20 )) more._"
+              fi
+            fi
+            echo "CVE_SUMMARY_EOF"
+          } >> "$GITHUB_OUTPUT"
 
   update-pr:
     name: Update PullRequest
     needs:
       [
-        build-test-image,
+        merge-test-image,
         integration-test-image,
         integration-test-custom-spelling,
         scan-image,
@@ -362,11 +438,18 @@ jobs:
             ```text
             ghcr.io/meyayl/languagetool:${{ github.run_id }}
             ```
+
+            <details>
+            <summary>CVE scan summary (Grype, all severities, fixable only)</summary>
+
+            ${{ needs.scan-image.outputs.cve_summary }}
+
+            </details>
           edit-mode: replace
 
   create-release-tag:
     name: Create release tag
-    needs: [compute-version, integration-test-image]
+    needs: [compute-version, integration-test-image, cve-check-image-and-report]
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' &&
@@ -398,8 +481,8 @@ jobs:
 
   cve-check-image-and-report:
     name: Scan Image with Ancore for CVEs and report
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: [build-test-image]
+    if: github.ref == 'refs/heads/main'
+    needs: [merge-test-image]
     runs-on: ubuntu-latest
 
     concurrency:
@@ -441,13 +524,7 @@ jobs:
 
   retag-and-push-final-image:
     name: Retag and push final image
-    needs:
-      [
-        compute-version,
-        build-test-image,
-        integration-test-image,
-        cve-check-image-and-report,
-      ]
+    needs: [compute-version, merge-test-image, integration-test-image]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
 
