@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-11] - 2026-09-18
+
+### Changed
+
+- Upgrade Alpine base image to 3.24.2 and bump tzdata to 2026d-r0
+- Patch netty to 4.2.18.Final via pom.xml
+- Patch opennlp-tools to 2.5.12 via pom.xml
+- Patch opentelemetry-api to 1.66.0 via pom.xml
+- Bump entrypoint dependency `github.com/beevik/etree` to 1.8.0
+
 ## [6.8-10] - 2026-09-06
 
 ### Fixed
