@@ -34,8 +34,8 @@
       "automerge": true
     },
     {
-      "groupName": "`alpine packages`",
-      "matchDatasources": ["repology"],
+      "groupName": "`Dockerfile packages`",
+      "matchFileNames": ["Dockerfile", "Dockerfile.fasttext"],
       "automerge": true
     },
     {

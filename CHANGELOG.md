@@ -14,6 +14,7 @@ Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g.
 - Patch opennlp-tools to 2.5.12 via pom.xml
 - Patch opentelemetry-api to 1.66.0 via pom.xml
 - Bump entrypoint dependency `github.com/beevik/etree` to 1.8.0
+- Group Renovate updates for Dockerfile ARG-pinned versions, the Alpine base image tag, and Alpine (repology) packages into a single `Dockerfile packages` pull request
 
 ## [6.8-10] - 2026-09-06
 
