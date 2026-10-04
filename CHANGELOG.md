@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-12] - 2026-10-04
+
+### Changed
+
+- Upgrade OpenSSL to 3.5.9-r0
+- Patch logback to 1.6.5 via pom.xml
+- Patch lettuce-core to 7.8.0.RELEASE via pom.xml
+- Bump entrypoint dependency `github.com/beevik/etree` to 1.8.1
+- Group the Alpine base image and Alpine (repology) packages into a single Renovate pull request
+
+### Security
+
+- Patch Jackson (jackson-core, jackson-databind) to 2.22.3 via pom.xml, fixing CVE-2026-91776 / GHSA-wv8q-qhhj-9h54 (jackson-databind retains every unknown raw type ID, High), CVE-2026-91777 / GHSA-cxp5-3px4-pw24 (jackson-databind quadratic forward-reference completion, High), CVE-2026-89425 / GHSA-7hhh-6rmp-j9qf (jackson-core unbounded `StringBuilder` growth in `_reportInvalidToken()`, DoS, High) and CVE-2026-89407 / GHSA-p6pp-m3f8-5c89 (jackson-core ReDoS in `NumberInput.PATTERN_FLOAT`, High)
+
 ## [6.8-11] - 2026-09-18
 
 ### Changed
