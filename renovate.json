@@ -34,8 +34,10 @@
       "automerge": true
     },
     {
-      "groupName": "`Dockerfile packages`",
+      "groupName": "alpine base image and packages",
       "matchFileNames": ["Dockerfile", "Dockerfile.fasttext"],
+      "matchDatasources": ["repology", "docker"],
+      "matchPackageNames": ["alpine", "/^alpine_/"],
       "automerge": true
     },
     {
