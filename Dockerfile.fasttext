@@ -1,5 +1,5 @@
-ARG IMAGE_VERSION="6.8-11"
-ARG IMAGE_CREATED="2026-09-18"
+ARG IMAGE_VERSION="6.8-12"
+ARG IMAGE_CREATED="2026-10-04"
 # renovate: datasource=github-tags depName=languagetool-org/languagetool versioning=loose
 ARG LT_VERSION="6.8"
 # renovate: datasource=github-releases depName=adoptium/temurin21-binaries versioning=regex:^jdk-(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)\+(?<build>\d+)$
@@ -27,7 +27,7 @@ ARG TZDATA_VERSION="2026d-r0"
 # renovate: datasource=repology depName=alpine_3_24/zlib versioning=loose
 ARG ZLIB_VERSION="1.3.2-r0"
 # renovate: datasource=repology depName=alpine_3_24/openssl versioning=loose
-ARG OPENSSL_VERSION="3.5.8-r0"
+ARG OPENSSL_VERSION="3.5.9-r0"
 
 RUN set -eux; \
     apk add --upgrade --no-cache \
@@ -97,15 +97,15 @@ RUN set -eux; \
 COPY patches/ /patches/
 
 # renovate: datasource=maven depName=ch.qos.logback:logback-classic versioning=maven
-ARG LOGBACK_VERSION="1.6.3"
+ARG LOGBACK_VERSION="1.6.5"
 # renovate: datasource=maven depName=com.fasterxml.jackson.core:jackson-databind versioning=maven
-ARG JACKSON_VERSION="2.22.2"
+ARG JACKSON_VERSION="2.22.3"
 # renovate: datasource=maven depName=org.apache.opennlp:opennlp-tools versioning=maven
 ARG OPENNLP_VERSION="2.5.12"
 # renovate: datasource=maven depName=io.opentelemetry:opentelemetry-api versioning=maven
 ARG OPENTELEMETRY_VERSION="1.66.0"
 # renovate: datasource=maven depName=io.lettuce:lettuce-core versioning=maven
-ARG LETTUCE_VERSION="7.7.0.RELEASE"
+ARG LETTUCE_VERSION="7.8.0.RELEASE"
 # renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
 ARG NETTY_VERSION="4.2.18.Final"
 # renovate: datasource=maven depName=org.mariadb.jdbc:mariadb-java-client versioning=maven
