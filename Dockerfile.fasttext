@@ -5,7 +5,7 @@ ARG LT_VERSION="6.8"
 # renovate: datasource=github-releases depName=adoptium/temurin21-binaries versioning=regex:^jdk-(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)\+(?<build>\d+)$
 ARG JAVA_VERSION="jdk-21.0.12+8"
 # renovate: datasource=github-releases depName=apache/maven versioning=semver extractVersion=^maven-(?<version>.*)$
-ARG MAVEN_VERSION="3.9.16"
+ARG MAVEN_VERSION="3.10.0"
 # renovate: datasource=docker depName=golang versioning=docker
 ARG GO_VERSION="1.27.1-alpine3.24"
 FROM alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 AS base
