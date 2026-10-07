@@ -8,7 +8,7 @@ ARG JAVA_VERSION="jdk-21.0.12+8"
 ARG MAVEN_VERSION="3.9.16"
 # renovate: datasource=docker depName=golang versioning=docker
 ARG GO_VERSION="1.27.1-alpine3.24"
-FROM alpine:3.24.2@sha256:31b6477333eb8257db9e5d7c3a7264fd0467928756f0bbcc27d35bea5d28cdbd AS base
+FROM alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 AS base
 
 FROM base AS java_base
 
@@ -25,7 +25,7 @@ ARG MUSL_LOCALES_LANG_VERSION="0.1.0-r1"
 # renovate: datasource=repology depName=alpine_3_24/tzdata versioning=loose
 ARG TZDATA_VERSION="2026d-r0"
 # renovate: datasource=repology depName=alpine_3_24/zlib versioning=loose
-ARG ZLIB_VERSION="1.3.2-r0"
+ARG ZLIB_VERSION="1.3.2-r1"
 # renovate: datasource=repology depName=alpine_3_24/openssl versioning=loose
 ARG OPENSSL_VERSION="3.5.9-r0"
 
