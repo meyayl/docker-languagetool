@@ -11,6 +11,7 @@ Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g.
 
 - Patch opentelemetry-api to 1.67.0 via pom.xml
 - Upgrade Maven (build stage) to 3.10.0
+- Bump tzdata to 2026e-r0
 
 ### Security
 
