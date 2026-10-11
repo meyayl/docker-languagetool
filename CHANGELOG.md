@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-13] - 2026-10-11
+
+### Changed
+
+- Patch opentelemetry-api to 1.67.0 via pom.xml
+- Upgrade Maven (build stage) to 3.10.0
+
+### Security
+
+- Upgrade Alpine base image to the latest 3.24.2 digest and bump zlib to 1.3.2-r1, fixing CVE-2026-85091 / GHSA-g5fp-32jq-cfw2 (heap buffer overflow in `gz_vacate`, High)
+- Patch netty to 4.2.19.Final, fixing GHSA-jp47-57pp-4qpp (SNI routing bypass in `netty-handler`), GHSA-268p-9r42-7qp4 (improper access control in `netty-handler`) and GHSA-3h79-3wcf-5whr (unbounded resource consumption in `netty-codec-dns`); no CVE IDs have been assigned yet
+- Upgrade Go to 1.27.2 for the entrypoint binary, fixing the `net/http` client-side issues CVE-2026-56866 (HTTP/1 client connection desync after CONNECT rejection) and CVE-2026-78660 (HTTP/2 transport accepts malformed framing-related headers), CVE-2026-94440 (memory limit bypass when parsing MIME headers in `net/textproto`) and CVE-2026-97031 (malformed ECH outer extension references in `crypto/tls`)
+
 ## [6.8-12] - 2026-10-04
 
 ### Changed
