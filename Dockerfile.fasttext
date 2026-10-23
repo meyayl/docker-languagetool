@@ -99,7 +99,7 @@ COPY patches/ /patches/
 # renovate: datasource=maven depName=ch.qos.logback:logback-classic versioning=maven
 ARG LOGBACK_VERSION="1.6.5"
 # renovate: datasource=maven depName=com.fasterxml.jackson.core:jackson-databind versioning=maven
-ARG JACKSON_VERSION="2.22.3"
+ARG JACKSON_VERSION="2.22.4"
 # renovate: datasource=maven depName=org.apache.opennlp:opennlp-tools versioning=maven
 ARG OPENNLP_VERSION="2.5.12"
 # renovate: datasource=maven depName=io.opentelemetry:opentelemetry-api versioning=maven
