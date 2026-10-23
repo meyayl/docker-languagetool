@@ -109,7 +109,7 @@ ARG LETTUCE_VERSION="7.8.0.RELEASE"
 # renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
 ARG NETTY_VERSION="4.2.19.Final"
 # renovate: datasource=maven depName=org.mariadb.jdbc:mariadb-java-client versioning=maven
-ARG MARIADB_JDBC_VERSION="3.5.10"
+ARG MARIADB_JDBC_VERSION="3.5.11"
 
 # hadolint ignore=SC2086,DL3003
 RUN set -eux; \
