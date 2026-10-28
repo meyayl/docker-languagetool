@@ -1,5 +1,5 @@
-ARG IMAGE_VERSION="6.8-13"
-ARG IMAGE_CREATED="2026-10-11"
+ARG IMAGE_VERSION="6.8-14"
+ARG IMAGE_CREATED="2026-10-28"
 # renovate: datasource=github-tags depName=languagetool-org/languagetool versioning=loose
 ARG LT_VERSION="6.8"
 # renovate: datasource=github-releases depName=adoptium/temurin21-binaries versioning=regex:^jdk-(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)\+(?<build>\d+)$
@@ -110,6 +110,10 @@ ARG LETTUCE_VERSION="7.9.0.RELEASE"
 ARG NETTY_VERSION="4.2.19.Final"
 # renovate: datasource=maven depName=org.mariadb.jdbc:mariadb-java-client versioning=maven
 ARG MARIADB_JDBC_VERSION="3.5.11"
+# renovate: datasource=maven depName=com.google.guava:guava versioning=maven
+ARG GUAVA_VERSION="33.7.2-jre"
+# renovate: datasource=maven depName=org.mybatis:mybatis versioning=maven
+ARG MYBATIS_VERSION="3.6.0"
 
 # hadolint ignore=SC2086,DL3003
 RUN set -eux; \
@@ -134,6 +138,8 @@ RUN set -eux; \
         patch_property "//*[name()='io.opentelemetry.version']" "${OPENTELEMETRY_VERSION}"; \
         patch_property "//*[name()='io.lettuce.version']" "${LETTUCE_VERSION}"; \
         patch_property "//*[name()='org.mariadb.jdbc.version']" "${MARIADB_JDBC_VERSION}"; \
+        patch_property "//*[name()='guava.version']" "${GUAVA_VERSION}"; \
+        patch_property "//*[name()='org.mybatis.version']" "${MYBATIS_VERSION}"; \
     fi ; \
     /opt/maven/bin/mvn  \
       --file /tmp/languagetool/pom.xml \

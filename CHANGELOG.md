@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-14] - 2026-10-28
+
+### Changed
+
+- Upgrade Alpine base image to 3.24.3
+- Upgrade Temurin JDK to jdk-21.0.13+9
+- Upgrade Go to 1.27.3 for the entrypoint binary
+- Patch logback to 1.6.6 via pom.xml
+- Patch Jackson (jackson-core, jackson-databind) to 2.22.4 via pom.xml
+- Patch lettuce-core to 7.9.0.RELEASE via pom.xml
+- Patch mariadb-java-client to 3.5.11 via pom.xml
+- Patch guava to 33.7.2-jre via pom.xml
+- Patch mybatis to 3.6.0 via pom.xml (bundles ognl 3.4.16 instead of 3.4.2)
+
+### Security
+
+- Upgrade Alpine base image to 3.24.3, fixing CVE-2026-107891 (musl, musl-utils)
+- Upgrade Go to 1.27.3 for the entrypoint binary, fixing GO-2026-6809 / CVE-2026-111943 (`crypto/x509` distrust of compromised intermediate certificates)
+- Patch guava to 33.7.2-jre, fixing GHSA-xxph-c9ww-hj94 / CVE-2026-102554 (uncontrolled memory allocation when deserializing `CompactHashMap`, `CompactHashSet` and `MapMakerInternalMap`, DoS)
+- Patch mybatis to 3.6.0, which bundles the fixed ognl 3.4.16, fixing GHSA-crwc-vw2r-qr6m / CVE-2026-113730 (OGNL stricter-invocation block list bypass)
+
 ## [6.8-13] - 2026-10-11
 
 ### Changed
