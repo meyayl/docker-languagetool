@@ -111,7 +111,7 @@ ARG NETTY_VERSION="4.2.20.Final"
 # renovate: datasource=maven depName=org.mariadb.jdbc:mariadb-java-client versioning=maven
 ARG MARIADB_JDBC_VERSION="3.5.11"
 # renovate: datasource=maven depName=com.google.guava:guava versioning=maven
-ARG GUAVA_VERSION="33.7.2-jre"
+ARG GUAVA_VERSION="33.8.0-jre"
 # renovate: datasource=maven depName=org.mybatis:mybatis versioning=maven
 ARG MYBATIS_VERSION="3.6.0"
 
