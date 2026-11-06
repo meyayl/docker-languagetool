@@ -8,7 +8,7 @@ ARG JAVA_VERSION="jdk-21.0.13+9"
 ARG MAVEN_VERSION="3.10.0"
 # renovate: datasource=docker depName=golang versioning=docker
 ARG GO_VERSION="1.27.3-alpine3.24"
-FROM alpine:3.24.4@sha256:e2944c2947c8cabdd6b23a2ebcf8094a9f3d53ca9e0340edd065237ab74c18c0 AS base
+FROM alpine:3.24.4@sha256:93b41ef40b1677fce8fcc64ff4af09daddfacf5040afde618bc46c1e2d1cc7d4 AS base
 
 FROM base AS java_base
 
