@@ -6,6 +6,8 @@ ARG LT_VERSION="6.8"
 ARG JAVA_VERSION="jdk-21.0.13+9"
 # renovate: datasource=github-releases depName=apache/maven versioning=semver extractVersion=^maven-(?<version>.*)$
 ARG MAVEN_VERSION="3.10.0"
+# renovate: datasource=docker depName=eclipse-temurin versioning=docker
+ARG TEMURIN_BUILD_VERSION="21.0.13_9-jdk-alpine"
 # renovate: datasource=docker depName=golang versioning=docker
 ARG GO_VERSION="1.27.3-alpine3.24"
 FROM alpine:3.24.4@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf AS base
@@ -38,46 +40,13 @@ RUN set -eux; \
      zlib="${ZLIB_VERSION}"; \
     rm -rf /var/cache/apk/*
 
-FROM java_base AS prepare
+# Builds LanguageTool from source. Deliberately not derived from `base`, so that Alpine
+# digest and package bumps do not invalidate the slow Maven build layer.
+FROM --platform=$BUILDPLATFORM eclipse-temurin:${TEMURIN_BUILD_VERSION} AS lt_build
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 ARG LT_VERSION
-ARG JAVA_VERSION
 ARG MAVEN_VERSION
-
-ENV JAVA_HOME=/opt/java/openjdk \
-    JAVA_VERSION=${JAVA_VERSION}
-
-# renovate: datasource=repology depName=alpine_3_24/7zip versioning=loose
-ARG SEVEN_ZIP_VERSION="26.01-r0"
-
-RUN set -eux; \
-    apk add --no-cache binutils 7zip="${SEVEN_ZIP_VERSION}"; \
-    rm -rf /var/cache/apk/*
-
-ARG TARGETARCH
-# hadolint ignore=SC3060,DL4006,SC2086
-RUN set -eux; \
-    RELEASE_PATH="${JAVA_VERSION/+/%2B}"; \
-    RELEASE_TYPE="${JAVA_VERSION%-*}"; \
-    RELEASE_NUMBER="${JAVA_VERSION#*-}"; \
-    RELEASE_NUMBER="${RELEASE_NUMBER/+/_}"; \
-    case "${TARGETARCH}" in \
-        amd64) JAVA_ARCH="x64" ;; \
-        arm64) JAVA_ARCH="aarch64" ;; \
-        *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
-    esac; \
-    URL="https://github.com/adoptium/temurin21-binaries/releases/download/${RELEASE_PATH}/OpenJDK21U-${RELEASE_TYPE}_${JAVA_ARCH}_alpine-linux_hotspot_${RELEASE_NUMBER}.tar.gz"; \
-    CHKSUM=$(wget --quiet -O -  "${URL}.sha256.txt" | cut -d' ' -f1); \
-    wget -O /tmp/openjdk.tar.gz ${URL}; \
-    echo "${CHKSUM} */tmp/openjdk.tar.gz" | sha256sum -c -; \
-    mkdir -p "${JAVA_HOME}"; \
-    tar --extract \
-        --file /tmp/openjdk.tar.gz \
-        --directory "${JAVA_HOME}" \
-        --strip-components 1 \
-        --no-same-owner; \
-    rm /tmp/openjdk.tar.gz;
 
 # hadolint ignore=DL4006,SC2086
 RUN set -eux; \
@@ -146,11 +115,55 @@ RUN --mount=type=cache,target=/root/.m2 set -eux; \
       -Dmaven.test.skip=true \
       --threads 2C \
       --quiet; \
-    7z x "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" -o"/" -bb1 -bso1 -bse1 -bsp1 -y; \
+    cp "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" /LanguageTool.zip; \
+    rm -r "/tmp/languagetool"
+
+FROM java_base AS prepare
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
+ARG JAVA_VERSION
+
+ENV JAVA_HOME=/opt/java/openjdk \
+    JAVA_VERSION=${JAVA_VERSION}
+
+# renovate: datasource=repology depName=alpine_3_24/7zip versioning=loose
+ARG SEVEN_ZIP_VERSION="26.01-r0"
+
+RUN set -eux; \
+    apk add --no-cache binutils 7zip="${SEVEN_ZIP_VERSION}"; \
+    rm -rf /var/cache/apk/*
+
+ARG TARGETARCH
+# hadolint ignore=SC3060,DL4006,SC2086
+RUN set -eux; \
+    RELEASE_PATH="${JAVA_VERSION/+/%2B}"; \
+    RELEASE_TYPE="${JAVA_VERSION%-*}"; \
+    RELEASE_NUMBER="${JAVA_VERSION#*-}"; \
+    RELEASE_NUMBER="${RELEASE_NUMBER/+/_}"; \
+    case "${TARGETARCH}" in \
+        amd64) JAVA_ARCH="x64" ;; \
+        arm64) JAVA_ARCH="aarch64" ;; \
+        *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
+    esac; \
+    URL="https://github.com/adoptium/temurin21-binaries/releases/download/${RELEASE_PATH}/OpenJDK21U-${RELEASE_TYPE}_${JAVA_ARCH}_alpine-linux_hotspot_${RELEASE_NUMBER}.tar.gz"; \
+    CHKSUM=$(wget --quiet -O -  "${URL}.sha256.txt" | cut -d' ' -f1); \
+    wget -O /tmp/openjdk.tar.gz ${URL}; \
+    echo "${CHKSUM} */tmp/openjdk.tar.gz" | sha256sum -c -; \
+    mkdir -p "${JAVA_HOME}"; \
+    tar --extract \
+        --file /tmp/openjdk.tar.gz \
+        --directory "${JAVA_HOME}" \
+        --strip-components 1 \
+        --no-same-owner; \
+    rm /tmp/openjdk.tar.gz;
+
+# hadolint ignore=DL3003
+RUN --mount=type=bind,from=lt_build,source=/LanguageTool.zip,target=/tmp/LanguageTool.zip \
+    set -eux; \
+    7z x /tmp/LanguageTool.zip -o"/" -bb1 -bso1 -bse1 -bsp1 -y; \
     mv /LanguageTool-*/ "/languagetool"; \
 	cd "/languagetool"; \
-    ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml; \
-    rm -r "/tmp/languagetool"
+    ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml
 
 # renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
 ARG NETTY_VERSION="4.2.20.Final"
@@ -188,6 +201,7 @@ RUN set -eux; \
         --strip-debug \
         --no-man-pages \
         --no-header-files \
+        --compress=zip-6 \
         --output /opt/java/customjre
 
 FROM base AS fasttext
