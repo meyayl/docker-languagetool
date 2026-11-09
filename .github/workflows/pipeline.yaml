@@ -30,7 +30,7 @@ jobs:
       statuses: write
       pull-requests: write
 
-    uses: ./.github/workflows/reusable-super-linter.yaml
+    uses: $/.github/workflows/reusable-super-linter.yaml
 
   compute-version:
     name: Compute image version
