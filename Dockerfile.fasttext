@@ -106,8 +106,6 @@ ARG OPENNLP_VERSION="2.5.12"
 ARG OPENTELEMETRY_VERSION="1.68.0"
 # renovate: datasource=maven depName=io.lettuce:lettuce-core versioning=maven
 ARG LETTUCE_VERSION="7.9.0.RELEASE"
-# renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
-ARG NETTY_VERSION="4.2.20.Final"
 # renovate: datasource=maven depName=org.mariadb.jdbc:mariadb-java-client versioning=maven
 ARG MARIADB_JDBC_VERSION="3.5.11"
 # renovate: datasource=maven depName=com.google.guava:guava versioning=maven
@@ -116,7 +114,7 @@ ARG GUAVA_VERSION="33.8.0-jre"
 ARG MYBATIS_VERSION="3.6.0"
 
 # hadolint ignore=SC2086,DL3003
-RUN set -eux; \
+RUN --mount=type=cache,target=/root/.m2 set -eux; \
     apk add --upgrade --no-cache git xmlstarlet; \
     rm -rf /var/cache/apk/*; \
     git clone --depth 1 -b v${LT_VERSION} https://github.com/languagetool-org/languagetool.git /tmp/languagetool; \
@@ -152,7 +150,13 @@ RUN set -eux; \
     mv /LanguageTool-*/ "/languagetool"; \
 	cd "/languagetool"; \
     ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml; \
-    rm -r "/tmp/languagetool"; \
+    rm -r "/tmp/languagetool"
+
+# renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
+ARG NETTY_VERSION="4.2.20.Final"
+
+# hadolint ignore=SC2086
+RUN set -eux; \
     update_maven_dependency() { \
       local _URL=${1}; \
       local _FILENAME=${_URL##*/}; \
