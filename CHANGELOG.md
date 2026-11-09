@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Image tags follow the pattern `{LanguageTool_version}-{sequential_number}` (e.g. `6.8-3`).
 
+## [6.8-15] - 2026-11-09
+
+### Changed
+
+- Upgrade Alpine base image to 3.24.4
+- Bump zlib to 1.4-r0
+- Bump tzdata to 2026f-r0
+- Patch Jackson (jackson-core, jackson-databind) to 2.23.0 via pom.xml
+- Patch opentelemetry-api to 1.68.0 via pom.xml
+- Patch guava to 33.8.0-jre via pom.xml
+- Patch netty to 4.2.20.Final
+
+### Security
+
+- Bump zlib to 1.4-r0, fixing CVE-2026-4738 (Critical, CVSS 9.4)
+- Patch netty to 4.2.20.Final, fixing GHSA-m77g-r4c7-3w77, GHSA-rx4g-qxm6-238r and GHSA-qhw9-p586-v948 (out-of-bounds reads in `netty-buffer`), GHSA-cqmg-wc9g-fpj8 (insufficient entropy in `netty-resolver-dns`) and GHSA-6xv6-9mgg-mfvc (mTLS authentication bypass via session resumption in `netty-handler`); no CVE IDs have been assigned yet
+- Patch guava to 33.8.0-jre, fixing GHSA-v5x9-67m3-7m56 / CVE-2026-118042 (hash flooding makes `HashBiMap` and `LinkedHashMultimap` construction quadratic, DoS)
+
 ## [6.8-14] - 2026-10-28
 
 ### Changed
