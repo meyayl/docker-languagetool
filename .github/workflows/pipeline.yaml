@@ -333,7 +333,7 @@ jobs:
     name: Scan Image with Grype
     needs: [merge-test-image]
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/')
+    if: github.event_name == 'pull_request'
     outputs:
       cve_summary: ${{ steps.summary.outputs.cve_summary }}
 
@@ -507,7 +507,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Anchore scan for all CVEs (non-blocking)
+      - name: Run Anchore scan for all CVEs (blocking)
         uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
         id: scan
         with:
@@ -518,6 +518,7 @@ jobs:
           fail-build: true
 
       - name: upload Anchore scan SARIF report
+        if: ${{ !cancelled() }}
         uses: github/codeql-action/upload-sarif@1fc58d04a4d4374f921bdac573c3811c240f9c26 # v4.39.2
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
