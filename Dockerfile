@@ -6,6 +6,8 @@ ARG LT_VERSION="6.8"
 ARG JAVA_VERSION="jdk-21.0.13+9"
 # renovate: datasource=github-releases depName=apache/maven versioning=semver extractVersion=^maven-(?<version>.*)$
 ARG MAVEN_VERSION="3.10.0"
+# renovate: datasource=docker depName=eclipse-temurin versioning=docker
+ARG TEMURIN_BUILD_VERSION="21.0.13_9-jdk-alpine"
 # renovate: datasource=docker depName=golang versioning=docker
 ARG GO_VERSION="1.27.4-alpine3.24"
 FROM alpine:3.24.4@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf AS base
@@ -38,12 +40,88 @@ RUN set -eux; \
      zlib="${ZLIB_VERSION}"; \
     rm -rf /var/cache/apk/*
 
-FROM java_base AS prepare
+# Builds LanguageTool from source. Deliberately not derived from `base`, so that Alpine
+# digest and package bumps do not invalidate the slow Maven build layer.
+FROM --platform=$BUILDPLATFORM eclipse-temurin:${TEMURIN_BUILD_VERSION} AS lt_build
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 ARG LT_VERSION
-ARG JAVA_VERSION
 ARG MAVEN_VERSION
+
+# hadolint ignore=DL4006,SC2086
+RUN set -eux; \
+    URL="https://archive.apache.org/dist/maven/maven-${MAVEN_VERSION%%.*}/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"; \
+    CHKSUM=$(wget --quiet -O - "${URL}.sha512"); \
+    MAVEN_HOME=/opt/maven; \
+    wget -O /tmp/maven.tar.gz ${URL}; \
+    echo "${CHKSUM} */tmp/maven.tar.gz" | sha512sum -c -; \
+    mkdir -p "${MAVEN_HOME}"; \
+    tar --extract \
+        --file /tmp/maven.tar.gz \
+        --directory "${MAVEN_HOME}" \
+        --strip-components 1 \
+        --no-same-owner; \
+    rm /tmp/maven.tar.gz;
+
+COPY patches/ /patches/
+
+# renovate: datasource=maven depName=ch.qos.logback:logback-classic versioning=maven
+ARG LOGBACK_VERSION="1.6.6"
+# renovate: datasource=maven depName=com.fasterxml.jackson.core:jackson-databind versioning=maven
+ARG JACKSON_VERSION="2.23.0"
+# renovate: datasource=maven depName=org.apache.opennlp:opennlp-tools versioning=maven
+ARG OPENNLP_VERSION="2.5.12"
+# renovate: datasource=maven depName=io.opentelemetry:opentelemetry-api versioning=maven
+ARG OPENTELEMETRY_VERSION="1.68.0"
+# renovate: datasource=maven depName=io.lettuce:lettuce-core versioning=maven
+ARG LETTUCE_VERSION="7.9.0.RELEASE"
+# renovate: datasource=maven depName=org.mariadb.jdbc:mariadb-java-client versioning=maven
+ARG MARIADB_JDBC_VERSION="3.5.11"
+# renovate: datasource=maven depName=com.google.guava:guava versioning=maven
+ARG GUAVA_VERSION="33.8.0-jre"
+# renovate: datasource=maven depName=org.mybatis:mybatis versioning=maven
+ARG MYBATIS_VERSION="3.6.0"
+
+# hadolint ignore=SC2086,DL3003
+RUN --mount=type=cache,target=/root/.m2 set -eux; \
+    apk add --upgrade --no-cache git xmlstarlet; \
+    rm -rf /var/cache/apk/*; \
+    git clone --depth 1 -b v${LT_VERSION} https://github.com/languagetool-org/languagetool.git /tmp/languagetool; \
+    cd /tmp/languagetool; \
+    if [ "${LT_VERSION}" == "6.7" ]; then \
+        git apply --stat /patches/lt6_7_memory_leak_fix.patch; \
+        git apply --check /patches/lt6_7_memory_leak_fix.patch; \
+        git apply /patches/lt6_7_memory_leak_fix.patch; \
+    fi ; \
+    patch_property() { \
+      local _xpath=${1}; \
+      local _value=${2}; \
+      xml edit --inplace --update "${_xpath}" --value "${_value}" /tmp/languagetool/pom.xml; \
+    }; \
+    if [ "${LT_VERSION}" == "6.8" ]; then \
+        patch_property "//*[name()='ch.qos.logback.version']" "${LOGBACK_VERSION}"; \
+        patch_property "//*[name()='jackson.version']" "${JACKSON_VERSION}"; \
+        patch_property "//*[name()='org.apache.opennlp.opennlp-tools.version']" "${OPENNLP_VERSION}"; \
+        patch_property "//*[name()='io.opentelemetry.version']" "${OPENTELEMETRY_VERSION}"; \
+        patch_property "//*[name()='io.lettuce.version']" "${LETTUCE_VERSION}"; \
+        patch_property "//*[name()='org.mariadb.jdbc.version']" "${MARIADB_JDBC_VERSION}"; \
+        patch_property "//*[name()='guava.version']" "${GUAVA_VERSION}"; \
+        patch_property "//*[name()='org.mybatis.version']" "${MYBATIS_VERSION}"; \
+    fi ; \
+    /opt/maven/bin/mvn  \
+      --file /tmp/languagetool/pom.xml \
+      --projects languagetool-standalone \
+      --also-make package \
+      -Dmaven.test.skip=true \
+      --threads 2C \
+      --quiet; \
+    cp "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" /LanguageTool.zip; \
+    rm -r "/tmp/languagetool"
+
+FROM java_base AS prepare
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
+
+ARG JAVA_VERSION
 
 ENV JAVA_HOME=/opt/java/openjdk \
     JAVA_VERSION=${JAVA_VERSION}
@@ -79,80 +157,19 @@ RUN set -eux; \
         --no-same-owner; \
     rm /tmp/openjdk.tar.gz;
 
-# hadolint ignore=DL4006,SC2086
-RUN set -eux; \
-    URL="https://archive.apache.org/dist/maven/maven-${MAVEN_VERSION%%.*}/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"; \
-    CHKSUM=$(wget --quiet -O - "${URL}.sha512"); \
-    MAVEN_HOME=/opt/maven; \
-    wget -O /tmp/maven.tar.gz ${URL}; \
-    echo "${CHKSUM} */tmp/maven.tar.gz" | sha512sum -c -; \
-    mkdir -p "${MAVEN_HOME}"; \
-    tar --extract \
-        --file /tmp/maven.tar.gz \
-        --directory "${MAVEN_HOME}" \
-        --strip-components 1 \
-        --no-same-owner; \
-    rm /tmp/maven.tar.gz;
-
-COPY patches/ /patches/
-
-# renovate: datasource=maven depName=ch.qos.logback:logback-classic versioning=maven
-ARG LOGBACK_VERSION="1.6.6"
-# renovate: datasource=maven depName=com.fasterxml.jackson.core:jackson-databind versioning=maven
-ARG JACKSON_VERSION="2.23.0"
-# renovate: datasource=maven depName=org.apache.opennlp:opennlp-tools versioning=maven
-ARG OPENNLP_VERSION="2.5.12"
-# renovate: datasource=maven depName=io.opentelemetry:opentelemetry-api versioning=maven
-ARG OPENTELEMETRY_VERSION="1.68.0"
-# renovate: datasource=maven depName=io.lettuce:lettuce-core versioning=maven
-ARG LETTUCE_VERSION="7.9.0.RELEASE"
-# renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
-ARG NETTY_VERSION="4.2.20.Final"
-# renovate: datasource=maven depName=org.mariadb.jdbc:mariadb-java-client versioning=maven
-ARG MARIADB_JDBC_VERSION="3.5.11"
-# renovate: datasource=maven depName=com.google.guava:guava versioning=maven
-ARG GUAVA_VERSION="33.8.0-jre"
-# renovate: datasource=maven depName=org.mybatis:mybatis versioning=maven
-ARG MYBATIS_VERSION="3.6.0"
-
-# hadolint ignore=SC2086,DL3003
-RUN set -eux; \
-    apk add --upgrade --no-cache git xmlstarlet; \
-    rm -rf /var/cache/apk/*; \
-    git clone --depth 1 -b v${LT_VERSION} https://github.com/languagetool-org/languagetool.git /tmp/languagetool; \
-    cd /tmp/languagetool; \
-    if [ "${LT_VERSION}" == "6.7" ]; then \
-        git apply --stat /patches/lt6_7_memory_leak_fix.patch; \
-        git apply --check /patches/lt6_7_memory_leak_fix.patch; \
-        git apply /patches/lt6_7_memory_leak_fix.patch; \
-    fi ; \
-    patch_property() { \
-      local _xpath=${1}; \
-      local _value=${2}; \
-      xml edit --inplace --update "${_xpath}" --value "${_value}" /tmp/languagetool/pom.xml; \
-    }; \
-    if [ "${LT_VERSION}" == "6.8" ]; then \
-        patch_property "//*[name()='ch.qos.logback.version']" "${LOGBACK_VERSION}"; \
-        patch_property "//*[name()='jackson.version']" "${JACKSON_VERSION}"; \
-        patch_property "//*[name()='org.apache.opennlp.opennlp-tools.version']" "${OPENNLP_VERSION}"; \
-        patch_property "//*[name()='io.opentelemetry.version']" "${OPENTELEMETRY_VERSION}"; \
-        patch_property "//*[name()='io.lettuce.version']" "${LETTUCE_VERSION}"; \
-        patch_property "//*[name()='org.mariadb.jdbc.version']" "${MARIADB_JDBC_VERSION}"; \
-        patch_property "//*[name()='guava.version']" "${GUAVA_VERSION}"; \
-        patch_property "//*[name()='org.mybatis.version']" "${MYBATIS_VERSION}"; \
-    fi ; \
-    /opt/maven/bin/mvn  \
-      --file /tmp/languagetool/pom.xml \
-      --projects languagetool-standalone \
-      --also-make package \
-      -Dmaven.test.skip=true \
-      --threads 2C \
-      --quiet; \
-    7z x "/tmp/languagetool/languagetool-standalone/target/LanguageTool-${LT_VERSION}.zip" -o"/" -bb1 -bso1 -bse1 -bsp1 -y; \
+# hadolint ignore=DL3003
+RUN --mount=type=bind,from=lt_build,source=/LanguageTool.zip,target=/tmp/LanguageTool.zip \
+    set -eux; \
+    7z x /tmp/LanguageTool.zip -o"/" -bb1 -bso1 -bse1 -bsp1 -y; \
     mv /LanguageTool-*/ "/languagetool"; \
 	cd "/languagetool"; \
-    ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml; \
-    rm -r "/tmp/languagetool"; \
+    ${JAVA_HOME}/bin/jar xf languagetool-server.jar logback.xml
+
+# renovate: datasource=maven depName=io.netty:netty-handler versioning=maven
+ARG NETTY_VERSION="4.2.20.Final"
+
+# hadolint ignore=SC2086
+RUN set -eux; \
     update_maven_dependency() { \
       local _URL=${1}; \
       local _FILENAME=${_URL##*/}; \
@@ -184,6 +201,7 @@ RUN set -eux; \
         --strip-debug \
         --no-man-pages \
         --no-header-files \
+        --compress=zip-6 \
         --output /opt/java/customjre
 
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION} AS go_build

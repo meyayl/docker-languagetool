@@ -31,10 +31,11 @@ Both `Dockerfile` and `Dockerfile.fasttext` use the same multi-stage pattern:
 
 1. **`base`** — pinned Alpine base image
 2. **`java_base`** — base + locale/timezone packages
-3. **`prepare`** — downloads Eclipse Temurin JDK + Apache Maven, clones LanguageTool from GitHub at the tag matching `LT_VERSION`, patches `pom.xml` for CVE fixes (logback, Jackson), builds with Maven, then uses `jlink` to produce a minimal custom JRE (`/opt/java/customjre`) with only the modules LanguageTool actually needs
-4. **`fasttext`** (Dockerfile.fasttext only) — compiles fasttext from source with gcc13 patch + UPX compression
-5. **`go_build`** — compiles the `entrypoint` Go binary (see below); `ARG GO_VERSION` must be declared in global scope (before the first `FROM`) so it can be referenced in the `FROM golang:${GO_VERSION}` line
-6. **final** — copies `/languagetool` and `/opt/java/customjre` from `prepare`, installs runtime Alpine packages, sets up `languagetool` user (UID/GID 783)
+3. **`lt_build`** — runs on `FROM --platform=$BUILDPLATFORM eclipse-temurin:${TEMURIN_BUILD_VERSION}`, deliberately **not** derived from `base`, so Alpine digest/package bumps do not invalidate the slow Maven build. Downloads Apache Maven, clones LanguageTool from GitHub at the tag matching `LT_VERSION`, patches `pom.xml` for CVE fixes (logback, Jackson, ...), builds with Maven (with a BuildKit cache mount on `/root/.m2`) and outputs `/LanguageTool.zip`. `ARG TEMURIN_BUILD_VERSION` must be declared in global scope for the same reason as `GO_VERSION`
+4. **`prepare`** — downloads Eclipse Temurin JDK for the target architecture, extracts `/LanguageTool.zip` from `lt_build`, replaces the netty JARs, then uses `jlink` to produce a minimal custom JRE (`/opt/java/customjre`) with only the modules LanguageTool actually needs
+5. **`fasttext`** (Dockerfile.fasttext only) — compiles fasttext from source with gcc13 patch + UPX compression
+6. **`go_build`** — compiles the `entrypoint` Go binary (see below); `ARG GO_VERSION` must be declared in global scope (before the first `FROM`) so it can be referenced in the `FROM golang:${GO_VERSION}` line
+7. **final** — copies `/languagetool` and `/opt/java/customjre` from `prepare`, installs runtime Alpine packages, sets up `languagetool` user (UID/GID 783)
 
 ### Dependency version management
 
