@@ -27,7 +27,7 @@ ARG TZDATA_VERSION="2026f-r0"
 # renovate: datasource=repology depName=alpine_3_24/zlib versioning=loose
 ARG ZLIB_VERSION="1.4-r0"
 # renovate: datasource=repology depName=alpine_3_24/openssl versioning=loose
-ARG OPENSSL_VERSION="3.5.9-r0"
+ARG OPENSSL_VERSION="3.5.9-r1"
 
 RUN set -eux; \
     apk add --upgrade --no-cache \
